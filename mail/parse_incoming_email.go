@@ -31,6 +31,11 @@ func (e forwardEmailAddressField) asEmailAddresses() []EmailAddress {
 	return out
 }
 
+type forwardEmailHeader struct {
+	Key  string `json:"key"`
+	Line string `json:"line"`
+}
+
 type forwardEmailModel struct {
 	From      forwardEmailAddressField `json:"from"`
 	To        forwardEmailAddressField `json:"to"`
@@ -38,6 +43,7 @@ type forwardEmailModel struct {
 	Subject   string                   `json:"subject"`
 	MessageID string                   `json:"messageId"`
 	Text      string                   `json:"text"`
+	Headers   []forwardEmailHeader     `json:"headerLines"`
 }
 
 var emailRegex = `[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+`
@@ -66,6 +72,12 @@ func ParseIncomingEmail(data []byte) (Email, error) {
 	out.CC = model.CC.asEmailAddresses()
 	out.Subject = model.Subject
 	out.MessageID = model.MessageID
+
+	for _, header := range model.Headers {
+		if header.Key == "date" {
+			out.Date = strings.TrimPrefix(header.Line, "Date: ")
+		}
+	}
 
 	fullBody := model.Text
 	body := &strings.Builder{}

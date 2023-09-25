@@ -10,6 +10,12 @@ local:
 	@echo "Running disco"
 	@go run main.go
 
-deploy: test
+ensure-compiles:
+	@go build .
+	@rm disco
+
+deploy: test ensure-compiles
 	@echo "Deploying 🪩"
 	@flyctl deploy
+
+shipit: deploy

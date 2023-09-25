@@ -26,6 +26,7 @@ var _ = Describe("Email", func() {
 				CC:        []mail.EmailAddress{"someone@else.com", "yet-another@someone.com", "Onsi <onsijoe@gmail.com>", "Disco Again <disco@sedenverultimate.net>"},
 				Subject:   "Original Subject",
 				Text:      "My **original** text\nIs _here_!",
+				Date:      "Sun, 24 Sep 2023 13:48:58 -0600",
 			}
 		})
 
@@ -38,8 +39,8 @@ var _ = Describe("Email", func() {
 			Ω(email.To).Should(ConsistOf(mail.EmailAddress("onsijoe@gmail.com")))
 			Ω(email.CC).Should(BeEmpty())
 			Ω(email.Subject).Should(Equal("Re: Original Subject"))
-			Ω(email.Text).Should(Equal("Got your message.\n\nThanks!\n\n> My **original** text\n> Is _here_!"))
-			Ω(email.HTML).Should(Equal("<p>Got <strong>your</strong> message.</p>\n\n<p><em>Thanks!</em></p>\n\n<div><blockquote type=\"cite\">My **original** text<br>Is _here_!</blockquote></div>\n"))
+			Ω(email.Text).Should(Equal("Got your message.\n\nThanks!\n\n> On Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:\n\n> My **original** text\n> Is _here_!"))
+			Ω(email.HTML).Should(Equal("<p>Got <strong>your</strong> message.</p>\n\n<p><em>Thanks!</em></p>\n\n<div><blockquote type=\"cite\">On Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:<br><br></blockquote></div>\n<blockquote type=\"cite\"><div>My **original** text<br>Is _here_!</div></blockquote>\n"))
 		})
 
 		It("can reply all to an e-mail", func() {
@@ -56,8 +57,8 @@ var _ = Describe("Email", func() {
 				//note this does not include the replyer's e-mail address
 			))
 			Ω(email.Subject).Should(Equal("Re: Original Subject"))
-			Ω(email.Text).Should(Equal("Got your message.\n\nThanks!\n\n> My **original** text\n> Is _here_!"))
-			Ω(email.HTML).Should(Equal("<p>Got <strong>your</strong> message.</p>\n\n<p><em>Thanks!</em></p>\n\n<div><blockquote type=\"cite\">My **original** text<br>Is _here_!</blockquote></div>\n"))
+			Ω(email.Text).Should(Equal("Got your message.\n\nThanks!\n\n> On Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:\n\n> My **original** text\n> Is _here_!"))
+			Ω(email.HTML).Should(Equal("<p>Got <strong>your</strong> message.</p>\n\n<p><em>Thanks!</em></p>\n\n<div><blockquote type=\"cite\">On Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:<br><br></blockquote></div>\n<blockquote type=\"cite\"><div>My **original** text<br>Is _here_!</div></blockquote>\n"))
 		})
 	})
 })

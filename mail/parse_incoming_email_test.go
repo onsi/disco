@@ -25,6 +25,7 @@ var _ = Describe("ParseIncomingEmail", func() {
 		Ω(email.Subject).Should(Equal("Hey Disco!"))
 		Ω(email.InReplyTo).Should(BeZero())
 		Ω(email.MessageID).Should(Equal("<C81E9CFE-81FC-477B-A3EA-1F6AB18870B4@gmail.com>"))
+		Ω(email.Date).Should(Equal("Sat, 23 Sep 2023 16:47:41 -0600"))
 	})
 
 	Context("when there are multiple to and CC recipients", func() {
@@ -38,6 +39,7 @@ var _ = Describe("ParseIncomingEmail", func() {
 			Ω(email.Subject).Should(Equal("Multiple Tos and CCs"))
 			Ω(email.InReplyTo).Should(BeZero())
 			Ω(email.MessageID).Should(Equal("<CAFmhaLZbzzxfNCkuqmC4vNY0wPtgJ=afHTdBwpEqJb2vuHXTug@mail.gmail.com>"))
+			Ω(email.Date).Should(Equal("Sun, 24 Sep 2023 13:48:58 -0600"))
 		})
 	})
 

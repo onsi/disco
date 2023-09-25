@@ -1,6 +1,8 @@
 package mail
 
 import (
+	"fmt"
+	stdlibhtml "html"
 	"strings"
 
 	"github.com/client9/gospell/plaintext"
@@ -17,6 +19,7 @@ type Email struct {
 	To      []EmailAddress
 	CC      []EmailAddress
 	Subject string
+	Date    string
 
 	Text string
 	HTML string
@@ -35,12 +38,13 @@ func renderMarkdown(md string) string {
 	return string(markdown.Render(mdParser.Parse([]byte(md)), htmlRenderer))
 }
 
-func synthesizeReplyBodies(originalText string, bodyMarkdown string) (string, string) {
-	lines := strings.Split(originalText, "\n")
+func synthesizeReplyBodies(email Email, bodyMarkdown string) (string, string) {
+	lines := strings.Split(email.Text, "\n")
 
 	text := &strings.Builder{}
 	text.WriteString(stripMarkdown(bodyMarkdown))
 	text.WriteString("\n\n")
+	fmt.Fprintf(text, "> On %s, %s wrote:\n\n", email.Date, email.From)
 	for idx, line := range lines {
 		text.WriteString("> ")
 		text.WriteString(line)
@@ -51,14 +55,15 @@ func synthesizeReplyBodies(originalText string, bodyMarkdown string) (string, st
 
 	html := &strings.Builder{}
 	html.WriteString(renderMarkdown(bodyMarkdown))
-	html.WriteString("\n<div><blockquote type=\"cite\">")
+	fmt.Fprintf(html, "\n<div><blockquote type=\"cite\">On %s, %s wrote:<br><br></blockquote></div>", stdlibhtml.EscapeString(email.Date), stdlibhtml.EscapeString(email.From.String()))
+	html.WriteString("\n<blockquote type=\"cite\"><div>")
 	for idx, line := range lines {
-		html.WriteString(line)
+		html.WriteString(stdlibhtml.EscapeString(line))
 		if idx < len(lines)-1 {
 			html.WriteString("<br>")
 		}
 	}
-	html.WriteString("</blockquote></div>\n")
+	html.WriteString("</div></blockquote>\n")
 
 	return text.String(), html.String()
 }
@@ -70,7 +75,7 @@ func (e Email) WithBody(bodyMarkdown string) Email {
 }
 
 func (e Email) Reply(from EmailAddress, bodyMarkdown string) Email {
-	text, html := synthesizeReplyBodies(e.Text, bodyMarkdown)
+	text, html := synthesizeReplyBodies(e, bodyMarkdown)
 	return Email{
 		InReplyTo: e.MessageID,
 		From:      from,
@@ -82,7 +87,7 @@ func (e Email) Reply(from EmailAddress, bodyMarkdown string) Email {
 }
 
 func (e Email) ReplyAll(from EmailAddress, bodyMarkdown string) Email {
-	text, html := synthesizeReplyBodies(e.Text, bodyMarkdown)
+	text, html := synthesizeReplyBodies(e, bodyMarkdown)
 	ccs := []EmailAddress{}
 	for _, to := range e.To {
 		if !(to.Equals(from) || to.Equals(e.From)) {

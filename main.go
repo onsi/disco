@@ -64,11 +64,11 @@ func (s *Server) IncomingEmail(c echo.Context) error {
 
 	go func() {
 		if strings.HasPrefix(email.Text, "/reply-all") {
-			mail.SendEmail(email.ReplyAll("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\n- Disco 🪩"))
+			mail.SendEmail(s.config, email.ReplyAll("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\nDisco 🪩"))
 		} else if strings.HasPrefix(email.Text, "/reply") {
-			mail.SendEmail(email.Reply("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\n- Disco 🪩"))
+			mail.SendEmail(s.config, email.Reply("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\nDisco 🪩"))
 		} else {
-			mail.SendEmail(mail.Email{
+			mail.SendEmail(s.config, mail.Email{
 				From:    "saturday-disco@sedenverultimate.net",
 				To:      []mail.EmailAddress{email.From},
 				Subject: "Got your message",
