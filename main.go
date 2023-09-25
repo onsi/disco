@@ -1,25 +1,26 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"io"
 	"net/http"
-	"os"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/onsi/disco/config"
+	"github.com/onsi/disco/mail"
 )
 
 type Server struct {
 	e      *echo.Echo
 	config config.Config
+
+	TempEmails []string
 }
 
 func main() {
-	fmt.Println(os.Environ())
 	server := &Server{
 		e:      echo.New(),
 		config: config.LoadConfig(),
@@ -37,17 +38,45 @@ func (s *Server) Start() error {
 		s.e.Debug = true
 	}
 	s.RegisterRoutes()
-	fmt.Println(s.config)
 	return s.e.Start(":" + s.config.Port)
 }
 
 func (s *Server) RegisterRoutes() {
 	s.e.Use(middleware.Logger())
 	s.e.GET("/", s.Index)
+	s.e.POST("/incoming/"+s.config.IncomingEmailGUID, s.IncomingEmail)
 }
 
 func (s *Server) Index(c echo.Context) error {
-	return c.Render(http.StatusOK, "index", nil)
+	return c.Render(http.StatusOK, "index", s)
+}
+
+func (s *Server) IncomingEmail(c echo.Context) error {
+	data, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	email, err := mail.ParseIncomingEmail(data)
+	if err != nil {
+		s.e.Logger.Errorf("failed to parse incoming email: %s", err.Error())
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	go func() {
+		if strings.HasPrefix(email.Text, "/reply-all") {
+			mail.SendEmail(email.ReplyAll("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\n- Disco 🪩"))
+		} else if strings.HasPrefix(email.Text, "/reply") {
+			mail.SendEmail(email.Reply("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\n- Disco 🪩"))
+		} else {
+			mail.SendEmail(mail.Email{
+				From:    "saturday-disco@sedenverultimate.net",
+				To:      []mail.EmailAddress{email.From},
+				Subject: "Got your message",
+				Text:    string(data),
+			})
+		}
+	}()
+	return c.NoContent(http.StatusOK)
 }
 
 type Template struct {

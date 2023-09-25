@@ -1,0 +1,290 @@
+{
+    "attachments": [],
+    "headers": "ARC-Seal: i=1; a=rsa-sha256; t=1695509308; cv=none; d=forwardemail.net;\r\n s=default;\r\n b=My332gfqrzC/smnaiISMUD0nF+HJSAaycmshquuee5/zQikq0kADk8y4R5289+1sb2+vEpeWn\r\n lH9DZOVtVF+pcLuNkT9+InxswKMPQx5FqKDdT1f26VWan3AdumTfgyXJa1bdaNFTflPF+mokJpz\r\n UP7X5LneHr6RDQpOwBUJo1Y=\r\nARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;\r\n d=forwardemail.net; h=To: In-Reply-To: Cc: References: Message-Id: Date:\r\n Subject: Mime-Version: From: Content-Transfer-Encoding: Content-Type;\r\n q=dns/txt; s=default; t=1695509307;\r\n bh=myA//WLnH8fT4P5ihPQs41fERPqyw6zBB4X5RdNB2SI=;\r\n b=TtNfNJGeuUx1Vd9eiJ7cdB6CR5WZ0w7s1GHMs7umfeQBqINfd7HDJ8dD6i03FfmewdAVr24bT\r\n XfV+Cvp7PnYh+zM8D1ftIte6l78jyFHElJSlujy1yH+KcNxEMRONj9RUDDzWyA3zrDBUbFDgFHa\r\n TCk+kdWYfuPIrWJEjNd9LSA=\r\nARC-Authentication-Results: i=1; mx1.forwardemail.net;\r\n dkim=pass header.i=@gmail.com header.s=20230601 header.a=rsa-sha256 header.b=O1nXBQwi;\r\n spf=pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) smtp.mailfrom=onsijoe@gmail.com\r\n smtp.helo=mail-il1-f169.google.com;\r\n dmarc=pass (p=NONE sp=QUARANTINE arc=none) header.from=gmail.com header.d=gmail.com;\r\n bimi=skipped (too lax DMARC policy)\r\nReceived-SPF: pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) client-ip=209.85.166.169;\r\nAuthentication-Results: mx1.forwardemail.net;\r\n dkim=pass header.i=@gmail.com header.s=20230601 header.a=rsa-sha256 header.b=O1nXBQwi;\r\n spf=pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) smtp.mailfrom=onsijoe@gmail.com\r\n smtp.helo=mail-il1-f169.google.com;\r\n dmarc=pass (p=NONE sp=QUARANTINE arc=none) header.from=gmail.com header.d=gmail.com;\r\n bimi=skipped (too lax DMARC policy)\r\n",
+    "headerLines": [
+        {
+            "key": "arc-seal",
+            "line": "ARC-Seal: i=1; a=rsa-sha256; t=1695509308; cv=none; d=forwardemail.net;\r\n s=default;\r\n b=My332gfqrzC/smnaiISMUD0nF+HJSAaycmshquuee5/zQikq0kADk8y4R5289+1sb2+vEpeWn\r\n lH9DZOVtVF+pcLuNkT9+InxswKMPQx5FqKDdT1f26VWan3AdumTfgyXJa1bdaNFTflPF+mokJpz\r\n UP7X5LneHr6RDQpOwBUJo1Y="
+        },
+        {
+            "key": "arc-message-signature",
+            "line": "ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;\r\n d=forwardemail.net; h=To: In-Reply-To: Cc: References: Message-Id: Date:\r\n Subject: Mime-Version: From: Content-Transfer-Encoding: Content-Type;\r\n q=dns/txt; s=default; t=1695509307;\r\n bh=myA//WLnH8fT4P5ihPQs41fERPqyw6zBB4X5RdNB2SI=;\r\n b=TtNfNJGeuUx1Vd9eiJ7cdB6CR5WZ0w7s1GHMs7umfeQBqINfd7HDJ8dD6i03FfmewdAVr24bT\r\n XfV+Cvp7PnYh+zM8D1ftIte6l78jyFHElJSlujy1yH+KcNxEMRONj9RUDDzWyA3zrDBUbFDgFHa\r\n TCk+kdWYfuPIrWJEjNd9LSA="
+        },
+        {
+            "key": "arc-authentication-results",
+            "line": "ARC-Authentication-Results: i=1; mx1.forwardemail.net;\r\n dkim=pass header.i=@gmail.com header.s=20230601 header.a=rsa-sha256 header.b=O1nXBQwi;\r\n spf=pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) smtp.mailfrom=onsijoe@gmail.com\r\n smtp.helo=mail-il1-f169.google.com;\r\n dmarc=pass (p=NONE sp=QUARANTINE arc=none) header.from=gmail.com header.d=gmail.com;\r\n bimi=skipped (too lax DMARC policy)"
+        },
+        {
+            "key": "received-spf",
+            "line": "Received-SPF: pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) client-ip=209.85.166.169;"
+        },
+        {
+            "key": "authentication-results",
+            "line": "Authentication-Results: mx1.forwardemail.net;\r\n dkim=pass header.i=@gmail.com header.s=20230601 header.a=rsa-sha256 header.b=O1nXBQwi;\r\n spf=pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) smtp.mailfrom=onsijoe@gmail.com\r\n smtp.helo=mail-il1-f169.google.com;\r\n dmarc=pass (p=NONE sp=QUARANTINE arc=none) header.from=gmail.com header.d=gmail.com;\r\n bimi=skipped (too lax DMARC policy)"
+        },
+        {
+            "key": "x-complaints-to",
+            "line": "X-Complaints-To: abuse@forwardemail.net"
+        },
+        {
+            "key": "x-report-abuse-to",
+            "line": "X-Report-Abuse-To: abuse@forwardemail.net"
+        },
+        {
+            "key": "x-report-abuse",
+            "line": "X-Report-Abuse: abuse@forwardemail.net"
+        },
+        {
+            "key": "x-forwardemail-sender",
+            "line": "X-ForwardEmail-Sender: rfc822; onsijoe@gmail.com, mail-il1-f169.google.com,\r\n 209.85.166.169"
+        },
+        {
+            "key": "x-forwardemail-version",
+            "line": "X-ForwardEmail-Version: 10.0.0-alpha"
+        },
+        {
+            "key": "received",
+            "line": "Received: by mail-il1-f169.google.com with SMTP id e9e14a558f8ab-3512b425662so3545645ab.0\r\n        for <saturday-disco@sedenverultimate.net>; Sat, 23 Sep 2023 15:48:27 -0700 (PDT)"
+        },
+        {
+            "key": "dkim-signature",
+            "line": "DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=gmail.com; s=20230601; t=1695509307; x=1696114107; darn=sedenverultimate.net;\r\n        h=to:in-reply-to:cc:references:message-id:date:subject:mime-version\r\n         :from:content-transfer-encoding:from:to:cc:subject:date:message-id\r\n         :reply-to;\r\n        bh=myA//WLnH8fT4P5ihPQs41fERPqyw6zBB4X5RdNB2SI=;\r\n        b=O1nXBQwiVe67GjsnA7UQ9v90SZj6mby1qRH4AbqjV9PRkhpqmnhjqzY3CVHgt62a2f\r\n         PdrFs+KfM1/911Y7LxS7lPwRj4C3unDZUCtxIuod7hqM/0km18wzHR/t5xaJEhCxmbkl\r\n         qA1MLYIel19vczrq43hh9m8Yd30w9g+P8D2zGa2oKbz2/ssiObtRCMT+1lM7d17UBAOP\r\n         7IgvuqIJLzI13BvY5irof3eoUsxFliZVFrR2nD9VkhzMbRJtxl0CjNyLp6mMMcPAi7DC\r\n         hR3ZGwF0db0uE9OxE5mwLx0yaO0riKkk2rSEpJY58/oQjQ+kMbs8uw94PxCx17h4z01y\r\n         ptzQ=="
+        },
+        {
+            "key": "x-google-dkim-signature",
+            "line": "X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=1e100.net; s=20230601; t=1695509307; x=1696114107;\r\n        h=to:in-reply-to:cc:references:message-id:date:subject:mime-version\r\n         :from:content-transfer-encoding:x-gm-message-state:from:to:cc\r\n         :subject:date:message-id:reply-to;\r\n        bh=myA//WLnH8fT4P5ihPQs41fERPqyw6zBB4X5RdNB2SI=;\r\n        b=XiWshhbWJJ4F5NlntOjbBpU6or/JmXBx1SZbsEnJ/xapJebJzaCZZLlztNIgJSJTdA\r\n         JicBiyS8He+xQBAkd3Qo+ANerTZHjAcQ8tAnsLGL1BOf7daCb4uimqD2Wx6MuATVUaOV\r\n         m08xgyGRBu4j0mzMk9qQhBMosEM7iQH7vFRU+M7tqBuvynOcCpMgzMGb7FKpgjcx+FBN\r\n         lFhHAYPAgQdle+fjUGyxnUf3MblsSw4hK0mjfCQB/38UxVFSxISbNfe6o34AJ4yWX3sc\r\n         xAIHFow4aoe0iuJ0giy5qvGuo+AbWRtqo4KQLWMowbfkuJFsYWOlQd6yyBJXn9I3oh5G\r\n         mbUQ=="
+        },
+        {
+            "key": "x-gm-message-state",
+            "line": "X-Gm-Message-State: AOJu0YzUZSYNexLc/rIQp9isw/PxfUaI1DKAvmycF5oonIgbMAJjBZb5\r\n\tWINH05GOR3lLiY/m7D6OD5rY1ymuokI="
+        },
+        {
+            "key": "x-google-smtp-source",
+            "line": "X-Google-Smtp-Source: AGHT+IFqWmeTUaZUZ/mKG5GlcloqygkIsLvwuYGjDaewKw1lvYTJwkka0PtTIa0O0SjaE73wiNO+2A=="
+        },
+        {
+            "key": "x-received",
+            "line": "X-Received: by 2002:a92:c5a6:0:b0:34f:c7f7:18b with SMTP id r6-20020a92c5a6000000b0034fc7f7018bmr3426211ilt.2.1695509307053;\r\n        Sat, 23 Sep 2023 15:48:27 -0700 (PDT)"
+        },
+        {
+            "key": "return-path",
+            "line": "Return-Path: <onsijoe@gmail.com>"
+        },
+        {
+            "key": "received",
+            "line": "Received: from smtpclient.apple (174-29-180-251.hlrn.qwest.net. [174.29.180.251])\r\n        by smtp.gmail.com with ESMTPSA id x8-20020a92dc48000000b003493fcfaef1sm1954715ilq.67.2023.09.23.15.48.26\r\n        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);\r\n        Sat, 23 Sep 2023 15:48:26 -0700 (PDT)"
+        },
+        {
+            "key": "content-type",
+            "line": "Content-Type: multipart/alternative; boundary=Apple-Mail-E00DF87C-CB9D-4C69-A371-286FF458E6B2"
+        },
+        {
+            "key": "content-transfer-encoding",
+            "line": "Content-Transfer-Encoding: 7bit"
+        },
+        {
+            "key": "from",
+            "line": "From: Onsi Fakhouri <onsijoe@gmail.com>"
+        },
+        {
+            "key": "mime-version",
+            "line": "Mime-Version: 1.0 (1.0)"
+        },
+        {
+            "key": "subject",
+            "line": "Subject: Re: Hey Disco!"
+        },
+        {
+            "key": "date",
+            "line": "Date: Sat, 23 Sep 2023 16:48:16 -0600"
+        },
+        {
+            "key": "message-id",
+            "line": "Message-Id: <4C72D641-DF9D-4515-86F2-291C4DB41031@gmail.com>"
+        },
+        {
+            "key": "references",
+            "line": "References: <C81E9CFE-81FC-477B-A3EA-1F6AB18870B4@gmail.com>"
+        },
+        {
+            "key": "cc",
+            "line": "Cc: Onsi Fakhouri <onsijoe@gmail.com>"
+        },
+        {
+            "key": "in-reply-to",
+            "line": "In-Reply-To: <C81E9CFE-81FC-477B-A3EA-1F6AB18870B4@gmail.com>"
+        },
+        {
+            "key": "to",
+            "line": "To: saturday-disco@sedenverultimate.net"
+        },
+        {
+            "key": "x-mailer",
+            "line": "X-Mailer: iPhone Mail (21A329)"
+        }
+    ],
+    "html": "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"></head><body dir=\"auto\"><div dir=\"ltr\"></div><div dir=\"ltr\">And this is my reply… from iOS Mail</div><div dir=\"ltr\"><br><blockquote type=\"cite\">On Sep 23, 2023, at 4:47\u202fPM, Onsi Fakhouri &lt;onsijoe@gmail.com&gt; wrote:<br><br></blockquote></div><blockquote type=\"cite\"><div dir=\"ltr\">\ufeff<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">This is an email from <b>iOS Mail</b>.<div dir=\"ltr\"></div><div><br></div><div>Onsi</div></div></blockquote></body></html>",
+    "text": "And this is my reply… from iOS Mail\n\n> On Sep 23, 2023, at 4:47\u202fPM, Onsi Fakhouri <onsijoe@gmail.com> wrote:\n> \n> \ufeffThis is an email from iOS Mail.\n> \n> Onsi\n",
+    "textAsHtml": "<p>And this is my reply&mldr; from iOS Mail</p><p>&gt; On Sep 23, 2023, at 4:47&#x202F;PM, Onsi Fakhouri &lt;<a href=\"mailto:onsijoe@gmail.com\">onsijoe@gmail.com</a>&gt; wrote:<br/>&gt;<br/>&gt; &#xFEFF;This is an email from iOS Mail.<br/>&gt;<br/>&gt; Onsi</p>",
+    "subject": "Re: Hey Disco!",
+    "references": "<C81E9CFE-81FC-477B-A3EA-1F6AB18870B4@gmail.com>",
+    "date": "2023-09-23T22:48:16.000Z",
+    "to": {
+        "value": [
+            {
+                "address": "saturday-disco@sedenverultimate.net",
+                "name": ""
+            }
+        ],
+        "html": "<span class=\"mp_address_group\"><a href=\"mailto:saturday-disco@sedenverultimate.net\" class=\"mp_address_email\">saturday-disco@sedenverultimate.net</a></span>",
+        "text": "saturday-disco@sedenverultimate.net"
+    },
+    "from": {
+        "value": [
+            {
+                "address": "onsijoe@gmail.com",
+                "name": "Onsi Fakhouri"
+            }
+        ],
+        "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">Onsi Fakhouri</span> &lt;<a href=\"mailto:onsijoe@gmail.com\" class=\"mp_address_email\">onsijoe@gmail.com</a>&gt;</span>",
+        "text": "Onsi Fakhouri <onsijoe@gmail.com>"
+    },
+    "cc": {
+        "value": [
+            {
+                "address": "onsijoe@gmail.com",
+                "name": "Onsi Fakhouri"
+            }
+        ],
+        "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">Onsi Fakhouri</span> &lt;<a href=\"mailto:onsijoe@gmail.com\" class=\"mp_address_email\">onsijoe@gmail.com</a>&gt;</span>",
+        "text": "Onsi Fakhouri <onsijoe@gmail.com>"
+    },
+    "messageId": "<4C72D641-DF9D-4515-86F2-291C4DB41031@gmail.com>",
+    "inReplyTo": "<C81E9CFE-81FC-477B-A3EA-1F6AB18870B4@gmail.com>",
+    "raw": "ARC-Seal: i=1; a=rsa-sha256; t=1695509308; cv=none; d=forwardemail.net;\r\n s=default;\r\n b=My332gfqrzC/smnaiISMUD0nF+HJSAaycmshquuee5/zQikq0kADk8y4R5289+1sb2+vEpeWn\r\n lH9DZOVtVF+pcLuNkT9+InxswKMPQx5FqKDdT1f26VWan3AdumTfgyXJa1bdaNFTflPF+mokJpz\r\n UP7X5LneHr6RDQpOwBUJo1Y=\r\nARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;\r\n d=forwardemail.net; h=To: In-Reply-To: Cc: References: Message-Id: Date:\r\n Subject: Mime-Version: From: Content-Transfer-Encoding: Content-Type;\r\n q=dns/txt; s=default; t=1695509307;\r\n bh=myA//WLnH8fT4P5ihPQs41fERPqyw6zBB4X5RdNB2SI=;\r\n b=TtNfNJGeuUx1Vd9eiJ7cdB6CR5WZ0w7s1GHMs7umfeQBqINfd7HDJ8dD6i03FfmewdAVr24bT\r\n XfV+Cvp7PnYh+zM8D1ftIte6l78jyFHElJSlujy1yH+KcNxEMRONj9RUDDzWyA3zrDBUbFDgFHa\r\n TCk+kdWYfuPIrWJEjNd9LSA=\r\nARC-Authentication-Results: i=1; mx1.forwardemail.net;\r\n dkim=pass header.i=@gmail.com header.s=20230601 header.a=rsa-sha256 header.b=O1nXBQwi;\r\n spf=pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) smtp.mailfrom=onsijoe@gmail.com\r\n smtp.helo=mail-il1-f169.google.com;\r\n dmarc=pass (p=NONE sp=QUARANTINE arc=none) header.from=gmail.com header.d=gmail.com;\r\n bimi=skipped (too lax DMARC policy)\r\nReceived-SPF: pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) client-ip=209.85.166.169;\r\nAuthentication-Results: mx1.forwardemail.net;\r\n dkim=pass header.i=@gmail.com header.s=20230601 header.a=rsa-sha256 header.b=O1nXBQwi;\r\n spf=pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) smtp.mailfrom=onsijoe@gmail.com\r\n smtp.helo=mail-il1-f169.google.com;\r\n dmarc=pass (p=NONE sp=QUARANTINE arc=none) header.from=gmail.com header.d=gmail.com;\r\n bimi=skipped (too lax DMARC policy)\r\nX-Complaints-To: abuse@forwardemail.net\r\nX-Report-Abuse-To: abuse@forwardemail.net\r\nX-Report-Abuse: abuse@forwardemail.net\r\nX-ForwardEmail-Sender: rfc822; onsijoe@gmail.com, mail-il1-f169.google.com,\r\n 209.85.166.169\r\nX-ForwardEmail-Version: 10.0.0-alpha\r\nReceived: by mail-il1-f169.google.com with SMTP id e9e14a558f8ab-3512b425662so3545645ab.0\r\n        for <saturday-disco@sedenverultimate.net>; Sat, 23 Sep 2023 15:48:27 -0700 (PDT)\r\nDKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=gmail.com; s=20230601; t=1695509307; x=1696114107; darn=sedenverultimate.net;\r\n        h=to:in-reply-to:cc:references:message-id:date:subject:mime-version\r\n         :from:content-transfer-encoding:from:to:cc:subject:date:message-id\r\n         :reply-to;\r\n        bh=myA//WLnH8fT4P5ihPQs41fERPqyw6zBB4X5RdNB2SI=;\r\n        b=O1nXBQwiVe67GjsnA7UQ9v90SZj6mby1qRH4AbqjV9PRkhpqmnhjqzY3CVHgt62a2f\r\n         PdrFs+KfM1/911Y7LxS7lPwRj4C3unDZUCtxIuod7hqM/0km18wzHR/t5xaJEhCxmbkl\r\n         qA1MLYIel19vczrq43hh9m8Yd30w9g+P8D2zGa2oKbz2/ssiObtRCMT+1lM7d17UBAOP\r\n         7IgvuqIJLzI13BvY5irof3eoUsxFliZVFrR2nD9VkhzMbRJtxl0CjNyLp6mMMcPAi7DC\r\n         hR3ZGwF0db0uE9OxE5mwLx0yaO0riKkk2rSEpJY58/oQjQ+kMbs8uw94PxCx17h4z01y\r\n         ptzQ==\r\nX-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=1e100.net; s=20230601; t=1695509307; x=1696114107;\r\n        h=to:in-reply-to:cc:references:message-id:date:subject:mime-version\r\n         :from:content-transfer-encoding:x-gm-message-state:from:to:cc\r\n         :subject:date:message-id:reply-to;\r\n        bh=myA//WLnH8fT4P5ihPQs41fERPqyw6zBB4X5RdNB2SI=;\r\n        b=XiWshhbWJJ4F5NlntOjbBpU6or/JmXBx1SZbsEnJ/xapJebJzaCZZLlztNIgJSJTdA\r\n         JicBiyS8He+xQBAkd3Qo+ANerTZHjAcQ8tAnsLGL1BOf7daCb4uimqD2Wx6MuATVUaOV\r\n         m08xgyGRBu4j0mzMk9qQhBMosEM7iQH7vFRU+M7tqBuvynOcCpMgzMGb7FKpgjcx+FBN\r\n         lFhHAYPAgQdle+fjUGyxnUf3MblsSw4hK0mjfCQB/38UxVFSxISbNfe6o34AJ4yWX3sc\r\n         xAIHFow4aoe0iuJ0giy5qvGuo+AbWRtqo4KQLWMowbfkuJFsYWOlQd6yyBJXn9I3oh5G\r\n         mbUQ==\r\nX-Gm-Message-State: AOJu0YzUZSYNexLc/rIQp9isw/PxfUaI1DKAvmycF5oonIgbMAJjBZb5\r\n\tWINH05GOR3lLiY/m7D6OD5rY1ymuokI=\r\nX-Google-Smtp-Source: AGHT+IFqWmeTUaZUZ/mKG5GlcloqygkIsLvwuYGjDaewKw1lvYTJwkka0PtTIa0O0SjaE73wiNO+2A==\r\nX-Received: by 2002:a92:c5a6:0:b0:34f:c7f7:18b with SMTP id r6-20020a92c5a6000000b0034fc7f7018bmr3426211ilt.2.1695509307053;\r\n        Sat, 23 Sep 2023 15:48:27 -0700 (PDT)\r\nReturn-Path: <onsijoe@gmail.com>\r\nReceived: from smtpclient.apple (174-29-180-251.hlrn.qwest.net. [174.29.180.251])\r\n        by smtp.gmail.com with ESMTPSA id x8-20020a92dc48000000b003493fcfaef1sm1954715ilq.67.2023.09.23.15.48.26\r\n        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);\r\n        Sat, 23 Sep 2023 15:48:26 -0700 (PDT)\r\nContent-Type: multipart/alternative; boundary=Apple-Mail-E00DF87C-CB9D-4C69-A371-286FF458E6B2\r\nContent-Transfer-Encoding: 7bit\r\nFrom: Onsi Fakhouri <onsijoe@gmail.com>\r\nMime-Version: 1.0 (1.0)\r\nSubject: Re: Hey Disco!\r\nDate: Sat, 23 Sep 2023 16:48:16 -0600\r\nMessage-Id: <4C72D641-DF9D-4515-86F2-291C4DB41031@gmail.com>\r\nReferences: <C81E9CFE-81FC-477B-A3EA-1F6AB18870B4@gmail.com>\r\nCc: Onsi Fakhouri <onsijoe@gmail.com>\r\nIn-Reply-To: <C81E9CFE-81FC-477B-A3EA-1F6AB18870B4@gmail.com>\r\nTo: saturday-disco@sedenverultimate.net\r\nX-Mailer: iPhone Mail (21A329)\r\n\r\n\r\n--Apple-Mail-E00DF87C-CB9D-4C69-A371-286FF458E6B2\r\nContent-Type: text/plain;\r\n\tcharset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nAnd this is my reply=E2=80=A6 from iOS Mail\r\n\r\n> On Sep 23, 2023, at 4:47=E2=80=AFPM, Onsi Fakhouri <onsijoe@gmail.com> wro=\r\nte:\r\n>=20\r\n> =EF=BB=BFThis is an email from iOS Mail.\r\n>=20\r\n> Onsi\r\n\r\n--Apple-Mail-E00DF87C-CB9D-4C69-A371-286FF458E6B2\r\nContent-Type: text/html;\r\n\tcharset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<html><head><meta http-equiv=3D\"content-type\" content=3D\"text/html; charset=3D=\r\nutf-8\"></head><body dir=3D\"auto\"><div dir=3D\"ltr\"></div><div dir=3D\"ltr\">And=\r\n this is my reply=E2=80=A6 from iOS Mail</div><div dir=3D\"ltr\"><br><blockquo=\r\nte type=3D\"cite\">On Sep 23, 2023, at 4:47=E2=80=AFPM, Onsi Fakhouri &lt;onsi=\r\njoe@gmail.com&gt; wrote:<br><br></blockquote></div><blockquote type=3D\"cite\"=\r\n><div dir=3D\"ltr\">=EF=BB=BF<meta http-equiv=3D\"content-type\" content=3D\"text=\r\n/html; charset=3Dutf-8\">This is an email from <b>iOS Mail</b>.<div dir=3D\"lt=\r\nr\"></div><div><br></div><div>Onsi</div></div></blockquote></body></html>=\r\n\r\n--Apple-Mail-E00DF87C-CB9D-4C69-A371-286FF458E6B2--\r\n",
+    "dkim": {
+        "headerFrom": [
+            "onsijoe@gmail.com"
+        ],
+        "envelopeFrom": "onsijoe@gmail.com",
+        "results": [
+            {
+                "signingDomain": "gmail.com",
+                "selector": "20230601",
+                "signature": "O1nXBQwiVe67GjsnA7UQ9v90SZj6mby1qRH4AbqjV9PRkhpqmnhjqzY3CVHgt62a2fPdrFs+KfM1/911Y7LxS7lPwRj4C3unDZUCtxIuod7hqM/0km18wzHR/t5xaJEhCxmbklqA1MLYIel19vczrq43hh9m8Yd30w9g+P8D2zGa2oKbz2/ssiObtRCMT+1lM7d17UBAOP7IgvuqIJLzI13BvY5irof3eoUsxFliZVFrR2nD9VkhzMbRJtxl0CjNyLp6mMMcPAi7DChR3ZGwF0db0uE9OxE5mwLx0yaO0riKkk2rSEpJY58/oQjQ+kMbs8uw94PxCx17h4z01yptzQ==",
+                "algo": "rsa-sha256",
+                "format": "relaxed/relaxed",
+                "bodyHash": "myA//WLnH8fT4P5ihPQs41fERPqyw6zBB4X5RdNB2SI=",
+                "bodyHashExpecting": "myA//WLnH8fT4P5ihPQs41fERPqyw6zBB4X5RdNB2SI=",
+                "signingHeaders": {
+                    "keys": "To: In-Reply-To: Cc: References: Message-Id: Date: Subject: Mime-Version: From: Content-Transfer-Encoding",
+                    "headers": [
+                        "To: saturday-disco@sedenverultimate.net",
+                        "In-Reply-To: <C81E9CFE-81FC-477B-A3EA-1F6AB18870B4@gmail.com>",
+                        "Cc: Onsi Fakhouri <onsijoe@gmail.com>",
+                        "References: <C81E9CFE-81FC-477B-A3EA-1F6AB18870B4@gmail.com>",
+                        "Message-Id: <4C72D641-DF9D-4515-86F2-291C4DB41031@gmail.com>",
+                        "Date: Sat, 23 Sep 2023 16:48:16 -0600",
+                        "Subject: Re: Hey Disco!",
+                        "Mime-Version: 1.0 (1.0)",
+                        "From: Onsi Fakhouri <onsijoe@gmail.com>",
+                        "Content-Transfer-Encoding: 7bit"
+                    ]
+                },
+                "status": {
+                    "result": "pass",
+                    "header": {
+                        "i": "@gmail.com",
+                        "s": "20230601",
+                        "a": "rsa-sha256",
+                        "b": "O1nXBQwi"
+                    },
+                    "aligned": "gmail.com"
+                },
+                "canonBodyLength": 1165,
+                "publicKey": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAntvSKT1hkqhKe0xcaZ0x\n+QbouDsJuBfby/S82jxsoC/SodmfmVs2D1KAH3mi1AqdMdU12h2VfETeOJkgGYq5\nljd996AJ7ud2SyOLQmlhaNHH7Lx+Mdab8/zDN1SdxPARDgcM7AsRECHwQ15R20Fa\nKUABGu4NTbR2fDKnYwiq5jQyBkLWP+LgGOgfUF4T4HZb2PY2bQtEP6QeqOtcW4rr\nsH24L7XhD+HSZb1hsitrE0VPbhJzxDwI4JF815XMnSVjZgYUXP8CxI1Y0FONlqtQ\nYgsorZ9apoW1KPQe8brSSlRsi9sXB/tu56LmG7tEDNmrZ5XUwQYUUADBOu7t1niw\nXwIDAQAB\n-----END PUBLIC KEY-----",
+                "modulusLength": 2048,
+                "rr": "v=DKIM1;k=rsa;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAntvSKT1hkqhKe0xcaZ0x+QbouDsJuBfby/S82jxsoC/SodmfmVs2D1KAH3mi1AqdMdU12h2VfETeOJkgGYq5ljd996AJ7ud2SyOLQmlhaNHH7Lx+Mdab8/zDN1SdxPARDgcM7AsRECHwQ15R20FaKUABGu4NTbR2fDKnYwiq5jQyBkLWP+LgGOgfUF4T4HZb2PY2bQtEP6QeqOtcW4rrsH24L7XhD+HSZb1hsitrE0VPbhJzxDwI4JF815XMnSVjZgYUXP8CxI1Y0FONlqtQYgsorZ9apoW1KPQe8brSSlRsi9sXB/tu56LmG7tEDNmrZ5XUwQYUUADBOu7t1niwXwIDAQAB",
+                "info": "dkim=pass header.i=@gmail.com header.s=20230601 header.a=rsa-sha256 header.b=O1nXBQwi"
+            }
+        ]
+    },
+    "spf": {
+        "domain": "gmail.com",
+        "client-ip": "209.85.166.169",
+        "helo": "mail-il1-f169.google.com",
+        "envelope-from": "onsijoe@gmail.com",
+        "rr": "v=spf1 redirect=_spf.google.com",
+        "status": {
+            "result": "pass",
+            "comment": "mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender",
+            "smtp": {
+                "mailfrom": "onsijoe@gmail.com",
+                "helo": "mail-il1-f169.google.com"
+            }
+        },
+        "header": "Received-SPF: pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) client-ip=209.85.166.169;",
+        "info": "spf=pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) smtp.mailfrom=onsijoe@gmail.com smtp.helo=mail-il1-f169.google.com",
+        "lookups": {
+            "limit": 10,
+            "count": 2,
+            "void": 0,
+            "subqueries": {}
+        }
+    },
+    "arc": {
+        "status": {
+            "result": "none"
+        },
+        "i": 0,
+        "authResults": "mx1.forwardemail.net;\r\n dkim=pass header.i=@gmail.com header.s=20230601 header.a=rsa-sha256 header.b=O1nXBQwi;\r\n spf=pass (mx1.forwardemail.net: domain of onsijoe@gmail.com designates 209.85.166.169 as permitted sender) smtp.mailfrom=onsijoe@gmail.com\r\n smtp.helo=mail-il1-f169.google.com;\r\n dmarc=pass (p=NONE sp=QUARANTINE arc=none) header.from=gmail.com header.d=gmail.com;\r\n bimi=skipped (too lax DMARC policy)"
+    },
+    "dmarc": {
+        "status": {
+            "result": "pass",
+            "comment": "p=NONE sp=QUARANTINE arc=none",
+            "header": {
+                "from": "gmail.com",
+                "d": "gmail.com"
+            }
+        },
+        "domain": "gmail.com",
+        "policy": "none",
+        "p": "none",
+        "sp": "quarantine",
+        "rr": "v=DMARC1; p=none; sp=quarantine; rua=mailto:mailauth-reports@google.com",
+        "alignment": {
+            "spf": {
+                "result": "gmail.com",
+                "strict": false
+            },
+            "dkim": {
+                "result": "gmail.com",
+                "strict": false
+            }
+        },
+        "info": "dmarc=pass (p=NONE sp=QUARANTINE arc=none) header.from=gmail.com header.d=gmail.com"
+    },
+    "bimi": {
+        "status": {
+            "header": {},
+            "result": "skipped",
+            "comment": "too lax DMARC policy"
+        },
+        "info": "bimi=skipped (too lax DMARC policy)"
+    },
+    "recipients": [
+        "saturday-disco@sedenverultimate.net"
+    ],
+    "session": {
+        "recipient": "saturday-disco@sedenverultimate.net",
+        "remoteAddress": "209.85.166.169",
+        "remotePort": 46237,
+        "clientHostname": "mail-il1-f169.google.com",
+        "hostNameAppearsAs": "mail-il1-f169.google.com",
+        "sender": "onsijoe@gmail.com",
+        "mta": "mx1.forwardemail.net",
+        "arrivalDate": "2023-09-23T22:48:27.544Z",
+        "arrivalTime": 1695509307544
+    }
+}
