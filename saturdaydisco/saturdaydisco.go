@@ -103,16 +103,34 @@ type Command struct {
 	Attempts int
 }
 
-type SaturdayDisco struct {
+type SaturdayDiscoSnapshot struct {
 	State     SaturdayDiscoState `json:"state"`
 	Count     map[string]int     `json:"count"`
 	NextEvent time.Time          `json:"next_event"`
 	T         time.Time          `json:"reference_time"`
-	w         io.Writer
+}
+
+func (s SaturdayDiscoSnapshot) dup() SaturdayDiscoSnapshot {
+	count := map[string]int{}
+	for k, v := range s.Count {
+		count[k] = v
+	}
+	return SaturdayDiscoSnapshot{
+		State:     s.State,
+		Count:     count,
+		NextEvent: s.NextEvent,
+		T:         s.T,
+	}
+}
+
+type SaturdayDisco struct {
+	SaturdayDiscoSnapshot
+	w io.Writer
 
 	alarmClock AlarmClockInt
 	outbox     mail.OutboxInt
 	commandC   chan Command
+	snapshotC  chan chan<- SaturdayDiscoSnapshot
 	config     config.Config
 	lock       *sync.Mutex
 	ctx        context.Context
@@ -136,6 +154,7 @@ func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockIn
 		alarmClock: alarmClock,
 		outbox:     outbox,
 		commandC:   make(chan Command),
+		snapshotC:  make(chan chan<- SaturdayDiscoSnapshot),
 		w:          w,
 
 		config: config,
@@ -163,7 +182,13 @@ func (s *SaturdayDisco) HandleIncomingEmail(email mail.Email) {
 	}()
 }
 
-func (s *SaturdayDisco) HasQuorum() bool {
+func (s *SaturdayDisco) GetSnapshot() SaturdayDiscoSnapshot {
+	c := make(chan SaturdayDiscoSnapshot)
+	s.snapshotC <- c
+	return <-c
+}
+
+func (s *SaturdayDisco) hasQuorum() bool {
 	total := 0
 	for _, count := range s.Count {
 		total += count
@@ -228,6 +253,9 @@ func (s *SaturdayDisco) dance() {
 		case command := <-s.commandC:
 			s.log("{{yellow}}received a command{{/}}")
 			s.handleCommand(command)
+		case c := <-s.snapshotC:
+			s.log("{{yellow}}received a snapshot request{{/}}")
+			c <- s.SaturdayDiscoSnapshot.dup()
 		}
 	}
 }
@@ -304,31 +332,31 @@ func (s *SaturdayDisco) performNextEvent() {
 		s.sendEmail(s.emailForList("invitation", data),
 			StateInviteSent, s.retryNextEventErrorHandler)
 	case StateInviteSent:
-		if s.HasQuorum() {
+		if s.hasQuorum() {
 			// s.sendEmail("request-game-on-approval-email", StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
 			// s.sendEmail("request-badger-approval-email", StateRequestedBadgerApproval, s.retryNextEventErrorHandler)
 		}
 	case StateRequestedBadgerApproval:
-		if s.HasQuorum() {
+		if s.hasQuorum() {
 			// s.sendEmail("request-game-on-approval-email", StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
 			// s.sendEmail("badger-email", StateBadgerSent, s.retryNextEventErrorHandler)
 		}
 	case StateBadgerSent, StateBadgerNotSent:
-		if s.HasQuorum() {
+		if s.hasQuorum() {
 			// s.sendEmail("request-game-on-approval-email", StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
 			// s.sendEmail("request-no-game-approval-email", StateRequestedNoGameApproval, s.retryNextEventErrorHandler)
 		}
 	case StateRequestedGameOnApproval:
-		if s.HasQuorum() {
+		if s.hasQuorum() {
 			// s.sendEmail("game-on-email", StateGameOnSent, s.retryNextEventErrorHandler)
 		} else {
 			// s.sendEmail("request-no-game-approval-email", StateRequestedNoGameApproval, s.retryNextEventErrorHandler)
 		}
 	case StateRequestedNoGameApproval:
-		if s.HasQuorum() {
+		if s.hasQuorum() {
 			// s.sendEmail("request-game-on-approval-email", StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
 			// s.sendEmail("no-game-email", StateNoGameSent, s.retryNextEventErrorHandler)

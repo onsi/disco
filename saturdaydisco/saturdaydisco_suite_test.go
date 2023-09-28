@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/onsi/disco/mail"
+	"github.com/onsi/disco/saturdaydisco"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gleak"
@@ -58,6 +59,10 @@ func HaveText(text any) OmegaMatcher {
 
 func HaveHTML(html any) OmegaMatcher {
 	return HaveField("HTML", html)
+}
+
+func HaveState(state saturdaydisco.SaturdayDiscoState) OmegaMatcher {
+	return HaveField("State", state)
 }
 
 func BeOn(day time.Weekday, hour int, optionalMinute ...int) OmegaMatcher {

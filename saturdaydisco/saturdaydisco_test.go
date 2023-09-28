@@ -45,7 +45,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 		disco = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox)
 		DeferCleanup(disco.Stop)
-		Ω(disco.State).Should(Equal(StatePending))
+		Ω(disco.GetSnapshot()).Should(HaveState(StatePending))
 	})
 
 	Describe("sending invitations", func() {
@@ -66,7 +66,7 @@ var _ = Describe("SaturdayDisco", func() {
 			Ω(le()).Should(HaveText(ContainSubstring("--- Invite Email ---\nSubject: Saturday Bible Park Frisbee " + gameDate)))
 			Ω(le()).Should(HaveText(ContainSubstring("--- No Invite Email ---\nSubject: No Saturday Bible Park Frisbee This Week")))
 			Ω(le()).Should(HaveHTML(BeEmpty()))
-			Ω(disco.State).Should(Equal(StateRequestedInviteApproval))
+			Ω(disco.GetSnapshot()).Should(HaveState(StateRequestedInviteApproval))
 		})
 
 		Context("if the boss doesn't reply", func() {
@@ -84,7 +84,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Ω(le()).Should(HaveText(ContainSubstring("Please let me know if you'll be joining us this Saturday " + gameDate)))
 				Ω(le()).Should(HaveText(ContainSubstring("Where: James Bible Park")))
 				Ω(le()).Should(HaveHTML(ContainSubstring(`<strong>Where</strong>: <a href="https://maps.app.goo.gl/P1vm2nkZdYLGZbxb9" target="_blank">James Bible Park</a>`)))
-				Ω(disco.State).Should(Equal(StateInviteSent))
+				Ω(disco.GetSnapshot()).Should(HaveState(StateInviteSent))
 			})
 
 			Context("if the boss then replies", func() {
@@ -101,7 +101,7 @@ var _ = Describe("SaturdayDisco", func() {
 					Ω(le()).Should(HaveText(ContainSubstring("You sent me this e-mail, but my current state is: invite_sent")))
 					Ω(le()).Should(HaveText(ContainSubstring("> /approve")))
 					Ω(le()).Should(HaveHTML(BeEmpty()))
-					Ω(disco.State).Should(Equal(StateInviteSent))
+					Ω(disco.GetSnapshot()).Should(HaveState(StateInviteSent))
 				})
 			})
 		})
@@ -119,7 +119,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 				Ω(le()).Should(HaveText(ContainSubstring("Please let me know if you'll be joining us this Saturday " + gameDate)))
 				Ω(le()).Should(HaveHTML(ContainSubstring("<strong>")))
-				Ω(disco.State).Should(Equal(StateInviteSent))
+				Ω(disco.GetSnapshot()).Should(HaveState(StateInviteSent))
 			})
 		})
 
@@ -137,7 +137,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Ω(le()).Should(HaveText(ContainSubstring("Lets GO!")))
 				Ω(le()).Should(HaveText(ContainSubstring("Please let me know if you'll be joining us this Saturday " + gameDate)))
 				Ω(le()).Should(HaveHTML(ContainSubstring("Lets <strong>GO!</strong>")))
-				Ω(disco.State).Should(Equal(StateInviteSent))
+				Ω(disco.GetSnapshot()).Should(HaveState(StateInviteSent))
 			})
 		})
 
@@ -157,11 +157,11 @@ var _ = Describe("SaturdayDisco", func() {
 			})
 
 			It("resets when the clock next ticks, on Saturday at noon", func() {
-				Ω(disco.State).Should(Equal(StateNoInviteSent))
+				Ω(disco.GetSnapshot()).Should(HaveState(StateNoInviteSent))
 				clock.Fire()
 				Ω(clock.Time()).Should(BeOn(time.Saturday, 12))
 				time.Sleep(time.Millisecond * 100)
-				Ω(disco.State).Should(Equal(StatePending))
+				Ω(disco.GetSnapshot()).Should(HaveState(StatePending))
 			})
 		})
 
@@ -178,8 +178,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 				Ω(le()).Should(HaveText(ContainSubstring("On account of weather...\n\n:(\n\nNo Saturday game this week.  We'll try again next week!")))
 				Ω(le()).Should(HaveHTML(ContainSubstring("On account of <strong>weather</strong>&hellip;")))
-
-				Ω(disco.State).Should(Equal(StateNoInviteSent))
+				Ω(disco.GetSnapshot()).Should(HaveState(StateNoInviteSent))
 			})
 		})
 	})
