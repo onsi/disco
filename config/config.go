@@ -1,8 +1,16 @@
 package config
 
-import "os"
+import (
+	"os"
+
+	"github.com/onsi/disco/mail"
+)
 
 type Config struct {
+	BossEmail          mail.EmailAddress
+	SaturdayDiscoEmail mail.EmailAddress
+	SaturdayDiscoList  mail.EmailAddress
+
 	Port              string
 	Env               string
 	ForwardEmailKey   string

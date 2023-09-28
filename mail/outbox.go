@@ -6,11 +6,23 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/onsi/disco/config"
 )
 
-func SendEmail(config config.Config, email Email) error {
+type OutboxInt interface {
+	SendEmail(Email) error
+}
+
+type Outbox struct {
+	forwardEmailKey string
+}
+
+func NewOutbox(forwardEmailKey string) Outbox {
+	return Outbox{
+		forwardEmailKey: forwardEmailKey,
+	}
+}
+
+func (o Outbox) SendEmail(email Email) error {
 	form := url.Values{}
 	form.Add("from", email.From.String())
 	for _, to := range email.To {
@@ -32,13 +44,16 @@ func SendEmail(config config.Config, email Email) error {
 		form.Add("html", email.HTML)
 	}
 	req, err := http.NewRequest("POST", "https://api.forwardemail.net/v1/emails", strings.NewReader(form.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.SetBasicAuth(config.ForwardEmailKey, "")
-	resp, err := http.DefaultClient.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.SetBasicAuth(o.forwardEmailKey, "")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		issue, err := io.ReadAll(resp.Body)
 		if err != nil {

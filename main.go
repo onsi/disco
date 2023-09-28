@@ -16,14 +16,17 @@ import (
 type Server struct {
 	e      *echo.Echo
 	config config.Config
+	outbox mail.OutboxInt
 
 	TempEmails []string
 }
 
 func main() {
+	conf := config.LoadConfig()
 	server := &Server{
 		e:      echo.New(),
-		config: config.LoadConfig(),
+		config: conf,
+		outbox: mail.NewOutbox(conf.ForwardEmailKey),
 	}
 	log.Fatal(server.Start())
 }
@@ -64,11 +67,11 @@ func (s *Server) IncomingEmail(c echo.Context) error {
 
 	go func() {
 		if strings.HasPrefix(email.Text, "/reply-all") {
-			mail.SendEmail(s.config, email.ReplyAll("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\nDisco 🪩"))
+			s.outbox.SendEmail(email.ReplyAll("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\nDisco 🪩"))
 		} else if strings.HasPrefix(email.Text, "/reply") {
-			mail.SendEmail(s.config, email.Reply("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\nDisco 🪩"))
+			s.outbox.SendEmail(email.Reply("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\nDisco 🪩"))
 		} else {
-			mail.SendEmail(s.config, mail.Email{
+			s.outbox.SendEmail(mail.Email{
 				From:    "saturday-disco@sedenverultimate.net",
 				To:      []mail.EmailAddress{email.From},
 				Subject: "Got your message",

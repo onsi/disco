@@ -11,6 +11,9 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
+// TODO: test
+type Markdown string
+
 type Email struct {
 	MessageID string
 	InReplyTo string
@@ -25,12 +28,16 @@ type Email struct {
 	HTML string
 }
 
-func stripMarkdown(md string) string {
+func (e Email) String() string {
+	return fmt.Sprintf("From: %s\nTo: %s\nCC: %s\nSubject: %s\n\n%s", e.From, e.To, e.CC, e.Subject, e.Text)
+}
+
+func stripMarkdown(md Markdown) string {
 	var mdStripper, _ = plaintext.NewMarkdownText()
 	return string(mdStripper.Text([]byte(md)))
 }
 
-func renderMarkdown(md string) string {
+func renderMarkdown(md Markdown) string {
 	var mdParser = parser.NewWithExtensions(parser.CommonExtensions)
 	var htmlRenderer = html.NewRenderer(html.RendererOptions{
 		Flags: html.CommonFlags | html.HrefTargetBlank,
@@ -38,11 +45,28 @@ func renderMarkdown(md string) string {
 	return string(markdown.Render(mdParser.Parse([]byte(md)), htmlRenderer))
 }
 
-func synthesizeReplyBodies(email Email, bodyMarkdown string) (string, string) {
+func synthesizeReplyBodies(email Email, body any) (string, string) {
 	lines := strings.Split(email.Text, "\n")
 
+	var bodyText string
+	var bodyHTML string
+	var hasHTML bool
+
+	switch body := body.(type) {
+	case Markdown:
+		bodyText = stripMarkdown(body)
+		bodyHTML = renderMarkdown(body)
+		hasHTML = true
+	case string:
+		bodyText = body
+		bodyHTML = ""
+		hasHTML = false
+	default:
+		panic("invalid type for body")
+	}
+
 	text := &strings.Builder{}
-	text.WriteString(stripMarkdown(bodyMarkdown))
+	text.WriteString(bodyText)
 	text.WriteString("\n\n")
 	fmt.Fprintf(text, "> On %s, %s wrote:\n\n", email.Date, email.From)
 	for idx, line := range lines {
@@ -54,40 +78,78 @@ func synthesizeReplyBodies(email Email, bodyMarkdown string) (string, string) {
 	}
 
 	html := &strings.Builder{}
-	html.WriteString(renderMarkdown(bodyMarkdown))
-	fmt.Fprintf(html, "\n<div><blockquote type=\"cite\">On %s, %s wrote:<br><br></blockquote></div>", stdlibhtml.EscapeString(email.Date), stdlibhtml.EscapeString(email.From.String()))
-	html.WriteString("\n<blockquote type=\"cite\"><div>")
-	for idx, line := range lines {
-		html.WriteString(stdlibhtml.EscapeString(line))
-		if idx < len(lines)-1 {
-			html.WriteString("<br>")
+	if hasHTML {
+		html.WriteString(bodyHTML)
+		fmt.Fprintf(html, "\n<div><blockquote type=\"cite\">On %s, %s wrote:<br><br></blockquote></div>", stdlibhtml.EscapeString(email.Date), stdlibhtml.EscapeString(email.From.String()))
+		html.WriteString("\n<blockquote type=\"cite\"><div>")
+		for idx, line := range lines {
+			html.WriteString(stdlibhtml.EscapeString(line))
+			if idx < len(lines)-1 {
+				html.WriteString("<br>")
+			}
 		}
+		html.WriteString("</div></blockquote>\n")
 	}
-	html.WriteString("</div></blockquote>\n")
 
 	return text.String(), html.String()
 }
 
-func (e Email) WithBody(bodyMarkdown string) Email {
-	e.Text = stripMarkdown(bodyMarkdown)
-	e.HTML = renderMarkdown(bodyMarkdown)
+// TODO: test the DSL
+func E() Email {
+	return Email{}
+}
+
+func (e Email) WithFrom(from EmailAddress) Email {
+	e.From = from
 	return e
 }
 
-func (e Email) Reply(from EmailAddress, bodyMarkdown string) Email {
-	text, html := synthesizeReplyBodies(e, bodyMarkdown)
+func (e Email) WithTo(to ...EmailAddress) Email {
+	e.To = to
+	return e
+}
+
+func (e Email) WithSubject(subject string) Email {
+	e.Subject = subject
+	return e
+}
+
+func (e Email) WithBody(body any) Email {
+	switch body := body.(type) {
+	case Markdown:
+		e.Text = stripMarkdown(body)
+		e.HTML = renderMarkdown(body)
+	case string:
+		e.Text = body
+		e.HTML = ""
+	default:
+		panic("invalid type for body")
+	}
+
+	return e
+}
+
+func replySubject(subject string) string {
+	if strings.HasPrefix(subject, "Re: ") {
+		return subject
+	}
+	return "Re: " + subject
+}
+
+func (e Email) Reply(from EmailAddress, body any) Email {
+	text, html := synthesizeReplyBodies(e, body)
 	return Email{
 		InReplyTo: e.MessageID,
 		From:      from,
 		To:        []EmailAddress{e.From},
-		Subject:   "Re: " + e.Subject,
+		Subject:   replySubject(e.Subject),
 		Text:      text,
 		HTML:      html,
 	}
 }
 
-func (e Email) ReplyAll(from EmailAddress, bodyMarkdown string) Email {
-	text, html := synthesizeReplyBodies(e, bodyMarkdown)
+func (e Email) ReplyAll(from EmailAddress, body any) Email {
+	text, html := synthesizeReplyBodies(e, body)
 	ccs := []EmailAddress{}
 	for _, to := range e.To {
 		if !(to.Equals(from) || to.Equals(e.From)) {
@@ -104,8 +166,52 @@ func (e Email) ReplyAll(from EmailAddress, bodyMarkdown string) Email {
 		From:      from,
 		To:        []EmailAddress{e.From},
 		CC:        ccs,
-		Subject:   "Re: " + e.Subject,
+		Subject:   replySubject(e.Subject),
 		Text:      text,
 		HTML:      html,
 	}
+}
+
+func (e Email) ReplyWithoutQuote(from EmailAddress, body any) Email {
+	return Email{
+		InReplyTo: e.MessageID,
+		From:      from,
+		To:        []EmailAddress{e.From},
+		Subject:   replySubject(e.Subject),
+	}.WithBody(body)
+}
+func (e Email) ReplyAllWithoutQuote(from EmailAddress, body any) Email {
+	ccs := []EmailAddress{}
+	for _, to := range e.To {
+		if !(to.Equals(from) || to.Equals(e.From)) {
+			ccs = append(ccs, to)
+		}
+	}
+	for _, cc := range e.CC {
+		if !(cc.Equals(from) || cc.Equals(e.From)) {
+			ccs = append(ccs, cc)
+		}
+	}
+	return Email{
+		InReplyTo: e.MessageID,
+		From:      from,
+		To:        []EmailAddress{e.From},
+		CC:        ccs,
+		Subject:   replySubject(e.Subject),
+	}.WithBody(body)
+}
+
+// TODO: test
+func (c Email) IncludesRecipient(recipient EmailAddress) bool {
+	for _, to := range c.To {
+		if to.Equals(recipient) {
+			return true
+		}
+	}
+	for _, cc := range c.CC {
+		if cc.Equals(recipient) {
+			return true
+		}
+	}
+	return false
 }
