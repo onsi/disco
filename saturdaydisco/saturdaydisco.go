@@ -28,8 +28,6 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println(templates.DefinedTemplates())
 }
 
 const QUORUM = 8

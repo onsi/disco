@@ -15,6 +15,7 @@ type Config struct {
 	Env               string
 	ForwardEmailKey   string
 	IncomingEmailGUID string
+	OpenAIKey         string
 }
 
 func (c Config) IsPROD() bool {
@@ -31,5 +32,6 @@ func LoadConfig() Config {
 		Env:               os.Getenv("ENV"),
 		ForwardEmailKey:   os.Getenv("FORWARD_EMAIL_KEY"),
 		IncomingEmailGUID: os.Getenv("INCOMING_EMAIL_GUID"),
+		OpenAIKey:         os.Getenv("OPEN_AI_KEY"),
 	}
 }

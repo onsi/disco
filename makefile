@@ -6,6 +6,11 @@ test:
 	@echo "Running tests"
 	ginkgo -r -p --keep-going --randomize-all
 
+expensive:
+	@echo "Running Expensive tests"
+	INCLUDE_OPENAI_SPECS=true ginkgo -r -p --keep-going --randomize-all
+
+
 local:
 	@echo "Running disco"
 	@go run main.go
