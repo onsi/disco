@@ -2,10 +2,25 @@ package mail
 
 import "strings"
 
+type EmailAddresses []EmailAddress
+
+func (e EmailAddresses) String() string {
+	addresses := []string{}
+	for _, address := range e {
+		addresses = append(addresses, address.String())
+	}
+	return strings.Join(addresses, ", ")
+}
+
 type EmailAddress string
 
 func (e EmailAddress) String() string {
 	return strings.TrimSpace(string(e))
+}
+
+func (e EmailAddress) HasExplicitName() bool {
+	tidy := e.String()
+	return strings.LastIndex(tidy, " ") != -1
 }
 
 func (e EmailAddress) Name() string {

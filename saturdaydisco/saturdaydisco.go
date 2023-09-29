@@ -5,6 +5,8 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"text/template"
@@ -67,8 +69,6 @@ const (
 type CommandType string
 
 const (
-	CommandInvalid CommandType = `invalid`
-
 	CommandRequestedInviteApprovalReply CommandType = `requested_invite_approval_reply`
 	CommandRequestedBadgerApprovalReply CommandType = `requested_badger_approval_reply`
 	CommandRequestedGameOnApprovalReply CommandType = "requested_game_on_approval_reply"
@@ -95,31 +95,101 @@ type Command struct {
 	Approved          bool
 	AdditionalContent string
 
-	User  mail.EmailAddress
-	Count int
+	EmailAddress mail.EmailAddress
+	Count        int
 
 	Error error
 
 	Attempts int
 }
 
+type Participant struct {
+	Address        mail.EmailAddress
+	Count          int
+	RelevantEmails []mail.Email
+}
+
+func (p Participant) IndentedRelevantEmails() string {
+	out := &strings.Builder{}
+	for idx, email := range p.RelevantEmails {
+		say.Fpiw(out, 2, 100, "%s\n", email.String())
+		if idx < len(p.RelevantEmails)-1 {
+			say.Fpi(out, 2, "---\n")
+		}
+	}
+	return out.String()
+}
+
+type Participants []Participant
+
+func (p Participants) UpdateCount(address mail.EmailAddress, count int, relevantEmail mail.Email) Participants {
+	for i := range p {
+		if p[i].Address.Equals(address) {
+			if !p[i].Address.HasExplicitName() {
+				p[i].Address = address
+			}
+			p[i].Count = count
+			p[i].RelevantEmails = append(p[i].RelevantEmails, relevantEmail)
+			return p
+		}
+	}
+	return append(p, Participant{
+		Address:        address,
+		Count:          count,
+		RelevantEmails: []mail.Email{relevantEmail},
+	})
+}
+
+func (p Participants) Count() int {
+	total := 0
+	for _, participant := range p {
+		total += participant.Count
+	}
+	return total
+}
+
+func (p Participants) Public() string {
+	if p.Count() == 0 {
+		return "No one's signed up yet"
+	}
+
+	out := &strings.Builder{}
+	for i, participant := range p {
+		if p.Count() == 0 {
+			continue
+		}
+		out.WriteString(participant.Address.Name())
+		if participant.Count > 1 {
+			fmt.Fprintf(out, " **(%d)**", participant.Count)
+		}
+		if i < len(p)-2 {
+			out.WriteString(", ")
+		} else if i == len(p)-2 {
+			out.WriteString(" and ")
+		}
+	}
+	return out.String()
+}
+
+func (p Participants) dup() Participants {
+	participants := make(Participants, len(p))
+	copy(participants, p)
+	return participants
+}
+
 type SaturdayDiscoSnapshot struct {
-	State     SaturdayDiscoState `json:"state"`
-	Count     map[string]int     `json:"count"`
-	NextEvent time.Time          `json:"next_event"`
-	T         time.Time          `json:"reference_time"`
+	State        SaturdayDiscoState `json:"state"`
+	Participants Participants       `json:"participants"`
+	NextEvent    time.Time          `json:"next_event"`
+	T            time.Time          `json:"reference_time"`
 }
 
 func (s SaturdayDiscoSnapshot) dup() SaturdayDiscoSnapshot {
-	count := map[string]int{}
-	for k, v := range s.Count {
-		count[k] = v
-	}
 	return SaturdayDiscoSnapshot{
-		State:     s.State,
-		Count:     count,
-		NextEvent: s.NextEvent,
-		T:         s.T,
+		State:        s.State,
+		Participants: s.Participants.dup(),
+		NextEvent:    s.NextEvent,
+		T:            s.T,
 	}
 }
 
@@ -137,18 +207,29 @@ type SaturdayDisco struct {
 	cancel     func()
 }
 
-type EmailData struct {
+type TemplateData struct {
 	GameDate string
 	GameTime string
-	State    SaturdayDiscoState
+	SaturdayDiscoSnapshot
+	HasQuorum bool
 
-	AdditionalContent string
+	Message string
+	Error   error
 }
 
-func (e EmailData) WithAdditionalContent(content string) EmailData {
-	e.AdditionalContent = content
+func (e TemplateData) WithMessage(format string, args ...any) TemplateData {
+	if len(args) == 0 {
+		e.Message = format
+	} else {
+		e.Message = fmt.Sprintf(format, args...)
+	}
 	return e
 }
+func (e TemplateData) WithError(err error) TemplateData {
+	e.Error = err
+	return e
+}
+
 func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockInt, outbox mail.OutboxInt) *SaturdayDisco {
 	saturdayDisco := &SaturdayDisco{
 		alarmClock: alarmClock,
@@ -190,8 +271,8 @@ func (s *SaturdayDisco) GetSnapshot() SaturdayDiscoSnapshot {
 
 func (s *SaturdayDisco) hasQuorum() bool {
 	total := 0
-	for _, count := range s.Count {
-		total += count
+	for _, participant := range s.Participants {
+		total += participant.Count
 	}
 	return total >= QUORUM
 }
@@ -201,30 +282,33 @@ func (s *SaturdayDisco) log(format string, args ...any) {
 }
 
 func (s *SaturdayDisco) logi(i uint, format string, args ...any) {
-	say.Fplni(s.w, i, "{{gray}}[%s]{{/}} SaturdayDisco: "+format, append([]any{s.alarmClock.Time().Format("1/2 3:04:05am")}, args...))
+	out := say.F("{{gray}}[%s]{{/}} SaturdayDisco: ", s.alarmClock.Time().Format("1/2 3:04:05am"))
+	out += say.Fi(i, format, args...) + "\n"
+	s.w.Write([]byte(out))
 }
 
-func (s *SaturdayDisco) emailData() EmailData {
-	return EmailData{
-		GameDate: s.T.Format("1/2/06"),
-		GameTime: s.T.Format("3:04pm"),
-		State:    s.State,
+func (s *SaturdayDisco) emailData() TemplateData {
+	return TemplateData{
+		GameDate:              s.T.Format("1/2/06"),
+		GameTime:              s.T.Format("3:04pm"),
+		SaturdayDiscoSnapshot: s.SaturdayDiscoSnapshot,
+		HasQuorum:             s.hasQuorum(),
 	}
 }
 
-func (s *SaturdayDisco) emailSubject(name string, data EmailData) string {
+func (s *SaturdayDisco) emailSubject(name string, data TemplateData) string {
 	b := &strings.Builder{}
 	templates.ExecuteTemplate(b, name+"_subject", data)
 	return b.String()
 }
 
-func (s *SaturdayDisco) emailBody(name string, data EmailData) string {
+func (s *SaturdayDisco) emailBody(name string, data TemplateData) string {
 	b := &strings.Builder{}
 	templates.ExecuteTemplate(b, name+"_body", data)
 	return b.String()
 }
 
-func (s *SaturdayDisco) emailForBoss(name string, data EmailData) mail.Email {
+func (s *SaturdayDisco) emailForBoss(name string, data TemplateData) mail.Email {
 	return mail.E().
 		WithFrom(s.config.SaturdayDiscoEmail).
 		WithTo(s.config.BossEmail).
@@ -232,7 +316,7 @@ func (s *SaturdayDisco) emailForBoss(name string, data EmailData) mail.Email {
 		WithBody(s.emailBody(name, data))
 }
 
-func (s *SaturdayDisco) emailForList(name string, data EmailData) mail.Email {
+func (s *SaturdayDisco) emailForList(name string, data TemplateData) mail.Email {
 	return mail.E().
 		WithFrom(s.config.SaturdayDiscoEmail).
 		WithTo(s.config.SaturdayDiscoList).
@@ -254,45 +338,81 @@ func (s *SaturdayDisco) dance() {
 			s.log("{{yellow}}received a command{{/}}")
 			s.handleCommand(command)
 		case c := <-s.snapshotC:
-			s.log("{{yellow}}received a snapshot request{{/}}")
 			c <- s.SaturdayDiscoSnapshot.dup()
 		}
 	}
 }
 
+var setCommandRegex = regexp.MustCompile(`^/set\s+(.+)+\s+(\d+)$`)
+
 func (s *SaturdayDisco) processEmail(email mail.Email) {
+	s.logi(0, "{{yellow}}Processing Email:{{/}}")
+	s.logi(1, "Email: %s", email.String())
 	c := Command{Email: email}
 	isAdminReply := email.From.Equals(s.config.BossEmail) &&
 		len(email.To) == 1 &&
 		len(email.CC) == 0 &&
 		email.To[0].Equals(s.config.SaturdayDiscoEmail) &&
 		strings.HasPrefix(email.Subject, "Re: [")
+	isAdminCommand := email.From.Equals(s.config.BossEmail) &&
+		!email.IncludesRecipient(s.config.SaturdayDiscoList) &&
+		email.Text != ""
+	isPotentialPlayerCommand := !email.From.Equals(s.config.BossEmail)
+
+	var err error
 	if isAdminReply {
 		if strings.HasPrefix(email.Subject, "Re: [invite-approval-request]") {
 			c.CommandType = CommandRequestedInviteApprovalReply
+		} else if strings.HasPrefix(email.Subject, "Re: [badger-approval-request]") {
+			c.CommandType = CommandRequestedBadgerApprovalReply
+		} else if strings.HasPrefix(email.Subject, "Re: [game-on-approval-request]") {
+			c.CommandType = CommandRequestedGameOnApprovalReply
 		} else {
-			c.CommandType = CommandInvalidReply
 			c.Error = fmt.Errorf("invalid reply subject: %s", email.Subject)
 		}
-		if c.CommandType != CommandInvalidReply {
+		if c.Error == nil {
 			if strings.HasPrefix(email.Text, "/approve") || strings.HasPrefix(email.Text, "/yes") || strings.HasPrefix(email.Text, "/shipit") {
 				c.Approved = true
 			} else if strings.HasPrefix(email.Text, "/deny") || strings.HasPrefix(email.Text, "/no") {
 				c.Approved = false
 			} else {
-				c.CommandType = CommandInvalidReply
 				c.Error = fmt.Errorf("invalid command in reply, must be one of /approve, /yes, /shipit, /deny, or /no")
 			}
 		}
-		if c.CommandType != CommandInvalidReply {
+		if c.Error == nil {
 			idxFirstNewline := strings.Index(email.Text, "\n")
 			if idxFirstNewline > -1 {
 				c.AdditionalContent = strings.Trim(email.Text[idxFirstNewline:], "\n")
 			}
+		} else {
+			c.CommandType = CommandInvalidReply
 		}
+	} else if isAdminCommand {
+		commandLine := strings.Split(strings.TrimSpace(email.Text), "\n")[0]
+		if match := setCommandRegex.FindAllStringSubmatch(commandLine, -1); match != nil {
+			c.CommandType = CommandAdminSetCount
+			c.EmailAddress = mail.EmailAddress(match[0][1])
+			c.Count, err = strconv.Atoi(match[0][2])
+			if err != nil {
+				c.Error = fmt.Errorf("invalid count for /set command: %s", match[0][2])
+			}
+		} else if strings.HasPrefix(commandLine, "/status") {
+			c.CommandType = CommandAdminStatus
+		} else {
+			c.Error = fmt.Errorf("could not extract valid command from: %s", commandLine)
+		}
+		if c.Error != nil {
+			c.CommandType = CommandAdminInvalid
+		}
+	} else if isPotentialPlayerCommand {
+		//TODO
 	} else {
-		c.CommandType = CommandInvalid
-		c.Error = fmt.Errorf("unable to parse command")
+		//this is not a command
+		return
+	}
+
+	if c.Error != nil {
+		s.logi(1, "{{red}}unable to extract command from email: %s{{/}}", c.Error.Error())
 	}
 
 	s.commandC <- c
@@ -300,7 +420,6 @@ func (s *SaturdayDisco) processEmail(email mail.Email) {
 
 func (s *SaturdayDisco) transitionTo(state SaturdayDiscoState) {
 	switch state {
-	//TODO: make sure i've got 'em all!
 	case StatePending:
 		s.NextEvent = s.T.Add(-4*day - 4*time.Hour) //Tuesday, 6am
 	case StateInviteSent:
@@ -333,27 +452,43 @@ func (s *SaturdayDisco) performNextEvent() {
 			StateInviteSent, s.retryNextEventErrorHandler)
 	case StateInviteSent:
 		if s.hasQuorum() {
-			// s.sendEmail("request-game-on-approval-email", StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
+			s.logi(1, "{{coral}}we have quorum!  asking for permission to send game-on{{/}}")
+			s.sendEmail(s.emailForBoss("request_game_on_approval", data),
+				StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
-			// s.sendEmail("request-badger-approval-email", StateRequestedBadgerApproval, s.retryNextEventErrorHandler)
+			s.logi(1, "{{coral}}sending badger approval request to boss{{/}}")
+			s.sendEmail(s.emailForBoss("request_badger_approval", data),
+				StateRequestedBadgerApproval, s.retryNextEventErrorHandler)
 		}
 	case StateRequestedBadgerApproval:
 		if s.hasQuorum() {
-			// s.sendEmail("request-game-on-approval-email", StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
+			s.logi(1, "{{coral}}we have quorum!  asking for permission to send game-on{{/}}")
+			s.sendEmail(s.emailForBoss("request_game_on_approval", data),
+				StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
-			// s.sendEmail("badger-email", StateBadgerSent, s.retryNextEventErrorHandler)
+			s.logi(1, "{{green}}time's up, sending badger e-mail{{/}}")
+			s.sendEmail(s.emailForList("badger", data),
+				StateBadgerSent, s.retryNextEventErrorHandler)
 		}
 	case StateBadgerSent, StateBadgerNotSent:
 		if s.hasQuorum() {
-			// s.sendEmail("request-game-on-approval-email", StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
+			s.logi(1, "{{coral}}we have quorum!  asking for permission to send game-on{{/}}")
+			s.sendEmail(s.emailForBoss("request_game_on_approval", data),
+				StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
-			// s.sendEmail("request-no-game-approval-email", StateRequestedNoGameApproval, s.retryNextEventErrorHandler)
+			s.logi(1, "{{coral}}we still don't have quorum.  asking for permission to send no-game{{/}}")
+			s.sendEmail(s.emailForBoss("request_no_game_approval", data),
+				StateRequestedNoGameApproval, s.retryNextEventErrorHandler)
 		}
 	case StateRequestedGameOnApproval:
 		if s.hasQuorum() {
-			// s.sendEmail("game-on-email", StateGameOnSent, s.retryNextEventErrorHandler)
+			s.logi(1, "{{green}}we have quorum and time's up! sending game-on{{/}}")
+			s.sendEmail(s.emailForList("game_on", data),
+				StateGameOnSent, s.retryNextEventErrorHandler)
 		} else {
-			// s.sendEmail("request-no-game-approval-email", StateRequestedNoGameApproval, s.retryNextEventErrorHandler)
+			s.logi(1, "{{coral}}we lost quorum.  asking for permission to send no-game{{/}}")
+			s.sendEmail(s.emailForBoss("request_no_game_approval", data),
+				StateRequestedNoGameApproval, s.retryNextEventErrorHandler)
 		}
 	case StateRequestedNoGameApproval:
 		if s.hasQuorum() {
@@ -362,7 +497,7 @@ func (s *SaturdayDisco) performNextEvent() {
 			// s.sendEmail("no-game-email", StateNoGameSent, s.retryNextEventErrorHandler)
 		}
 	case StateGameOnSent:
-		// s.sendEmail("reminder-email", StateReminderSent, s.retryNextEventErrorHandler)
+		s.sendEmail(s.emailForList("reminder", data), StateReminderSent, s.retryNextEventErrorHandler)
 	case StateNoInviteSent, StateNoGameSent, StateReminderSent, StateAbort:
 		s.reset()
 	}
@@ -373,9 +508,14 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 	case CommandRequestedInviteApprovalReply, CommandRequestedBadgerApprovalReply, CommandRequestedGameOnApprovalReply, CommandRequestedNoGameApprovalReply:
 		s.handleReplyCommand(command)
 	case CommandInvalidReply:
-		//		s.sendEmailWithNoTransition("invalid-reply-email")
+		s.logi(1, "{{red}}boss sent me an invalid reply{{/}}")
+		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+			s.emailBody("invalid_admin_email",
+				s.emailData().WithError(command.Error))))
 	case CommandAdminStatus:
-		//		s.sendEmailWithNoTransition("full-state-dump-email")
+		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+			s.emailBody("boss_status",
+				s.emailData())))
 	case CommandAdminAbort:
 		s.transitionTo(StateAbort)
 		//		s.sendEmailWithNoTransition("acknowledge-abort")
@@ -388,16 +528,22 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 			// s.sendEmail("no-game-email", StateNoGameSent, s.replyWithFailureErrorHandler)
 		}
 	case CommandAdminSetCount:
-		s.Count[command.User.Address()] = command.Count
-		//		s.sendEmailWithNoTransition("acknowledge-admin-set-count") //includes status
+		s.logi(1, "{{green}}boss has asked me to adjust a participant count{{/}}")
+		s.Participants = s.Participants.UpdateCount(command.EmailAddress, command.Count, command.Email)
+		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+			s.emailBody("acknowledge_admin_set_count",
+				s.emailData().WithMessage("%s to %d", command.EmailAddress, command.Count))))
 	case CommandAdminInvalid:
-		//		s.sendEmailWithNoTransition("invalid-admin-email")
+		s.logi(1, "{{red}}boss sent me an invalid command{{/}}")
+		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+			s.emailBody("invalid_admin_email",
+				s.emailData().WithError(command.Error))))
 	case CommandPlayerStatus:
 		//		s.sendEmailWithNoTransition("public-status-email") //reply-all cc boss too, has logic around things like "hasn't been called yet"
 	case CommandPlayerUnsubscribe:
 		//		s.sendEmailWithNoTransition("unsubscribe-requested") //to boss only
 	case CommandPlayerSetCount:
-		s.Count[command.User.Address()] = command.Count
+		s.Participants = s.Participants.UpdateCount(command.EmailAddress, command.Count, command.Email)
 		//		s.sendEmailWithNoTransition("acknowledge-player-set-count") //cc boss
 	case CommandPlayerUnsure:
 		if !command.Email.IncludesRecipient(s.config.SaturdayDiscoList) {
@@ -407,7 +553,7 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 }
 
 func (s *SaturdayDisco) handleReplyCommand(command Command) {
-	data := s.emailData().WithAdditionalContent(command.AdditionalContent)
+	data := s.emailData().WithMessage(command.AdditionalContent).WithError(command.Error)
 	var expectedState SaturdayDiscoState
 	switch command.CommandType {
 	case CommandRequestedInviteApprovalReply:
@@ -439,9 +585,24 @@ func (s *SaturdayDisco) handleReplyCommand(command Command) {
 			s.sendEmail(s.emailForList("invitation", data),
 				StateInviteSent, s.replyWithFailureErrorHandler)
 		case CommandRequestedBadgerApprovalReply:
-			// s.sendEmail("badger-email", StateBadgerSent, s.replyWithFailureErrorHandler)
+			s.logi(1, "{{green}}boss says it's ok to send the badger, sending badger e-mail{{/}}")
+			s.sendEmail(s.emailForList("badger", data),
+				StateBadgerSent, s.replyWithFailureErrorHandler)
 		case CommandRequestedGameOnApprovalReply:
-			// s.sendEmail("game-on-email", StateGameOnSent, s.replyWithFailureErrorHandler)
+			if s.hasQuorum() {
+				s.logi(1, "{{green}}boss says it's ok to send game on, sending game-on e-mail{{/}}")
+				s.sendEmail(s.emailForList("game_on", data),
+					StateGameOnSent, s.replyWithFailureErrorHandler)
+			} else {
+				s.logi(1, "{{red}}boss says it's ok to send game on, but we don't have quorum, sending error email then no-game approval request{{/}}")
+				s.sendEmailWithNoTransition(command.Email.Reply(
+					s.config.SaturdayDiscoEmail,
+					s.emailBody("invalid_admin_email", data.WithError(fmt.Errorf("Quorum was lost before this approval came in.  Starting the No-Game flow soon."))),
+				))
+				s.sendEmail(s.emailForBoss("request_no_game_approval", data),
+					StateRequestedNoGameApproval, s.replyWithFailureErrorHandler)
+			}
+
 		case CommandRequestedNoGameApprovalReply:
 			// s.sendEmail("no-game-email", StateNoGameSent, s.replyWithFailureErrorHandler)
 		}
@@ -452,9 +613,12 @@ func (s *SaturdayDisco) handleReplyCommand(command Command) {
 			s.sendEmail(s.emailForList("no_invitation", data),
 				StateNoInviteSent, s.replyWithFailureErrorHandler)
 		case CommandRequestedBadgerApprovalReply:
+			s.logi(1, "{{red}}boss says not to badger folks, so i won't{{/}}")
 			s.transitionTo(StateBadgerNotSent)
 		case CommandRequestedGameOnApprovalReply:
-			// s.sendEmail("no-game-email", StateNoGameSent, s.replyWithFailureErrorHandler)
+			s.logi(1, "{{green}}boss says it's not ok to send game on, sending no-game e-mail{{/}}")
+			s.sendEmail(s.emailForList("no_game", data),
+				StateNoGameSent, s.replyWithFailureErrorHandler)
 		case CommandRequestedNoGameApprovalReply:
 			s.transitionTo(StateAbort)
 		}
@@ -500,7 +664,7 @@ func (s *SaturdayDisco) sendEmailWithNoTransition(email mail.Email) {
 func (s *SaturdayDisco) reset() {
 	s.alarmClock.Stop()
 	s.State = StateInvalid
-	s.Count = map[string]int{}
+	s.Participants = Participants{}
 	s.T = NextSaturdayAt10(s.alarmClock.Time())
 	s.NextEvent = time.Time{}
 	s.transitionTo(StatePending)

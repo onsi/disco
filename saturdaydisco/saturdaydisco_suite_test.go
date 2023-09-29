@@ -8,10 +8,12 @@ import (
 	"github.com/onsi/disco/saturdaydisco"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/format"
 	"github.com/onsi/gomega/gleak"
 )
 
 func TestSaturdaydisco(t *testing.T) {
+	format.TruncatedDiff = false
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Saturdaydisco Suite")
 }
@@ -61,8 +63,38 @@ func HaveHTML(html any) OmegaMatcher {
 	return HaveField("HTML", html)
 }
 
+func HaveRecipients(expected any) OmegaMatcher {
+	matcher, ok := expected.(OmegaMatcher)
+	if !ok {
+		matcher = Equal(expected)
+	}
+	return WithTransform(func(e mail.Email) []mail.EmailAddress {
+		actual := []mail.EmailAddress{}
+		actual = append(actual, e.To...)
+		actual = append(actual, e.CC...)
+		return actual
+	}, matcher)
+}
+
 func HaveState(state saturdaydisco.SaturdayDiscoState) OmegaMatcher {
 	return HaveField("State", state)
+}
+
+func HaveCount(count int) OmegaMatcher {
+	return WithTransform(func(snapshot saturdaydisco.SaturdayDiscoSnapshot) int {
+		return snapshot.Participants.Count()
+	}, Equal(count))
+}
+
+func HaveParticipantWithCount(address mail.EmailAddress, count int) OmegaMatcher {
+	return WithTransform(func(snapshot saturdaydisco.SaturdayDiscoSnapshot) int {
+		for _, p := range snapshot.Participants {
+			if p.Address.Equals(address) {
+				return p.Count
+			}
+		}
+		return 0
+	}, Equal(count))
 }
 
 func BeOn(day time.Weekday, hour int, optionalMinute ...int) OmegaMatcher {

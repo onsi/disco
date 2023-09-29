@@ -2,13 +2,11 @@
 
 {{define "invitation_subject"}}Saturday Bible Park Frisbee {{.GameDate}}{{end}}
 
-{{define "invitation_body"}}{{- if .AdditionalContent}}{{.AdditionalContent}}
+{{define "invitation_body"}}{{- if .Message}}{{.Message}}
 
 {{end}}Please let me know if you'll be joining us this Saturday **{{.GameDate}}**.
 
-**Where**: [James Bible Park](https://maps.app.goo.gl/P1vm2nkZdYLGZbxb9)
-**When**: Saturday, {{.GameTime}}
-**What**: Bring a red and a blue shirt if you have them
+{{template "game_details" .}}
 
 Reminder that we also play at lunch during the week. Visit [sedenverultimate.net](https://www.sedenverultimate.net) to sign up for the lunchtime mailing list.
 
@@ -19,7 +17,7 @@ Reminder that we also play at lunch during the week. Visit [sedenverultimate.net
 
 {{define "no_invitation_subject"}}No Saturday Bible Park Frisbee This Week{{end}}
 
-{{define "no_invitation_body"}}{{- if .AdditionalContent}}{{.AdditionalContent}}
+{{define "no_invitation_body"}}{{- if .Message}}{{.Message}}
 
 {{end}}No Saturday game this week.  We'll try again next week!
 

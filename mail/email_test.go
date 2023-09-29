@@ -3,7 +3,6 @@ package mail_test
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/format"
 
 	"github.com/onsi/disco/mail"
 )
@@ -31,7 +30,6 @@ var _ = Describe("Email", func() {
 		})
 
 		It("can reply to an e-mail", func() {
-			format.TruncatedDiff = false
 			email = email.Reply("disco@sedenverultimate.net", "Got **your** message.\n\n_Thanks!_")
 			Ω(email.MessageID).Should(BeZero())
 			Ω(email.InReplyTo).Should(Equal("<original-id>"))
@@ -44,7 +42,6 @@ var _ = Describe("Email", func() {
 		})
 
 		It("can reply all to an e-mail", func() {
-			format.TruncatedDiff = false
 			email = email.ReplyAll("disco@sedenverultimate.net", "Got **your** message.\n\n_Thanks!_")
 			Ω(email.MessageID).Should(BeZero())
 			Ω(email.InReplyTo).Should(Equal("<original-id>"))

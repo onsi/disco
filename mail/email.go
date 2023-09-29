@@ -19,8 +19,8 @@ type Email struct {
 	InReplyTo string
 
 	From    EmailAddress
-	To      []EmailAddress
-	CC      []EmailAddress
+	To      EmailAddresses
+	CC      EmailAddresses
 	Subject string
 	Date    string
 
@@ -29,7 +29,7 @@ type Email struct {
 }
 
 func (e Email) String() string {
-	return fmt.Sprintf("From: %s\nTo: %s\nCC: %s\nSubject: %s\n\n%s", e.From, e.To, e.CC, e.Subject, e.Text)
+	return fmt.Sprintf("From: %s on %s\nTo: %s\nCC: %s\nSubject: %s\n\n%s", e.From, e.Date, e.To, e.CC, e.Subject, e.Text)
 }
 
 func stripMarkdown(md Markdown) string {
@@ -141,7 +141,7 @@ func (e Email) Reply(from EmailAddress, body any) Email {
 	return Email{
 		InReplyTo: e.MessageID,
 		From:      from,
-		To:        []EmailAddress{e.From},
+		To:        EmailAddresses{e.From},
 		Subject:   replySubject(e.Subject),
 		Text:      text,
 		HTML:      html,
@@ -150,7 +150,7 @@ func (e Email) Reply(from EmailAddress, body any) Email {
 
 func (e Email) ReplyAll(from EmailAddress, body any) Email {
 	text, html := synthesizeReplyBodies(e, body)
-	ccs := []EmailAddress{}
+	ccs := EmailAddresses{}
 	for _, to := range e.To {
 		if !(to.Equals(from) || to.Equals(e.From)) {
 			ccs = append(ccs, to)
@@ -164,7 +164,7 @@ func (e Email) ReplyAll(from EmailAddress, body any) Email {
 	return Email{
 		InReplyTo: e.MessageID,
 		From:      from,
-		To:        []EmailAddress{e.From},
+		To:        EmailAddresses{e.From},
 		CC:        ccs,
 		Subject:   replySubject(e.Subject),
 		Text:      text,
@@ -176,12 +176,12 @@ func (e Email) ReplyWithoutQuote(from EmailAddress, body any) Email {
 	return Email{
 		InReplyTo: e.MessageID,
 		From:      from,
-		To:        []EmailAddress{e.From},
+		To:        EmailAddresses{e.From},
 		Subject:   replySubject(e.Subject),
 	}.WithBody(body)
 }
 func (e Email) ReplyAllWithoutQuote(from EmailAddress, body any) Email {
-	ccs := []EmailAddress{}
+	ccs := EmailAddresses{}
 	for _, to := range e.To {
 		if !(to.Equals(from) || to.Equals(e.From)) {
 			ccs = append(ccs, to)
@@ -195,7 +195,7 @@ func (e Email) ReplyAllWithoutQuote(from EmailAddress, body any) Email {
 	return Email{
 		InReplyTo: e.MessageID,
 		From:      from,
-		To:        []EmailAddress{e.From},
+		To:        EmailAddresses{e.From},
 		CC:        ccs,
 		Subject:   replySubject(e.Subject),
 	}.WithBody(body)
