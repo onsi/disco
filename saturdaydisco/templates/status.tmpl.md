@@ -18,6 +18,10 @@ Participants:{{range $idx, $participant := .Participants}}
 Total Count: {{.Participants.Count}}
 Has Quorum: {{.HasQuorum}}{{end}}
 
+Commands: /status, /game-on, /no-game, /abort, /set Player Name <player@example.com> N
+Any content on the line below /game-on and /no-game is sent with the e-mail
+/abort stops the scheduler but continues to track players and allows you to manually control /game-on and /no-game
+
 /* public_status */
 
 {{define "public_status"}}Players: {{.Participants.Public}}{{end}}

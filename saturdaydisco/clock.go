@@ -5,13 +5,23 @@ import (
 	"time"
 )
 
+var Timezone *time.Location
+
+func init() {
+	var err error
+	Timezone, err = time.LoadLocation("America/Denver")
+	if err != nil {
+		panic(err)
+	}
+}
+
 func NextSaturdayAt10(now time.Time) time.Time {
-	now = now.In(time.Local)
+	now = now.In(Timezone)
 	if now.Weekday() == time.Saturday && now.Hour() >= 10 {
-		return time.Date(now.Year(), now.Month(), now.Day()+7, 10, 0, 0, 0, time.Local)
+		return time.Date(now.Year(), now.Month(), now.Day()+7, 10, 0, 0, 0, Timezone)
 	}
 	deltaDay := int(time.Saturday - now.Weekday())
-	return time.Date(now.Year(), now.Month(), now.Day()+deltaDay, 10, 0, 0, 0, time.Local)
+	return time.Date(now.Year(), now.Month(), now.Day()+deltaDay, 10, 0, 0, 0, Timezone)
 }
 
 type AlarmClockInt interface {

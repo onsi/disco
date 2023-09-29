@@ -30,7 +30,6 @@ func init() {
 	}
 
 	fmt.Println(templates.DefinedTemplates())
-
 }
 
 const QUORUM = 8
@@ -367,6 +366,8 @@ func (s *SaturdayDisco) processEmail(email mail.Email) {
 			c.CommandType = CommandRequestedBadgerApprovalReply
 		} else if strings.HasPrefix(email.Subject, "Re: [game-on-approval-request]") {
 			c.CommandType = CommandRequestedGameOnApprovalReply
+		} else if strings.HasPrefix(email.Subject, "Re: [no-game-approval-request]") {
+			c.CommandType = CommandRequestedNoGameApprovalReply
 		} else {
 			c.Error = fmt.Errorf("invalid reply subject: %s", email.Subject)
 		}
@@ -398,6 +399,20 @@ func (s *SaturdayDisco) processEmail(email mail.Email) {
 			}
 		} else if strings.HasPrefix(commandLine, "/status") {
 			c.CommandType = CommandAdminStatus
+		} else if strings.HasPrefix(commandLine, "/abort") {
+			c.CommandType = CommandAdminAbort
+		} else if strings.HasPrefix(commandLine, "/game-on") {
+			c.CommandType = CommandAdminGameOn
+			idxFirstNewline := strings.Index(email.Text, "\n")
+			if idxFirstNewline > -1 {
+				c.AdditionalContent = strings.Trim(email.Text[idxFirstNewline:], "\n")
+			}
+		} else if strings.HasPrefix(commandLine, "/no-game") {
+			c.CommandType = CommandAdminNoGame
+			idxFirstNewline := strings.Index(email.Text, "\n")
+			if idxFirstNewline > -1 {
+				c.AdditionalContent = strings.Trim(email.Text[idxFirstNewline:], "\n")
+			}
 		} else {
 			c.Error = fmt.Errorf("could not extract valid command from: %s", commandLine)
 		}
@@ -492,9 +507,13 @@ func (s *SaturdayDisco) performNextEvent() {
 		}
 	case StateRequestedNoGameApproval:
 		if s.hasQuorum() {
-			// s.sendEmail("request-game-on-approval-email", StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
+			s.logi(1, "{{coral}}we have quorum!  asking for permission to send game-on{{/}}")
+			s.sendEmail(s.emailForBoss("request_game_on_approval", data),
+				StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
-			// s.sendEmail("no-game-email", StateNoGameSent, s.retryNextEventErrorHandler)
+			s.logi(1, "{{green}}time's up, sending no-game e-mail{{/}}")
+			s.sendEmail(s.emailForList("no_game", data),
+				StateNoGameSent, s.retryNextEventErrorHandler)
 		}
 	case StateGameOnSent:
 		s.sendEmail(s.emailForList("reminder", data), StateReminderSent, s.retryNextEventErrorHandler)
@@ -510,23 +529,22 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 	case CommandInvalidReply:
 		s.logi(1, "{{red}}boss sent me an invalid reply{{/}}")
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
-			s.emailBody("invalid_admin_email",
-				s.emailData().WithError(command.Error))))
+			s.emailBody("invalid_admin_email", s.emailData().WithError(command.Error))))
 	case CommandAdminStatus:
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
-			s.emailBody("boss_status",
-				s.emailData())))
+			s.emailBody("boss_status", s.emailData())))
 	case CommandAdminAbort:
-		s.transitionTo(StateAbort)
-		//		s.sendEmailWithNoTransition("acknowledge-abort")
+		s.sendEmail(command.Email.Reply(s.config.SaturdayDiscoEmail,
+			s.emailBody("abort", s.emailData())),
+			StateAbort, s.replyWithFailureErrorHandler)
 	case CommandAdminGameOn:
-		// s.sendEmail("game-on-email", StateGameOnSent, s.replyWithFailureErrorHandler)
+		s.sendEmail(s.emailForList("game_on",
+			s.emailData().WithMessage(command.AdditionalContent)),
+			StateGameOnSent, s.replyWithFailureErrorHandler)
 	case CommandAdminNoGame:
-		if command.AdditionalContent == "" {
-			//			s.sendEmailWithNoTransition("invalid-no-game-email")
-		} else {
-			// s.sendEmail("no-game-email", StateNoGameSent, s.replyWithFailureErrorHandler)
-		}
+		s.sendEmail(s.emailForList("no_game",
+			s.emailData().WithMessage(command.AdditionalContent)),
+			StateNoGameSent, s.replyWithFailureErrorHandler)
 	case CommandAdminSetCount:
 		s.logi(1, "{{green}}boss has asked me to adjust a participant count{{/}}")
 		s.Participants = s.Participants.UpdateCount(command.EmailAddress, command.Count, command.Email)
@@ -578,17 +596,28 @@ func (s *SaturdayDisco) handleReplyCommand(command Command) {
 		// s.sendEmailWithNoTransition("too-many-attempts-email")
 		return
 	}
-	if command.Approved {
-		switch command.CommandType {
-		case CommandRequestedInviteApprovalReply:
+	switch command.CommandType {
+	case CommandRequestedInviteApprovalReply:
+		if command.Approved {
 			s.logi(1, "{{green}}boss says it's ok to send the invite, sending invitation e-mail{{/}}")
 			s.sendEmail(s.emailForList("invitation", data),
 				StateInviteSent, s.replyWithFailureErrorHandler)
-		case CommandRequestedBadgerApprovalReply:
+		} else {
+			s.logi(1, "{{orange}}boss says it's not ok to send the invite, sending no-invitation e-mail{{/}}")
+			s.sendEmail(s.emailForList("no_invitation", data),
+				StateNoInviteSent, s.replyWithFailureErrorHandler)
+		}
+	case CommandRequestedBadgerApprovalReply:
+		if command.Approved {
 			s.logi(1, "{{green}}boss says it's ok to send the badger, sending badger e-mail{{/}}")
 			s.sendEmail(s.emailForList("badger", data),
 				StateBadgerSent, s.replyWithFailureErrorHandler)
-		case CommandRequestedGameOnApprovalReply:
+		} else {
+			s.logi(1, "{{red}}boss says not to badger folks, so i won't{{/}}")
+			s.transitionTo(StateBadgerNotSent)
+		}
+	case CommandRequestedGameOnApprovalReply:
+		if command.Approved {
 			if s.hasQuorum() {
 				s.logi(1, "{{green}}boss says it's ok to send game on, sending game-on e-mail{{/}}")
 				s.sendEmail(s.emailForList("game_on", data),
@@ -602,25 +631,33 @@ func (s *SaturdayDisco) handleReplyCommand(command Command) {
 				s.sendEmail(s.emailForBoss("request_no_game_approval", data),
 					StateRequestedNoGameApproval, s.replyWithFailureErrorHandler)
 			}
-
-		case CommandRequestedNoGameApprovalReply:
-			// s.sendEmail("no-game-email", StateNoGameSent, s.replyWithFailureErrorHandler)
-		}
-	} else {
-		switch command.CommandType {
-		case CommandRequestedInviteApprovalReply:
-			s.logi(1, "{{orange}}boss says it's not ok to send the invite, sending no-invitation e-mail{{/}}")
-			s.sendEmail(s.emailForList("no_invitation", data),
-				StateNoInviteSent, s.replyWithFailureErrorHandler)
-		case CommandRequestedBadgerApprovalReply:
-			s.logi(1, "{{red}}boss says not to badger folks, so i won't{{/}}")
-			s.transitionTo(StateBadgerNotSent)
-		case CommandRequestedGameOnApprovalReply:
+		} else {
 			s.logi(1, "{{green}}boss says it's not ok to send game on, sending no-game e-mail{{/}}")
 			s.sendEmail(s.emailForList("no_game", data),
 				StateNoGameSent, s.replyWithFailureErrorHandler)
-		case CommandRequestedNoGameApprovalReply:
-			s.transitionTo(StateAbort)
+		}
+	case CommandRequestedNoGameApprovalReply:
+		if s.hasQuorum() {
+			s.logi(1, "{{red}}boss says it's ok to send no game, but we have quorum now, sending error email then no-game approval request{{/}}")
+			s.sendEmailWithNoTransition(command.Email.Reply(
+				s.config.SaturdayDiscoEmail,
+				s.emailBody("invalid_admin_email", data.WithError(fmt.Errorf("Quorum was gained before this came in.  Starting the Game-On flow soon."))),
+			))
+			s.sendEmail(s.emailForBoss("request_game_on_approval", data),
+				StateRequestedGameOnApproval, s.replyWithFailureErrorHandler)
+		} else {
+			if command.Approved {
+				s.logi(1, "{{green}}boss says it's ok to send no game, sending no-game e-mail{{/}}")
+				s.sendEmail(s.emailForList("no_game", data),
+					StateNoGameSent, s.replyWithFailureErrorHandler)
+			} else {
+				s.logi(1, "{{green}}boss says not to send the no-game email so i'm aborting{{/}}")
+				s.sendEmail(command.Email.Reply(
+					s.config.SaturdayDiscoEmail,
+					s.emailBody("abort", data)),
+					StateAbort, s.replyWithFailureErrorHandler)
+
+			}
 		}
 	}
 }
