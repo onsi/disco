@@ -55,7 +55,7 @@ var _ = Describe("Interpreter", func() {
 		Entry(nil, "John can't any more", 5, CommandPlayerSetCount, 4),
 		Entry(nil, "Both boys are out this week, but I can still come", 3, CommandPlayerSetCount, 1),
 		Entry(nil, "Sorry, something's come up and none of us can make it any more", 3, CommandPlayerSetCount, 0),
-		Entry(nil, "My cousin's in town and can join too!", 1, CommandPlayerSetCount, 2),
+		Entry(nil, "My cousin's in town and can join me too!", 1, CommandPlayerSetCount, 2),
 
 		//unsubscribe
 		Entry(nil, "unsubscribe", 0, CommandPlayerUnsubscribe),
