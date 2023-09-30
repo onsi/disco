@@ -13,14 +13,6 @@ import (
 	. "github.com/onsi/disco/saturdaydisco"
 )
 
-/*
-TODO:
-
-- before error testing, commit and then step back.  is there a cleaner way to express the state machine?
-- spot-check retries for state machine
-- spot-check retries for e-mail commands
-*/
-
 var _ = Describe("SaturdayDisco", func() {
 	var outbox *mail.FakeOutbox
 	var clock *FakeAlarmClock
@@ -237,6 +229,7 @@ var _ = Describe("SaturdayDisco", func() {
 			BeforeEach(func() {
 				clock.Fire() // invite approval
 				clock.Fire() // invite
+				bossToDisco("/set random@example.com 0")
 				bossToDisco("/set player@example.com 1")
 				Eventually(disco.GetSnapshot).Should(HaveCount(1))
 				bossToDisco("/set onsijoe@gmail.com 2")
@@ -1165,6 +1158,34 @@ var _ = Describe("SaturdayDisco", func() {
 						})
 					})
 				}
+			})
+		})
+
+		Describe("spot-checking retry logic", func() {
+			Context("when an email for a scheduled event is supposed to be sent, but it fails to send", func() {
+				BeforeEach(func() {
+					outbox.SetError(fmt.Errorf("boom"))
+					clock.Fire()
+					Eventually(le).Should(HaveSubject("Help!"))
+					Ω(clock.Time()).Should(BeOn(time.Tuesday, 6))
+				})
+
+				It("sends an error email", func() {
+					Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
+					Ω(le()).Should(BeSentTo(conf.BossEmail))
+					Ω(le()).Should(HaveText(ContainSubstring("boom")))
+					Ω(le()).Should(HaveText(ContainSubstring("[invite-approval-request]"))) // the email we were trying to send is sent
+					Ω(disco.GetSnapshot()).Should(HaveState(StatePending))
+				})
+
+				It("retries in five minutes", func() {
+					outbox.SetError(nil)
+					clock.Fire()
+					Ω(clock.Time()).Should(BeOn(time.Tuesday, 6, 5))
+					Eventually(disco.GetSnapshot()).Should(HaveState(StateRequestedInviteApproval))
+					Eventually(le).Should(HaveSubject("[invite-approval-request] Can I send this week's invite?"))
+
+				})
 			})
 		})
 	})

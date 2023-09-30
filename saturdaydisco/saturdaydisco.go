@@ -98,14 +98,21 @@ type Command struct {
 	Count        int
 
 	Error error
-
-	Attempts int
 }
 
 type Participant struct {
 	Address        mail.EmailAddress
 	Count          int
 	RelevantEmails []mail.Email
+}
+
+func (p Participant) dup() Participant {
+	emails := []mail.Email{}
+	return Participant{
+		Address:        p.Address,
+		Count:          p.Count,
+		RelevantEmails: append(emails, p.RelevantEmails...),
+	}
 }
 
 func (p Participant) IndentedRelevantEmails() string {
@@ -161,18 +168,21 @@ func (p Participants) Public() string {
 		return "No one's signed up yet"
 	}
 
-	out := &strings.Builder{}
-	for i, participant := range p {
-		if p.Count() == 0 {
-			continue
+	validP := Participants{}
+	for _, participant := range p {
+		if participant.Count > 0 {
+			validP = append(validP, participant)
 		}
+	}
+	out := &strings.Builder{}
+	for i, participant := range validP {
 		out.WriteString(participant.Address.Name())
 		if participant.Count > 1 {
 			fmt.Fprintf(out, " **(%d)**", participant.Count)
 		}
-		if i < len(p)-2 {
+		if i < len(validP)-2 {
 			out.WriteString(", ")
-		} else if i == len(p)-2 {
+		} else if i == len(validP)-2 {
 			out.WriteString(" and ")
 		}
 	}
@@ -181,7 +191,9 @@ func (p Participants) Public() string {
 
 func (p Participants) dup() Participants {
 	participants := make(Participants, len(p))
-	copy(participants, p)
+	for i, participant := range p {
+		participants[i] = participant.dup()
+	}
 	return participants
 }
 
@@ -629,11 +641,6 @@ func (s *SaturdayDisco) handleReplyCommand(command Command) {
 		))
 		return
 	}
-	if command.Attempts > 3 {
-		//this is a reply to command.Email
-		// s.sendEmailWithNoTransition("too-many-attempts-email")
-		return
-	}
 	switch command.CommandType {
 	case CommandRequestedInviteApprovalReply:
 		if command.Approved {
@@ -707,11 +714,17 @@ func (s *SaturdayDisco) retryNextEventErrorHandler(email mail.Email, err error) 
 		Subject: "Help!",
 		Text:    fmt.Sprintf("Saturday Disco failed to send an e-mail during an event transition.\n\n%s\n\nTrying to send:\n\n%s\n\nPlease help!", err.Error(), email.String()),
 	})
-	s.alarmClock.SetAlarm(time.Now().Add(RETRY_DELAY))
+	s.alarmClock.SetAlarm(s.alarmClock.Time().Add(RETRY_DELAY))
 }
 
 func (s *SaturdayDisco) replyWithFailureErrorHandler(email mail.Email, err error) {
-	//TODO
+	s.logi(1, "{{red}}failed while handling a command: %s{{/}}", err.Error())
+	s.outbox.SendEmail(mail.Email{
+		From:    s.config.SaturdayDiscoEmail,
+		To:      []mail.EmailAddress{s.config.BossEmail},
+		Subject: "Help!",
+		Text:    fmt.Sprintf("Saturday Disco failed while trying to handle a command.\n\n%s\n\nTrying to send:\n\n%s\n\nPlease help!", err.Error(), email.String()),
+	})
 }
 
 func (s *SaturdayDisco) sendEmail(email mail.Email, successState SaturdayDiscoState, onFailure func(mail.Email, error)) {
