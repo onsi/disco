@@ -83,11 +83,13 @@ const (
 	CommandPlayerUnsubscribe CommandType = "player_unsubscribe"
 	CommandPlayerSetCount    CommandType = "player_set_count"
 	CommandPlayerUnsure      CommandType = "player_unsure"
+	CommandPlayerError       CommandType = "player_error"
 )
 
 type Command struct {
-	CommandType CommandType
-	Email       mail.Email
+	CommandType            CommandType
+	Email                  mail.Email
+	IsPrivatePlayerCommand bool
 
 	Approved          bool
 	AdditionalContent string
@@ -135,6 +137,15 @@ func (p Participants) UpdateCount(address mail.EmailAddress, count int, relevant
 		Count:          count,
 		RelevantEmails: []mail.Email{relevantEmail},
 	})
+}
+
+func (p Participants) CountFor(address mail.EmailAddress) int {
+	for _, participant := range p {
+		if participant.Address.Equals(address) {
+			return participant.Count
+		}
+	}
+	return 0
 }
 
 func (p Participants) Count() int {
@@ -194,14 +205,15 @@ type SaturdayDisco struct {
 	SaturdayDiscoSnapshot
 	w io.Writer
 
-	alarmClock AlarmClockInt
-	outbox     mail.OutboxInt
-	commandC   chan Command
-	snapshotC  chan chan<- SaturdayDiscoSnapshot
-	config     config.Config
-	lock       *sync.Mutex
-	ctx        context.Context
-	cancel     func()
+	alarmClock  AlarmClockInt
+	outbox      mail.OutboxInt
+	interpreter InterpreterInt
+	commandC    chan Command
+	snapshotC   chan chan<- SaturdayDiscoSnapshot
+	config      config.Config
+	lock        *sync.Mutex
+	ctx         context.Context
+	cancel      func()
 }
 
 type TemplateData struct {
@@ -209,6 +221,8 @@ type TemplateData struct {
 	GameTime string
 	SaturdayDiscoSnapshot
 	HasQuorum bool
+	GameOn    bool
+	GameOff   bool
 
 	Message string
 	Error   error
@@ -227,13 +241,14 @@ func (e TemplateData) WithError(err error) TemplateData {
 	return e
 }
 
-func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockInt, outbox mail.OutboxInt) *SaturdayDisco {
+func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockInt, outbox mail.OutboxInt, interpreter InterpreterInt) *SaturdayDisco {
 	saturdayDisco := &SaturdayDisco{
-		alarmClock: alarmClock,
-		outbox:     outbox,
-		commandC:   make(chan Command),
-		snapshotC:  make(chan chan<- SaturdayDiscoSnapshot),
-		w:          w,
+		alarmClock:  alarmClock,
+		outbox:      outbox,
+		interpreter: interpreter,
+		commandC:    make(chan Command),
+		snapshotC:   make(chan chan<- SaturdayDiscoSnapshot),
+		w:           w,
 
 		config: config,
 		lock:   &sync.Mutex{},
@@ -290,6 +305,8 @@ func (s *SaturdayDisco) emailData() TemplateData {
 		GameTime:              s.T.Format("3:04pm"),
 		SaturdayDiscoSnapshot: s.SaturdayDiscoSnapshot,
 		HasQuorum:             s.hasQuorum(),
+		GameOn:                s.State == StateGameOnSent || s.State == StateReminderSent,
+		GameOff:               s.State == StateNoInviteSent || s.State == StateNoGameSent,
 	}
 }
 
@@ -346,15 +363,13 @@ func (s *SaturdayDisco) processEmail(email mail.Email) {
 	s.logi(0, "{{yellow}}Processing Email:{{/}}")
 	s.logi(1, "Email: %s", email.String())
 	c := Command{Email: email}
-	isAdminReply := email.From.Equals(s.config.BossEmail) &&
+	isAdminCommand := email.From.Equals(s.config.BossEmail) &&
 		len(email.To) == 1 &&
 		len(email.CC) == 0 &&
-		email.To[0].Equals(s.config.SaturdayDiscoEmail) &&
-		strings.HasPrefix(email.Subject, "Re: [")
-	isAdminCommand := email.From.Equals(s.config.BossEmail) &&
-		!email.IncludesRecipient(s.config.SaturdayDiscoList) &&
-		email.Text != ""
-	isPotentialPlayerCommand := !email.From.Equals(s.config.BossEmail)
+		email.To[0].Equals(s.config.SaturdayDiscoEmail)
+	isAdminReply := isAdminCommand && strings.HasPrefix(email.Subject, "Re: [")
+	isPotentialPlayerCommand := !email.From.Equals(s.config.BossEmail) && email.IncludesRecipient(s.config.SaturdayDiscoList)
+	isPrivatePlayerCommand := !email.From.Equals(s.config.BossEmail) && !email.IncludesRecipient(s.config.SaturdayDiscoList) && len(email.Recipients()) == 1
 
 	var err error
 	if isAdminReply {
@@ -412,20 +427,27 @@ func (s *SaturdayDisco) processEmail(email mail.Email) {
 				c.AdditionalContent = strings.Trim(email.Text[idxFirstNewline:], "\n")
 			}
 		} else {
-			c.Error = fmt.Errorf("could not extract valid command from: %s", commandLine)
+			c.Error = fmt.Errorf("invalid command: %s", commandLine)
 		}
 		if c.Error != nil {
 			c.CommandType = CommandAdminInvalid
 		}
-	} else if isPotentialPlayerCommand {
-		//TODO
+	} else if isPotentialPlayerCommand || isPrivatePlayerCommand {
+		potentialCommand, err := s.interpreter.InterpretEmail(email, s.Participants.CountFor(email.From))
+		if err != nil {
+			c.CommandType = CommandPlayerError
+			c.Error = err
+		} else {
+			c = potentialCommand
+			c.IsPrivatePlayerCommand = isPrivatePlayerCommand
+		}
 	} else {
-		//this is not a command
+		//this is not a command - do nothing
 		return
 	}
 
 	if c.Error != nil {
-		s.logi(1, "{{red}}unable to extract command from email: %s{{/}}", c.Error.Error())
+		s.logi(1, "{{red}}unable to extract command from email: %s - %s{{/}}", c.CommandType, c.Error.Error())
 	}
 
 	s.commandC <- c
@@ -555,16 +577,34 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 			s.emailBody("invalid_admin_email",
 				s.emailData().WithError(command.Error))))
 	case CommandPlayerStatus:
-		//		s.sendEmailWithNoTransition("public-status-email") //reply-all cc boss too, has logic around things like "hasn't been called yet"
+		s.logi(1, "{{green}}player is asking for status.{{/}}")
+		s.sendEmailWithNoTransition(command.Email.ReplyAll(s.config.SaturdayDiscoEmail,
+			mail.Markdown(s.emailBody("public_status", s.emailData()))).AndCC(s.config.BossEmail))
+
+		//		s.sendEmailWithNoTransition("public-status-email") //reply-all cc boss too
 	case CommandPlayerUnsubscribe:
-		//		s.sendEmailWithNoTransition("unsubscribe-requested") //to boss only
+		s.logi(1, "{{green}}player asking to unsubscribe.  Acking and looping in the boss.{{/}}")
+		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+			s.emailBody("unsubscribe_player_command", s.emailData())).AndCC(s.config.BossEmail))
+
 	case CommandPlayerSetCount:
+		s.logi(1, "{{green}}player sent a message signing up.{{/}}")
 		s.Participants = s.Participants.UpdateCount(command.EmailAddress, command.Count, command.Email)
-		//		s.sendEmailWithNoTransition("acknowledge-player-set-count") //cc boss
+		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+			mail.Markdown(s.emailBody("acknowledge_player_set_count", s.emailData().WithMessage("%d", command.Count)))).
+			AndCC(s.config.BossEmail))
 	case CommandPlayerUnsure:
-		if !command.Email.IncludesRecipient(s.config.SaturdayDiscoList) {
-			//			s.sendEmailWithNoTransition("invalid-player-email") //to boss only
+		if command.IsPrivatePlayerCommand {
+			s.logi(1, "{{red}}player send a private message that i'm unsure about.  CCing the boss and asking for help.{{/}}")
+			s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+				s.emailBody("unsure_player_command", s.emailData())).AndCC(s.config.BossEmail))
+		} else {
+			s.logi(1, "{{yellow}}unsure about this e-mail but it wasn't sent to me privately so ignoring it{{/}}")
 		}
+	case CommandPlayerError:
+		s.logi(1, "{{red}}encountered an error while processing a player command: %s{{/}}", command.Error.Error())
+		s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
+			s.emailBody("error_player_command", s.emailData().WithError(command.Error))))
 	}
 }
 

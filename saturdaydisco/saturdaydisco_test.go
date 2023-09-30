@@ -1,6 +1,7 @@
 package saturdaydisco_test
 
 import (
+	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -15,13 +16,7 @@ import (
 /*
 TODO:
 
-- test the commands
-- think about behavior when aborted.  becomes completely command driven?
-- spot-check errors in the e-mail command parser
-
 - before error testing, commit and then step back.  is there a cleaner way to express the state machine?
-
-
 - spot-check retries for state machine
 - spot-check retries for e-mail commands
 */
@@ -29,11 +24,13 @@ TODO:
 var _ = Describe("SaturdayDisco", func() {
 	var outbox *mail.FakeOutbox
 	var clock *FakeAlarmClock
+	var interpreter *FakeInterpreter
 	var disco *SaturdayDisco
 	var conf config.Config
 
 	var now time.Time
 	var gameDate string
+	var playerEmail mail.EmailAddress
 
 	var le func() mail.Email
 	var bossToDisco = func(args ...string) {
@@ -58,49 +55,67 @@ var _ = Describe("SaturdayDisco", func() {
 		outbox = mail.NewFakeOutbox()
 		le = outbox.LastEmail
 		clock = NewFakeAlarmClock()
+		interpreter = NewFakeInterpreter()
 		conf.BossEmail = mail.EmailAddress("Boss <boss@example.com>")
 		conf.SaturdayDiscoEmail = mail.EmailAddress("Disco <saturday-disco@sedenverultimate.net>")
 		conf.SaturdayDiscoList = mail.EmailAddress("Saturday-List <saturday-se-denver-ultimate@googlegroups.com>")
+		playerEmail = mail.EmailAddress("player@example.com")
 
 		now = time.Date(2023, time.September, 24, 0, 0, 0, 0, Timezone) // a Sunday
 		gameDate = "9/30/23"                                            //the following Saturday
 		clock.SetTime(now)
 
-		disco = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox)
+		disco = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter)
 		DeferCleanup(disco.Stop)
 		Ω(disco.GetSnapshot()).Should(HaveState(StatePending))
 	})
 
 	Describe("commands", func() {
 		Describe("when an unknown command is sent by the boss", func() {
-			XIt("replies with an error e-mail", func() {
-
-			})
-		})
-
-		Describe("when a player sends an e-mail just to disco and disco is unsure", func() {
-			XIt("replies and CCs the boss", func() {
-
+			It("replies with an error e-mail", func() {
+				bossToDisco("/floop")
+				Eventually(le).Should(HaveSubject("Re: hey"))
+				Ω(le()).Should(HaveText(ContainSubstring("invalid command: /floop")))
 			})
 		})
 
 		Describe("when the boss send an e-mail that includes the list", func() {
 			It("totally ignores the boss' email, even if its a valid command", func() {
-
+				disco.HandleIncomingEmail(mail.E().WithFrom(conf.BossEmail).WithTo(conf.SaturdayDiscoList, conf.SaturdayDiscoEmail).WithSubject("hey").WithBody("/set onsijoe@gmail.com 3"))
+				Consistently(le).Should(BeZero())
+				Ω(disco.GetSnapshot()).Should(HaveCount(0))
 			})
 		})
 
 		Describe("when a player sends an e-mail that includes the list", func() {
-			Context("and disco thinks its a command", func() {
-				It("replies and CCs the boss", func() {
-
+			Context("and disco is unsure if its a command", func() {
+				It("does nothing", func() {
+					interpreter.SetCommand(Command{CommandType: CommandPlayerUnsure})
+					disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoList).WithSubject("hey").WithBody("I'm in!"))
+					Consistently(le).Should(BeZero())
 				})
 			})
+		})
 
-			Context("and disco is unsure", func() {
-				It("does nothing", func() {
+		Describe("when a player sends an e-mail just to disco and disco is unsure", func() {
+			It("replies and CCs the boss", func() {
+				interpreter.SetCommand(Command{CommandType: CommandPlayerUnsure})
+				disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail).WithSubject("hey").WithBody("Make me a bagel."))
+				Eventually(le).Should(HaveSubject("Re: hey"))
+				Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail))
+				Ω(le()).Should(HaveText(ContainSubstring("I'm not sure what you're asking me to do.  I'm CCing the boss to help.")))
+			})
+		})
 
-				})
+		Describe("when interpreting a player e-mail and an error occurs", func() {
+			It("notifies the boss", func() {
+				interpreter.SetError(fmt.Errorf("boom"))
+				disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoList).WithSubject("hey").WithBody("I'm in!"))
+
+				Eventually(le).Should(HaveSubject("Fwd: hey"))
+				Ω(le()).Should(BeSentTo(conf.BossEmail))
+				Ω(le()).Should(HaveText(ContainSubstring("I got an error while processing this email:\nboom")))
+				Ω(le()).Should(HaveHTML(""))
 			})
 		})
 
@@ -132,7 +147,7 @@ var _ = Describe("SaturdayDisco", func() {
 					Ω(disco.GetSnapshot()).Should(HaveParticipantWithCount("player@example.com", 4))
 
 					Ω(le()).Should(HaveSubject("Re: hey"))
-					Ω(le()).Should(HaveRecipients(ConsistOf(conf.BossEmail)))
+					Ω(le()).Should(BeSentTo(conf.BossEmail))
 					Ω(le()).Should(HaveText(ContainSubstring("I've set player@example.com to 4")))
 					Ω(le()).Should(HaveText(ContainSubstring("Current State: invite_sent")))
 					Ω(le()).Should(HaveText(ContainSubstring("Onsi Fakhouri <onsijoe@gmail.com>: 2")))
@@ -156,16 +171,15 @@ var _ = Describe("SaturdayDisco", func() {
 
 					Ω(le()).Should(HaveSubject("Re: hey"))
 					Ω(le()).Should(HaveText(ContainSubstring("Onsi Fakhouri <onsijoe@gmail.com>: 6"))) // we got the name!
-
 				})
 
 				It("send back an error if the admin messes up", func() {
 					bossToDisco("/set")
-					Eventually(le).Should(HaveText(ContainSubstring("could not extract valid command from: /set")))
+					Eventually(le).Should(HaveText(ContainSubstring("invalid command: /set")))
 					bossToDisco("/set 2")
-					Eventually(le).Should(HaveText(ContainSubstring("could not extract valid command from: /set 2")))
+					Eventually(le).Should(HaveText(ContainSubstring("invalid command: /set 2")))
 					bossToDisco("/set onsijoe@gmail.com two")
-					Eventually(le).Should(HaveText(ContainSubstring("could not extract valid command from: /set onsijoe@gmail.com two")))
+					Eventually(le).Should(HaveText(ContainSubstring("invalid command: /set onsijoe@gmail.com two")))
 				})
 
 				It("keeps track of all the emails associated with the player", func() {
@@ -200,27 +214,38 @@ var _ = Describe("SaturdayDisco", func() {
 				})
 			})
 
-			XDescribe("the user-facing interface for setting players", func() {
-				It("allows players to register themselves, replying only to them and CCing boss", func() {
-
+			Describe("the user-facing interface for setting players", func() {
+				BeforeEach(func() {
+					bossToDisco("/set player@example.com 1")
+					Eventually(disco.GetSnapshot).Should(HaveCount(1))
 				})
 
-				It("allows players to change their count, replying only to them and CCing boss", func() {
+				It("allows players to register themselves, replying only to them and CCing boss", func() {
+					interpreter.SetCommand(Command{CommandType: CommandPlayerSetCount, Count: 2})
+					disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("brother@example.com")).WithSubject("hey").WithBody("My brother's joining too!"))
 
+					Eventually(disco.GetSnapshot).Should(HaveCount(2))
+					Ω(le()).Should(HaveSubject("Re: hey"))
+					Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail))
+					Ω(le()).Should(HaveText(ContainSubstring("I've set your count to 2.")))
+					Ω(le()).Should(HaveHTML(ContainSubstring("ve set your count to 2.")))
 				})
 			})
 		})
 
 		Describe("getting status", func() {
+			BeforeEach(func() {
+				clock.Fire() // invite approval
+				clock.Fire() // invite
+				bossToDisco("/set player@example.com 1")
+				Eventually(disco.GetSnapshot).Should(HaveCount(1))
+				bossToDisco("/set onsijoe@gmail.com 2")
+				Eventually(disco.GetSnapshot).Should(HaveCount(3))
+				outbox.Clear()
+			})
+
 			Describe("the boss' interface", func() {
 				BeforeEach(func() {
-					clock.Fire() // invite approval
-					clock.Fire() // invite
-					bossToDisco("/set player@example.com 1")
-					Eventually(disco.GetSnapshot).Should(HaveCount(1))
-					bossToDisco("/set onsijoe@gmail.com 2")
-					Eventually(disco.GetSnapshot).Should(HaveCount(3))
-					outbox.Clear()
 					bossToDisco("/status")
 					Eventually(le).Should(HaveSubject("Re: hey"))
 				})
@@ -238,10 +263,58 @@ var _ = Describe("SaturdayDisco", func() {
 				})
 			})
 
-			XDescribe("the player's interface", func() {
-				It("allows players to get a status update, replying to all", func() {
+			Describe("the player's interface", func() {
+				sendPlayerRequest := func() {
+					interpreter.SetCommand(Command{CommandType: CommandPlayerStatus})
 
+					disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")).WithSubject("hey").WithBody("Is the game on?"))
+					Eventually(le).Should(HaveSubject("Re: hey"))
+				}
+
+				Context("when the game hasn't been called yet", func() {
+					BeforeEach(func() {
+						sendPlayerRequest()
+					})
+
+					It("allows players to get a status update, replying to all", func() {
+						Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")))
+						Ω(le()).Should(HaveText(ContainSubstring("The game on " + gameDate + " hasn't been called yet.")))
+						Ω(le()).Should(HaveText(ContainSubstring("Players: player and onsijoe (2)")))
+						Ω(le()).Should(HaveText(ContainSubstring("Total: 3")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("Players: player and onsijoe <strong>(2)</strong>")))
+					})
 				})
+
+				Context("when the game is on", func() {
+					BeforeEach(func() {
+						bossToDisco("/game-on")
+						Eventually(disco.GetSnapshot).Should(HaveState(StateGameOnSent))
+						sendPlayerRequest()
+					})
+
+					It("allows players to get a status update, replying to all", func() {
+						Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>GAME ON!</strong>")))
+						Ω(le()).Should(HaveText(ContainSubstring("Players: player and onsijoe (2)")))
+						Ω(le()).Should(HaveText(ContainSubstring("Total: 3")))
+					})
+				})
+
+				Context("when the game is off", func() {
+					BeforeEach(func() {
+						bossToDisco("/no-game")
+						Eventually(disco.GetSnapshot).Should(HaveState(StateNoGameSent))
+						sendPlayerRequest()
+					})
+
+					It("allows players to get a status update, replying to all", func() {
+						Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>NO GAME</strong>")))
+						Ω(le()).Should(HaveText(ContainSubstring("Players: player and onsijoe (2)")))
+						Ω(le()).Should(HaveText(ContainSubstring("Total: 3")))
+					})
+				})
+
 			})
 		})
 
@@ -264,8 +337,15 @@ var _ = Describe("SaturdayDisco", func() {
 		})
 
 		Describe("if a player wants to unsubscribe", func() {
-			XIt("replies and includes boss", func() {
+			BeforeEach(func() {
+				interpreter.SetCommand(Command{CommandType: CommandPlayerUnsubscribe})
+				disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")).WithSubject("hey").WithBody("Please unsubscibe me."))
+			})
 
+			It("replies and includes boss", func() {
+				Eventually(le).Should(HaveSubject("Re: hey"))
+				Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail))
+				Ω(le()).Should(HaveText(ContainSubstring("I got your unsubscribe request.  I'm notifying the boss to remove you from the list.")))
 			})
 		})
 

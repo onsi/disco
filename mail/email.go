@@ -11,7 +11,6 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
-// TODO: test
 type Markdown string
 
 type Email struct {
@@ -94,7 +93,6 @@ func synthesizeReplyBodies(email Email, body any) (string, string) {
 	return text.String(), html.String()
 }
 
-// TODO: test the DSL
 func E() Email {
 	return Email{}
 }
@@ -106,6 +104,11 @@ func (e Email) WithFrom(from EmailAddress) Email {
 
 func (e Email) WithTo(to ...EmailAddress) Email {
 	e.To = to
+	return e
+}
+
+func (e Email) AndCC(cc ...EmailAddress) Email {
+	e.CC = append(e.CC, cc...)
 	return e
 }
 
@@ -134,6 +137,17 @@ func replySubject(subject string) string {
 		return subject
 	}
 	return "Re: " + subject
+}
+
+func (e Email) Forward(from EmailAddress, to EmailAddress, body any) Email {
+	text, html := synthesizeReplyBodies(e, body)
+	return Email{
+		From:    from,
+		To:      EmailAddresses{to},
+		Subject: "Fwd: " + e.Subject,
+		Text:    text,
+		HTML:    html,
+	}
 }
 
 func (e Email) Reply(from EmailAddress, body any) Email {
@@ -201,7 +215,13 @@ func (e Email) ReplyAllWithoutQuote(from EmailAddress, body any) Email {
 	}.WithBody(body)
 }
 
-// TODO: test
+func (e Email) Recipients() EmailAddresses {
+	recipients := EmailAddresses{}
+	recipients = append(recipients, e.To...)
+	recipients = append(recipients, e.CC...)
+	return recipients
+}
+
 func (c Email) IncludesRecipient(recipient EmailAddress) bool {
 	for _, to := range c.To {
 		if to.Equals(recipient) {

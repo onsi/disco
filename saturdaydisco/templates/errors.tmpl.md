@@ -20,3 +20,14 @@ Status:
 {{template "boss_status" .}}
 
 {{template "signature" .}}{{end}}
+
+{{define "unsure_player_command_body"}}Hey there,
+
+It's Disco 🪩, and I'm not sure what you're asking me to do.  I'm CCing the boss to help.{{end}}
+
+{{define "error_player_command_body"}}Hey Boss,
+
+I got an error while processing this email:
+{{.Error}}
+
+{{template "signature" .}}{{end}}

@@ -41,11 +41,8 @@ func BeSentTo(recipients ...mail.EmailAddress) OmegaMatcher {
 	}
 	return WithTransform(func(e mail.Email) []string {
 		actual := []string{}
-		for _, t := range e.To {
-			actual = append(actual, t.Address())
-		}
-		for _, cc := range e.CC {
-			actual = append(actual, cc.Address())
+		for _, recipient := range e.Recipients() {
+			actual = append(actual, recipient.Address())
 		}
 		return actual
 	}, ConsistOf(expected))
@@ -61,19 +58,6 @@ func HaveText(text any) OmegaMatcher {
 
 func HaveHTML(html any) OmegaMatcher {
 	return HaveField("HTML", html)
-}
-
-func HaveRecipients(expected any) OmegaMatcher {
-	matcher, ok := expected.(OmegaMatcher)
-	if !ok {
-		matcher = Equal(expected)
-	}
-	return WithTransform(func(e mail.Email) []mail.EmailAddress {
-		actual := []mail.EmailAddress{}
-		actual = append(actual, e.To...)
-		actual = append(actual, e.CC...)
-		return actual
-	}, matcher)
 }
 
 func HaveState(state saturdaydisco.SaturdayDiscoState) OmegaMatcher {
