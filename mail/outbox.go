@@ -1,12 +1,16 @@
 package mail
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
+
+const DEFAULT_TIMEOUT = 10 * time.Second
 
 type OutboxInt interface {
 	SendEmail(Email) error
@@ -43,7 +47,9 @@ func (o Outbox) SendEmail(email Email) error {
 	if email.HTML != "" {
 		form.Add("html", email.HTML)
 	}
-	req, err := http.NewRequest("POST", "https://api.forwardemail.net/v1/emails", strings.NewReader(form.Encode()))
+	ctx, cancel := context.WithTimeout(context.Background(), DEFAULT_TIMEOUT)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.forwardemail.net/v1/emails", strings.NewReader(form.Encode()))
 	if err != nil {
 		return err
 	}

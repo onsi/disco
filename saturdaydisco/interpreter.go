@@ -43,6 +43,7 @@ If the email is indicating that no player can join set "count" to 0.
 4. If you’re unsure what the user is requesting, or if you think the email is just banter or random social conversation, send an empty JSON response (i.e. '{}')`))
 
 const DEFAULT_TIMEOUT = 10 * time.Second
+const USER_MESSAGE_CUTOFF = 1000
 
 type InterpreterInt interface {
 	InterpretEmail(email mail.Email, count int) (Command, error)
@@ -66,8 +67,15 @@ func (interpreter *Interpreter) InterpretEmail(email mail.Email, count int) (Com
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), DEFAULT_TIMEOUT)
 	defer cancel()
+
 	prompt := &strings.Builder{}
 	promptTemplate.Execute(prompt, promptData{Count: count})
+
+	userMessage := email.Text
+	if len(userMessage) > USER_MESSAGE_CUTOFF {
+		userMessage = userMessage[:USER_MESSAGE_CUTOFF] + "..."
+	}
+
 	resp, err := interpreter.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 		Model:       openai.GPT3Dot5Turbo,
 		MaxTokens:   512,
@@ -80,7 +88,7 @@ func (interpreter *Interpreter) InterpretEmail(email mail.Email, count int) (Com
 			},
 			{
 				Role:    openai.ChatMessageRoleUser,
-				Content: email.Text,
+				Content: userMessage,
 			},
 		},
 	})

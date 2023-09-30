@@ -1,6 +1,7 @@
 package saturdaydisco_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 
 	"github.com/onsi/disco/config"
 	"github.com/onsi/disco/mail"
+	"github.com/onsi/disco/s3db"
 	. "github.com/onsi/disco/saturdaydisco"
 )
 
@@ -18,6 +20,7 @@ var _ = Describe("SaturdayDisco", func() {
 	var clock *FakeAlarmClock
 	var interpreter *FakeInterpreter
 	var disco *SaturdayDisco
+	var db *s3db.FakeS3DB
 	var conf config.Config
 
 	var now time.Time
@@ -48,6 +51,7 @@ var _ = Describe("SaturdayDisco", func() {
 		le = outbox.LastEmail
 		clock = NewFakeAlarmClock()
 		interpreter = NewFakeInterpreter()
+		db = s3db.NewFakeS3DB()
 		conf.BossEmail = mail.EmailAddress("Boss <boss@example.com>")
 		conf.SaturdayDiscoEmail = mail.EmailAddress("Disco <saturday-disco@sedenverultimate.net>")
 		conf.SaturdayDiscoList = mail.EmailAddress("Saturday-List <saturday-se-denver-ultimate@googlegroups.com>")
@@ -57,9 +61,228 @@ var _ = Describe("SaturdayDisco", func() {
 		gameDate = "9/30/23"                                            //the following Saturday
 		clock.SetTime(now)
 
-		disco = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter)
-		DeferCleanup(disco.Stop)
-		Ω(disco.GetSnapshot()).Should(HaveState(StatePending))
+		isStartup, _ := CurrentSpecReport().MatchesLabelFilter("startup")
+		if !isStartup {
+			var err error
+			disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+			Ω(err).ShouldNot(HaveOccurred())
+			DeferCleanup(disco.Stop)
+			Ω(disco.GetSnapshot()).Should(HaveState(StatePending))
+			outbox.Clear() //clear out the welcome email
+		}
+	})
+
+	Describe("startup and persistence", Label("startup"), func() {
+		put := func(snapshot SaturdayDiscoSnapshot) {
+			data, err := json.Marshal(snapshot)
+			Ω(err).ShouldNot(HaveOccurred())
+			Ω(db.PutObject(KEY, data)).Should(Succeed())
+		}
+		fetch := func() SaturdayDiscoSnapshot {
+			data, err := db.FetchObject(KEY)
+			Ω(err).ShouldNot(HaveOccurred())
+			var snapshot SaturdayDiscoSnapshot
+			Ω(json.Unmarshal(data, &snapshot)).Should(Succeed())
+			return snapshot
+		}
+
+		Describe("backing up regularly", func() {
+			It("saves the backup whenever a command occurs", func() {
+				var err error
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				Ω(err).ShouldNot(HaveOccurred())
+				bossToDisco("/set onsijoe@gmail.com 2")
+				Eventually(disco.GetSnapshot).Should(HaveCount(2))
+				Ω(fetch().Participants).Should(Equal(disco.GetSnapshot().Participants))
+			})
+
+			It("saves the backup whenever a schedule event occurs", func() {
+				var err error
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				Ω(err).ShouldNot(HaveOccurred())
+				clock.Fire()
+				Eventually(disco.GetSnapshot).Should(HaveState(StateRequestedInviteApproval))
+				Ω(fetch().State).Should(Equal(disco.GetSnapshot().State))
+			})
+		})
+
+		Context("when there is no backup stored in the database", func() {
+			It("starts afresh and sends an email", func() {
+				var err error
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				Ω(err).ShouldNot(HaveOccurred())
+				Ω(le()).Should(HaveSubject("SaturdayDisco Joined the Dance Floor"))
+				Ω(le()).Should(BeSentTo(conf.BossEmail))
+				Ω(le()).Should(HaveText(ContainSubstring("I'm up and running now:\nNo backup found, starting from scratch...")))
+				Ω(le()).Should(HaveText(ContainSubstring("Current State: pending")))
+				Ω(disco.GetSnapshot()).Should(HaveState(StatePending))
+				Ω(disco.GetSnapshot()).Should(HaveCount(0))
+
+				outbox.Clear()
+				clock.Fire()
+				Ω(clock.Time()).Should(BeOn(time.Tuesday, 6))
+				Eventually(disco.GetSnapshot).Should(HaveState(StateRequestedInviteApproval))
+			})
+		})
+
+		Context("if the backup fails to load", func() {
+			BeforeEach(func() {
+				db.SetFetchError(fmt.Errorf("boom"))
+			})
+
+			It("returns an error and sends an email", func() {
+				var err error
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				Ω(err).Should(HaveOccurred())
+				Ω(le()).Should(HaveSubject("SaturdayDisco FAILED to Join the Dance Floor"))
+				Ω(le()).Should(BeSentTo(conf.BossEmail))
+				Ω(le()).Should(HaveText(ContainSubstring("FAILED TO LOAD BACKUP: boom")))
+			})
+		})
+
+		Context("if the backup fails to unmarshal", func() {
+			BeforeEach(func() {
+				Ω(db.PutObject(KEY, []byte("ß"))).Should(Succeed())
+			})
+
+			It("returns an error and sends an email", func() {
+				var err error
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				Ω(err).Should(HaveOccurred())
+				Ω(le()).Should(HaveSubject("SaturdayDisco FAILED to Join the Dance Floor"))
+				Ω(le()).Should(BeSentTo(conf.BossEmail))
+				Ω(le()).Should(HaveText(ContainSubstring("FAILED TO UNMARSHAL BACKUP: %s", err.Error())))
+			})
+		})
+
+		Context("if the backup is from a prior game week", func() {
+			BeforeEach(func() {
+				put(SaturdayDiscoSnapshot{
+					State: StateRequestedGameOnApproval,
+					Participants: Participants{
+						Participant{Address: playerEmail, Count: 2},
+					},
+					T:         NextSaturdayAt10(now.Add(-time.Hour * 24 * 7)),
+					NextEvent: NextSaturdayAt10(now.Add(-time.Hour * 24 * 7)).Add(-2*time.Hour*24 + 8*time.Hour),
+				})
+			})
+
+			It("discards the backup, starts afresh, and sends an eamil", func() {
+				var err error
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				Ω(err).ShouldNot(HaveOccurred())
+				Ω(le()).Should(HaveSubject("SaturdayDisco Joined the Dance Floor"))
+				Ω(le()).Should(BeSentTo(conf.BossEmail))
+				Ω(le()).Should(HaveText(ContainSubstring("I'm up and running now:\nBackup is from a previous week.  Resetting.")))
+				Ω(le()).Should(HaveText(ContainSubstring("Current State: pending")))
+				Ω(disco.GetSnapshot()).Should(HaveState(StatePending))
+				Ω(disco.GetSnapshot()).Should(HaveCount(0))
+
+				outbox.Clear()
+				clock.Fire()
+				Ω(clock.Time()).Should(BeOn(time.Tuesday, 6))
+				Eventually(disco.GetSnapshot).Should(HaveState(StateRequestedInviteApproval))
+			})
+		})
+
+		Context("if the backup is good", func() {
+			BeforeEach(func() {
+				put(SaturdayDiscoSnapshot{
+					State: StateRequestedGameOnApproval,
+					Participants: Participants{
+						Participant{Address: playerEmail, Count: 2},
+						Participant{Address: "onsijoe@gmail.com", Count: 6}, //have quorum
+					},
+					T:         NextSaturdayAt10(now),
+					NextEvent: NextSaturdayAt10(now).Add(-2*time.Hour*24 + 4*time.Hour),
+				})
+				clock.SetTime(NextSaturdayAt10(now).Add(-2*time.Hour*24 + 3*time.Hour))
+			})
+
+			Context("if it's not time for NextEvent yet", func() {
+				BeforeEach(func() {
+					clock.SetTime(NextSaturdayAt10(now).Add(-2*time.Hour*24 + 3*time.Hour))
+				})
+
+				It("spins up and picks up where it left off (and sends an e-mail)", func() {
+					var err error
+					disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+					Ω(err).ShouldNot(HaveOccurred())
+					Ω(le()).Should(HaveSubject("SaturdayDisco Joined the Dance Floor"))
+					Ω(le()).Should(BeSentTo(conf.BossEmail))
+					Ω(le()).Should(HaveText(ContainSubstring("I'm up and running now:\nBackup is good.  Spinning up...")))
+					Ω(le()).Should(HaveText(ContainSubstring("Current State: requested_game_on_approval")))
+					Ω(le()).Should(HaveText(ContainSubstring("onsijoe@gmail.com: 6")))
+					Ω(disco.GetSnapshot()).Should(HaveState(StateRequestedGameOnApproval))
+					Ω(disco.GetSnapshot()).Should(HaveCount(8))
+
+					outbox.Clear()
+					clock.Fire()
+					Ω(clock.Time()).Should(BeOn(time.Thursday, 14))
+					Eventually(disco.GetSnapshot).Should(HaveState(StateGameOnSent))
+					Ω(le()).Should(HaveSubject("GAME ON THIS SATURDAY! " + gameDate))
+				})
+			})
+
+			Context("if it's already past time for the next event", func() {
+				BeforeEach(func() {
+					clock.SetTime(NextSaturdayAt10(now).Add(-2*time.Hour*24 + 3*time.Hour))
+					go clock.Fire() //basically what happens irl
+				})
+
+				It("spins up and picks up where it left off (and sends an e-mail)", func() {
+					var err error
+					outbox.Clear()
+					disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+					Ω(err).ShouldNot(HaveOccurred())
+					Eventually(outbox.Emails).Should(HaveLen(2))
+
+					startupEmail := outbox.Emails()[0]
+					Ω(startupEmail).Should(HaveSubject("SaturdayDisco Joined the Dance Floor"))
+					Ω(startupEmail).Should(BeSentTo(conf.BossEmail))
+					Ω(startupEmail).Should(HaveText(ContainSubstring("I'm up and running now:\nBackup is good.  Spinning up...")))
+					Ω(startupEmail).Should(HaveText(ContainSubstring("Current State: requested_game_on_approval")))
+					Ω(startupEmail).Should(HaveText(ContainSubstring("onsijoe@gmail.com: 6")))
+
+					gameOnEmail := outbox.Emails()[1]
+					Eventually(disco.GetSnapshot).Should(HaveState(StateGameOnSent))
+					Ω(gameOnEmail).Should(HaveSubject("GAME ON THIS SATURDAY! " + gameDate))
+					Ω(gameOnEmail).Should(HaveText(ContainSubstring("onsijoe (6)")))
+					Ω(disco.GetSnapshot()).Should(HaveCount(8))
+				})
+			})
+		})
+
+		for _, state := range []SaturdayDiscoState{StatePending, StateRequestedInviteApproval} {
+			state := state
+			Context("if the invite hasn't been sent yet ("+string(state)+") and its after thursday 2pm", func() {
+				BeforeEach(func() {
+					put(SaturdayDiscoSnapshot{
+						State: state,
+						Participants: Participants{
+							Participant{Address: playerEmail, Count: 2},
+							Participant{Address: "onsijoe@gmail.com", Count: 6}, //have quorum
+						},
+						T:         NextSaturdayAt10(now),
+						NextEvent: NextSaturdayAt10(now).Add(-4*time.Hour*24 - 4*time.Hour),
+					})
+					clock.SetTime(NextSaturdayAt10(now).Add(-2*time.Hour*24 + 4*time.Hour))
+				})
+
+				It("aborts and sends an email", func() {
+					var err error
+					disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+					Ω(err).ShouldNot(HaveOccurred())
+					Ω(le()).Should(HaveSubject("SaturdayDisco Joined the Dance Floor"))
+					Ω(le()).Should(BeSentTo(conf.BossEmail))
+					Ω(le()).Should(HaveText(ContainSubstring("I'm up and running now:\nBackup is good.  Spinning up...\nIt's after Thursday at 2pm and we haven't sent the invite yet.  Aborting.  You'll need to take over, boss.")))
+					Ω(le()).Should(HaveText(ContainSubstring("Current State: abort")))
+					Ω(le()).Should(HaveText(ContainSubstring("onsijoe@gmail.com: 6")))
+					Ω(disco.GetSnapshot()).Should(HaveState(StateAbort))
+					Ω(disco.GetSnapshot()).Should(HaveCount(8))
+				})
+			})
+		}
 	})
 
 	Describe("commands", func() {

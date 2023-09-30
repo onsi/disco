@@ -3,6 +3,7 @@ package saturdaydisco
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"regexp"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/onsi/disco/config"
 	"github.com/onsi/disco/mail"
+	"github.com/onsi/disco/s3db"
 	"github.com/onsi/say"
 )
 
@@ -34,6 +36,7 @@ const QUORUM = 8
 
 const day = 24 * time.Hour
 const RETRY_DELAY = 5 * time.Minute
+const KEY = "saturday-disco"
 
 type SaturdayDiscoState string
 
@@ -100,103 +103,6 @@ type Command struct {
 	Error error
 }
 
-type Participant struct {
-	Address        mail.EmailAddress
-	Count          int
-	RelevantEmails []mail.Email
-}
-
-func (p Participant) dup() Participant {
-	emails := []mail.Email{}
-	return Participant{
-		Address:        p.Address,
-		Count:          p.Count,
-		RelevantEmails: append(emails, p.RelevantEmails...),
-	}
-}
-
-func (p Participant) IndentedRelevantEmails() string {
-	out := &strings.Builder{}
-	for idx, email := range p.RelevantEmails {
-		say.Fpiw(out, 2, 100, "%s\n", email.String())
-		if idx < len(p.RelevantEmails)-1 {
-			say.Fpi(out, 2, "---\n")
-		}
-	}
-	return out.String()
-}
-
-type Participants []Participant
-
-func (p Participants) UpdateCount(address mail.EmailAddress, count int, relevantEmail mail.Email) Participants {
-	for i := range p {
-		if p[i].Address.Equals(address) {
-			if !p[i].Address.HasExplicitName() {
-				p[i].Address = address
-			}
-			p[i].Count = count
-			p[i].RelevantEmails = append(p[i].RelevantEmails, relevantEmail)
-			return p
-		}
-	}
-	return append(p, Participant{
-		Address:        address,
-		Count:          count,
-		RelevantEmails: []mail.Email{relevantEmail},
-	})
-}
-
-func (p Participants) CountFor(address mail.EmailAddress) int {
-	for _, participant := range p {
-		if participant.Address.Equals(address) {
-			return participant.Count
-		}
-	}
-	return 0
-}
-
-func (p Participants) Count() int {
-	total := 0
-	for _, participant := range p {
-		total += participant.Count
-	}
-	return total
-}
-
-func (p Participants) Public() string {
-	if p.Count() == 0 {
-		return "No one's signed up yet"
-	}
-
-	validP := Participants{}
-	for _, participant := range p {
-		if participant.Count > 0 {
-			validP = append(validP, participant)
-		}
-	}
-	out := &strings.Builder{}
-	for i, participant := range validP {
-		out.WriteString(participant.Address.Name())
-		if participant.Count > 1 {
-			fmt.Fprintf(out, " **(%d)**", participant.Count)
-		}
-		if i < len(validP)-2 {
-			out.WriteString(", ")
-		} else if i == len(validP)-2 {
-			out.WriteString(" and ")
-		}
-	}
-	return out.String()
-}
-
-func (p Participants) dup() Participants {
-	participants := make(Participants, len(p))
-	for i, participant := range p {
-		participants[i] = participant.dup()
-	}
-	return participants
-}
-
 type SaturdayDiscoSnapshot struct {
 	State        SaturdayDiscoState `json:"state"`
 	Participants Participants       `json:"participants"`
@@ -220,6 +126,7 @@ type SaturdayDisco struct {
 	alarmClock  AlarmClockInt
 	outbox      mail.OutboxInt
 	interpreter InterpreterInt
+	db          s3db.S3DBInt
 	commandC    chan Command
 	snapshotC   chan chan<- SaturdayDiscoSnapshot
 	config      config.Config
@@ -253,11 +160,12 @@ func (e TemplateData) WithError(err error) TemplateData {
 	return e
 }
 
-func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockInt, outbox mail.OutboxInt, interpreter InterpreterInt) *SaturdayDisco {
+func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockInt, outbox mail.OutboxInt, interpreter InterpreterInt, db s3db.S3DBInt) (*SaturdayDisco, error) {
 	saturdayDisco := &SaturdayDisco{
 		alarmClock:  alarmClock,
 		outbox:      outbox,
 		interpreter: interpreter,
+		db:          db,
 		commandC:    make(chan Command),
 		snapshotC:   make(chan chan<- SaturdayDiscoSnapshot),
 		w:           w,
@@ -267,12 +175,60 @@ func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockIn
 	}
 	saturdayDisco.ctx, saturdayDisco.cancel = context.WithCancel(context.Background())
 
-	//load goes here
-	//otherwise:
-	saturdayDisco.reset()
-	go saturdayDisco.dance()
+	//TODO: test all these edges
+	startupMessage := ""
+	lastBackup, err := db.FetchObject(KEY)
+	if err == s3db.ErrObjectNotFound {
+		startupMessage = "No backup found, starting from scratch..."
+		saturdayDisco.logi(0, "{{yellow}}%s{{/}}", startupMessage)
+		saturdayDisco.reset()
+		err = nil
+	} else if err != nil {
+		startupMessage = fmt.Sprintf("FAILED TO LOAD BACKUP: %s", err.Error())
+		saturdayDisco.logi(0, "{{red}}%s{{/}}", startupMessage)
+	} else {
+		saturdayDisco.logi(0, "{{green}}Loading from Backup...{{/}}")
+		snapshot := SaturdayDiscoSnapshot{}
+		err = json.Unmarshal(lastBackup, &snapshot)
+		if err != nil {
+			startupMessage = fmt.Sprintf("FAILED TO UNMARSHAL BACKUP: %s", err.Error())
+			saturdayDisco.logi(0, "{{red}}%s{{/}}", startupMessage)
+		} else {
+			nextSaturday := NextSaturdayAt10(alarmClock.Time())
+			if nextSaturday.After(snapshot.T) {
+				startupMessage = "Backup is from a previous week.  Resetting."
+				saturdayDisco.logi(0, "{{red}}%s{{/}}", startupMessage)
+				saturdayDisco.reset()
+			} else {
+				startupMessage = "Backup is good.  Spinning up..."
+				saturdayDisco.logi(0, "{{green}}%s{{/}}", startupMessage)
+				saturdayDisco.SaturdayDiscoSnapshot = snapshot
+				alarmClock.SetAlarm(snapshot.NextEvent)
+			}
+		}
+	}
 
-	return saturdayDisco
+	if err != nil {
+		outbox.SendEmail(saturdayDisco.emailForBoss("startup_error", TemplateData{
+			Error: fmt.Errorf(startupMessage),
+		}))
+		return nil, err
+	}
+
+	if !alarmClock.Time().Before(saturdayDisco.T.Add(-2*day + 4*time.Hour)) {
+		// it's after thursday at 2pm.  we had better already send the invite
+		if saturdayDisco.State == StatePending || saturdayDisco.State == StateRequestedInviteApproval {
+			//welp! we haven't sent it yet.
+			saturdayDisco.logi(0, "{{red}}It's after Thursday at 2pm and we haven't sent the invite yet.  Aborting.{{/}}")
+			startupMessage += "\nIt's after Thursday at 2pm and we haven't sent the invite yet.  Aborting.  You'll need to take over, boss."
+			saturdayDisco.transitionTo(StateAbort)
+		}
+	}
+
+	outbox.SendEmail(saturdayDisco.emailForBoss("startup", saturdayDisco.emailData().WithMessage(startupMessage)))
+
+	go saturdayDisco.dance()
+	return saturdayDisco, nil
 }
 
 func (s *SaturdayDisco) Stop() {
@@ -360,13 +316,30 @@ func (s *SaturdayDisco) dance() {
 		case <-s.alarmClock.C():
 			s.log("{{yellow}}alarm clock triggered{{/}}")
 			s.performNextEvent()
+			s.backup()
 		case command := <-s.commandC:
 			s.log("{{yellow}}received a command{{/}}")
 			s.handleCommand(command)
+			s.backup()
 		case c := <-s.snapshotC:
 			c <- s.SaturdayDiscoSnapshot.dup()
 		}
 	}
+}
+
+func (s *SaturdayDisco) backup() {
+	s.log("{{yellow}}backing up...{{/}}")
+	data, err := json.Marshal(s.SaturdayDiscoSnapshot)
+	if err != nil {
+		s.log("{{red}}failed to marshal backup: %s{{/}}", err.Error())
+		return
+	}
+	err = s.db.PutObject(KEY, data)
+	if err != nil {
+		s.log("{{red}}failed to backup: %s{{/}}", err.Error())
+		return
+	}
+	s.log("{{green}}backed up{{/}}")
 }
 
 var setCommandRegex = regexp.MustCompile(`^/set\s+(.+)+\s+(\d+)$`)
@@ -493,6 +466,7 @@ func (s *SaturdayDisco) performNextEvent() {
 		s.logi(1, "{{coral}}sending invite approval request to boss{{/}}")
 		s.sendEmail(s.emailForBoss("request_invite_approval", data),
 			StateRequestedInviteApproval, s.retryNextEventErrorHandler)
+
 	case StateRequestedInviteApproval:
 		s.logi(1, "{{green}}time's up, sending invitation e-mail{{/}}")
 		s.sendEmail(s.emailForList("invitation", data),
