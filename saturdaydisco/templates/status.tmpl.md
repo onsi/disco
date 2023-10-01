@@ -38,9 +38,13 @@ It's Disco 🪩.  {{if .GameOn}}**GAME ON!** {{.GameDate}}{{ else if .GameOff}}*
 {{define "public_status"}}**Weather Forecast**: {{.Forecast}}
 
 Players: {{.Participants.Public}}
+
 Total: {{.Participants.Count}}{{end}}
 
 /* game_details */
 {{define "game_details"}}**Where**: [James Bible Park](https://maps.app.goo.gl/P1vm2nkZdYLGZbxb9)
+
 **When**: Saturday, {{.GameTime}}
-**What**: Bring a red and a blue shirt if you have them{{end}}
+
+**What**: Bring a red and a blue shirt if you have them
+{{end}}
