@@ -16,6 +16,7 @@ import (
 	"github.com/onsi/disco/config"
 	"github.com/onsi/disco/mail"
 	"github.com/onsi/disco/s3db"
+	"github.com/onsi/disco/weather"
 	"github.com/onsi/say"
 )
 
@@ -126,6 +127,7 @@ type SaturdayDisco struct {
 	alarmClock  AlarmClockInt
 	outbox      mail.OutboxInt
 	interpreter InterpreterInt
+	forecaster  weather.ForecasterInt
 	db          s3db.S3DBInt
 	commandC    chan Command
 	snapshotC   chan chan<- SaturdayDiscoSnapshot
@@ -142,6 +144,7 @@ type TemplateData struct {
 	HasQuorum bool
 	GameOn    bool
 	GameOff   bool
+	Forecast  weather.Forecast
 
 	Message string
 	Error   error
@@ -160,11 +163,12 @@ func (e TemplateData) WithError(err error) TemplateData {
 	return e
 }
 
-func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockInt, outbox mail.OutboxInt, interpreter InterpreterInt, db s3db.S3DBInt) (*SaturdayDisco, error) {
+func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockInt, outbox mail.OutboxInt, interpreter InterpreterInt, forecaster weather.ForecasterInt, db s3db.S3DBInt) (*SaturdayDisco, error) {
 	saturdayDisco := &SaturdayDisco{
 		alarmClock:  alarmClock,
 		outbox:      outbox,
 		interpreter: interpreter,
+		forecaster:  forecaster,
 		db:          db,
 		commandC:    make(chan Command),
 		snapshotC:   make(chan chan<- SaturdayDiscoSnapshot),
@@ -175,7 +179,6 @@ func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockIn
 	}
 	saturdayDisco.ctx, saturdayDisco.cancel = context.WithCancel(context.Background())
 
-	//TODO: test all these edges
 	startupMessage := ""
 	lastBackup, err := db.FetchObject(KEY)
 	if err == s3db.ErrObjectNotFound {
@@ -268,6 +271,11 @@ func (s *SaturdayDisco) logi(i uint, format string, args ...any) {
 }
 
 func (s *SaturdayDisco) emailData() TemplateData {
+	forecast, err := s.forecaster.ForecastFor(s.T)
+	if err != nil {
+		s.logi(0, "{{red}}failed to fetch forecast: %s{{/}}", err.Error())
+		forecast = weather.Forecast{}
+	}
 	return TemplateData{
 		GameDate:              s.T.Format("1/2/06"),
 		GameTime:              s.T.Format("3:04pm"),
@@ -275,6 +283,7 @@ func (s *SaturdayDisco) emailData() TemplateData {
 		HasQuorum:             s.hasQuorum(),
 		GameOn:                s.State == StateGameOnSent || s.State == StateReminderSent,
 		GameOff:               s.State == StateNoInviteSent || s.State == StateNoGameSent,
+		Forecast:              forecast,
 	}
 }
 
@@ -348,6 +357,11 @@ func (s *SaturdayDisco) processEmail(email mail.Email) {
 	s.logi(0, "{{yellow}}Processing Email:{{/}}")
 	s.logi(1, "Email: %s", email.String())
 	c := Command{Email: email}
+	isFromSelf := email.From.Equals(s.config.SaturdayDiscoEmail)
+	if isFromSelf {
+		return
+	}
+
 	isAdminCommand := email.From.Equals(s.config.BossEmail) &&
 		len(email.To) == 1 &&
 		len(email.CC) == 0 &&
@@ -374,6 +388,8 @@ func (s *SaturdayDisco) processEmail(email mail.Email) {
 				c.Approved = true
 			} else if strings.HasPrefix(email.Text, "/deny") || strings.HasPrefix(email.Text, "/no") {
 				c.Approved = false
+			} else if strings.HasPrefix(email.Text, "/abort") {
+				c.CommandType = CommandAdminAbort
 			} else {
 				c.Error = fmt.Errorf("invalid command in reply, must be one of /approve, /yes, /shipit, /deny, or /no")
 			}

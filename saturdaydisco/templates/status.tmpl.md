@@ -16,7 +16,9 @@ Participants:{{range $idx, $participant := .Participants}}
 {{- end}}
 
 Total Count: {{.Participants.Count}}
-Has Quorum: {{.HasQuorum}}{{end}}
+Has Quorum: {{.HasQuorum}}
+
+Weather Forecast: {{.Forecast}}{{end}}
 
 Commands: /status, /game-on, /no-game, /abort, /set Player Name <player@example.com> N
 Any content on the line below /game-on and /no-game is sent with the e-mail
@@ -33,7 +35,9 @@ It's Disco 🪩.  {{if .GameOn}}**GAME ON!** {{.GameDate}}{{ else if .GameOff}}*
 
 /* public_status */
 
-{{define "public_status"}}Players: {{.Participants.Public}}
+{{define "public_status"}}**Weather Forecast**: {{.Forecast}}
+
+Players: {{.Participants.Public}}
 Total: {{.Participants.Count}}{{end}}
 
 /* game_details */

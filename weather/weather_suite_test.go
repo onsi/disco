@@ -1,4 +1,4 @@
-package s3db_test
+package weather_test
 
 import (
 	"os"
@@ -8,8 +8,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestS3db(t *testing.T) {
+func TestWeather(t *testing.T) {
 	os.Setenv("ENV", "TEST")
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "S3db Suite")
+	RunSpecs(t, "Weather Suite")
 }

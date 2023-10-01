@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/onsi/disco/config"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -19,9 +18,8 @@ type ObjectToStore struct {
 var _ = Describe("S3db", func() {
 	var db s3db.S3DBInt
 	BeforeEach(func() {
-		conf := config.LoadConfig()
 		var err error
-		db, err = s3db.NewS3DB(conf.AWSAccessKey, conf.AWSSecretKey, conf.AWSRegion, conf.AWSS3Bucket, "TEST")
+		db, err = s3db.NewS3DB()
 		Ω(err).ShouldNot(HaveOccurred())
 	})
 

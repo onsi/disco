@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/onsi/disco/config"
 )
 
 var TIMEOUT = time.Second * 10
@@ -31,18 +32,19 @@ type S3DB struct {
 	env    string
 }
 
-func NewS3DB(accessKey, secretKey, region, bucket, env string) (*S3DB, error) {
+func NewS3DB() (*S3DB, error) {
+	conf := config.LoadConfig()
 	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(region),
-		Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
+		Region:      aws.String(conf.AWSRegion),
+		Credentials: credentials.NewStaticCredentials(conf.AWSAccessKey, conf.AWSSecretKey, ""),
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &S3DB{
 		svc:    s3.New(sess),
-		bucket: bucket,
-		env:    env,
+		bucket: conf.AWSS3Bucket,
+		env:    conf.Env,
 	}, nil
 }
 

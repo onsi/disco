@@ -42,5 +42,9 @@ func LoadConfig() Config {
 		AWSSecretKey:      os.Getenv("AWS_SECRET_KEY"),
 		AWSRegion:         os.Getenv("AWS_REGION"),
 		AWSS3Bucket:       os.Getenv("AWS_S3_BUCKET"),
+
+		BossEmail:          mail.EmailAddress(os.Getenv("BOSS_EMAIL")),
+		SaturdayDiscoEmail: mail.EmailAddress(os.Getenv("SATURDAY_DISCO_EMAIL")),
+		SaturdayDiscoList:  mail.EmailAddress(os.Getenv("SATURDAY_DISCO_LIST")),
 	}
 }

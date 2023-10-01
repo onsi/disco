@@ -18,7 +18,7 @@ var _ = Describe("Interpreter", func() {
 		}
 		config := config.LoadConfig()
 		Ω(config.OpenAIKey).ShouldNot(BeZero())
-		interpreter = NewInterpreter(config.OpenAIKey)
+		interpreter = NewInterpreter()
 	})
 
 	DescribeTable("it can interpret e-mails", func(body string, count int, expectedCommandType CommandType, expectedCount ...int) {

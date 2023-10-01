@@ -18,6 +18,7 @@ Can I badger folks?
 
 Respond with /approve or /yes or /shipit to send the badger e-mail
 Respond with /deny or /no or to do nothing
+Respond with /abort to turn off the scheduler and enter manual mode
 Ignore this e-mail to have me send the badger eventually
 
 Anything below the your command will be added to the top of the e-mail.

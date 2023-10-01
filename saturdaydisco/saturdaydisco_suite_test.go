@@ -1,6 +1,7 @@
 package saturdaydisco_test
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 )
 
 func TestSaturdaydisco(t *testing.T) {
+	os.Setenv("ENV", "TEST")
 	format.TruncatedDiff = false
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Saturdaydisco Suite")

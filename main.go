@@ -4,19 +4,22 @@ import (
 	"html/template"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/onsi/disco/config"
 	"github.com/onsi/disco/mail"
+	"github.com/onsi/disco/s3db"
+	"github.com/onsi/disco/saturdaydisco"
+	"github.com/onsi/disco/weather"
 )
 
 type Server struct {
-	e      *echo.Echo
-	config config.Config
-	outbox mail.OutboxInt
+	e             *echo.Echo
+	config        config.Config
+	outbox        mail.OutboxInt
+	saturdayDisco *saturdaydisco.SaturdayDisco
 
 	TempEmails []string
 }
@@ -40,6 +43,24 @@ func (s *Server) Start() error {
 	if s.config.IsDev() {
 		s.e.Debug = true
 	}
+
+	db, err := s3db.NewS3DB()
+	if err != nil {
+		return err
+	}
+	saturdaydisco, err := saturdaydisco.NewSaturdayDisco(
+		s.config,
+		s.e.Logger.Output(),
+		saturdaydisco.NewAlarmClock(),
+		mail.NewOutbox(s.config.ForwardEmailKey),
+		saturdaydisco.NewInterpreter(),
+		weather.NewForecaster(db),
+		db,
+	)
+	if err != nil {
+		return err
+	}
+	s.saturdayDisco = saturdaydisco
 	s.RegisterRoutes()
 	return s.e.Start(":" + s.config.Port)
 }
@@ -65,20 +86,7 @@ func (s *Server) IncomingEmail(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	go func() {
-		if strings.HasPrefix(email.Text, "/reply-all") {
-			s.outbox.SendEmail(email.ReplyAll("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\nDisco 🪩"))
-		} else if strings.HasPrefix(email.Text, "/reply") {
-			s.outbox.SendEmail(email.Reply("saturday-disco@sedenverultimate.net", "Got **your** message!\n\n_Thanks!_\n\nDisco 🪩"))
-		} else {
-			s.outbox.SendEmail(mail.Email{
-				From:    "saturday-disco@sedenverultimate.net",
-				To:      []mail.EmailAddress{email.From},
-				Subject: "Got your message",
-				Text:    string(data),
-			})
-		}
-	}()
+	s.saturdayDisco.HandleIncomingEmail(email)
 	return c.NoContent(http.StatusOK)
 }
 

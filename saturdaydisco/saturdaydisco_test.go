@@ -13,12 +13,14 @@ import (
 	"github.com/onsi/disco/mail"
 	"github.com/onsi/disco/s3db"
 	. "github.com/onsi/disco/saturdaydisco"
+	"github.com/onsi/disco/weather"
 )
 
 var _ = Describe("SaturdayDisco", func() {
 	var outbox *mail.FakeOutbox
 	var clock *FakeAlarmClock
 	var interpreter *FakeInterpreter
+	var forecaster *weather.FakeForecaster
 	var disco *SaturdayDisco
 	var db *s3db.FakeS3DB
 	var conf config.Config
@@ -51,6 +53,15 @@ var _ = Describe("SaturdayDisco", func() {
 		le = outbox.LastEmail
 		clock = NewFakeAlarmClock()
 		interpreter = NewFakeInterpreter()
+		forecaster = weather.NewFakeForecaster()
+		forecaster.SetForecast(weather.Forecast{
+			Temperature:                72,
+			TemperatureUnit:            "F",
+			WindSpeed:                  "8 mph",
+			ProbabilityOfPrecipitation: 10,
+			ShortForecast:              "Partly Cloud",
+			ShortForecastEmoji:         "🌤️",
+		})
 		db = s3db.NewFakeS3DB()
 		conf.BossEmail = mail.EmailAddress("Boss <boss@example.com>")
 		conf.SaturdayDiscoEmail = mail.EmailAddress("Disco <saturday-disco@sedenverultimate.net>")
@@ -64,7 +75,7 @@ var _ = Describe("SaturdayDisco", func() {
 		isStartup, _ := CurrentSpecReport().MatchesLabelFilter("startup")
 		if !isStartup {
 			var err error
-			disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+			disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, forecaster, db)
 			Ω(err).ShouldNot(HaveOccurred())
 			DeferCleanup(disco.Stop)
 			Ω(disco.GetSnapshot()).Should(HaveState(StatePending))
@@ -89,7 +100,7 @@ var _ = Describe("SaturdayDisco", func() {
 		Describe("backing up regularly", func() {
 			It("saves the backup whenever a command occurs", func() {
 				var err error
-				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, forecaster, db)
 				Ω(err).ShouldNot(HaveOccurred())
 				bossToDisco("/set onsijoe@gmail.com 2")
 				Eventually(disco.GetSnapshot).Should(HaveCount(2))
@@ -98,7 +109,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			It("saves the backup whenever a schedule event occurs", func() {
 				var err error
-				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, forecaster, db)
 				Ω(err).ShouldNot(HaveOccurred())
 				clock.Fire()
 				Eventually(disco.GetSnapshot).Should(HaveState(StateRequestedInviteApproval))
@@ -109,7 +120,7 @@ var _ = Describe("SaturdayDisco", func() {
 		Context("when there is no backup stored in the database", func() {
 			It("starts afresh and sends an email", func() {
 				var err error
-				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, forecaster, db)
 				Ω(err).ShouldNot(HaveOccurred())
 				Ω(le()).Should(HaveSubject("SaturdayDisco Joined the Dance Floor"))
 				Ω(le()).Should(BeSentTo(conf.BossEmail))
@@ -132,7 +143,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			It("returns an error and sends an email", func() {
 				var err error
-				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, forecaster, db)
 				Ω(err).Should(HaveOccurred())
 				Ω(le()).Should(HaveSubject("SaturdayDisco FAILED to Join the Dance Floor"))
 				Ω(le()).Should(BeSentTo(conf.BossEmail))
@@ -147,7 +158,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			It("returns an error and sends an email", func() {
 				var err error
-				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, forecaster, db)
 				Ω(err).Should(HaveOccurred())
 				Ω(le()).Should(HaveSubject("SaturdayDisco FAILED to Join the Dance Floor"))
 				Ω(le()).Should(BeSentTo(conf.BossEmail))
@@ -169,7 +180,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			It("discards the backup, starts afresh, and sends an eamil", func() {
 				var err error
-				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+				disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, forecaster, db)
 				Ω(err).ShouldNot(HaveOccurred())
 				Ω(le()).Should(HaveSubject("SaturdayDisco Joined the Dance Floor"))
 				Ω(le()).Should(BeSentTo(conf.BossEmail))
@@ -206,7 +217,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 				It("spins up and picks up where it left off (and sends an e-mail)", func() {
 					var err error
-					disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+					disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, forecaster, db)
 					Ω(err).ShouldNot(HaveOccurred())
 					Ω(le()).Should(HaveSubject("SaturdayDisco Joined the Dance Floor"))
 					Ω(le()).Should(BeSentTo(conf.BossEmail))
@@ -233,7 +244,7 @@ var _ = Describe("SaturdayDisco", func() {
 				It("spins up and picks up where it left off (and sends an e-mail)", func() {
 					var err error
 					outbox.Clear()
-					disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+					disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, forecaster, db)
 					Ω(err).ShouldNot(HaveOccurred())
 					Eventually(outbox.Emails).Should(HaveLen(2))
 
@@ -271,7 +282,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 				It("aborts and sends an email", func() {
 					var err error
-					disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, db)
+					disco, err = NewSaturdayDisco(conf, GinkgoWriter, clock, outbox, interpreter, forecaster, db)
 					Ω(err).ShouldNot(HaveOccurred())
 					Ω(le()).Should(HaveSubject("SaturdayDisco Joined the Dance Floor"))
 					Ω(le()).Should(BeSentTo(conf.BossEmail))
@@ -331,6 +342,14 @@ var _ = Describe("SaturdayDisco", func() {
 				Ω(le()).Should(BeSentTo(conf.BossEmail))
 				Ω(le()).Should(HaveText(ContainSubstring("I got an error while processing this email:\nboom")))
 				Ω(le()).Should(HaveHTML(""))
+			})
+		})
+
+		Describe("when an e-mail comes from disco itself", func() {
+			It("completely ignores the e-mail", func() {
+				interpreter.SetCommand(Command{CommandType: CommandPlayerStatus})
+				disco.HandleIncomingEmail(mail.E().WithFrom(conf.SaturdayDiscoEmail).WithTo(conf.SaturdayDiscoList).WithSubject("hey").WithBody("Is the game on?"))
+				Consistently(le).Should(BeZero())
 			})
 		})
 
@@ -469,6 +488,7 @@ var _ = Describe("SaturdayDisco", func() {
 				It("returns status", func() {
 					Ω(le()).Should(BeSentTo(conf.BossEmail))
 					Ω(le()).Should(HaveText(ContainSubstring("Current State: invite_sent")))
+					Ω(le()).Should(HaveText(ContainSubstring("Weather Forecast: 🌤️ Partly Cloud: 😎 72ºF | 💧 10% | 💨 8 mph")))
 					Ω(le()).Should(HaveText(ContainSubstring("Participants:")))
 					Ω(le()).Should(HaveText(ContainSubstring("- player@example.com: 1")))
 					Ω(le()).Should(HaveText(ContainSubstring("- onsijoe@gmail.com: 2")))
@@ -495,6 +515,7 @@ var _ = Describe("SaturdayDisco", func() {
 					It("allows players to get a status update, replying to all", func() {
 						Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")))
 						Ω(le()).Should(HaveText(ContainSubstring("The game on " + gameDate + " hasn't been called yet.")))
+						Ω(le()).Should(HaveText(ContainSubstring("Weather Forecast: 🌤️ Partly Cloud: 😎 72ºF | 💧 10% | 💨 8 mph")))
 						Ω(le()).Should(HaveText(ContainSubstring("Players: player and onsijoe (2)")))
 						Ω(le()).Should(HaveText(ContainSubstring("Total: 3")))
 						Ω(le()).Should(HaveHTML(ContainSubstring("Players: player and onsijoe <strong>(2)</strong>")))
@@ -511,6 +532,7 @@ var _ = Describe("SaturdayDisco", func() {
 					It("allows players to get a status update, replying to all", func() {
 						Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")))
 						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>GAME ON!</strong>")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Weather Forecast</strong>: 🌤️ Partly Cloud: 😎 72ºF | 💧 10% | 💨 8 mph")))
 						Ω(le()).Should(HaveText(ContainSubstring("Players: player and onsijoe (2)")))
 						Ω(le()).Should(HaveText(ContainSubstring("Total: 3")))
 					})
@@ -526,6 +548,7 @@ var _ = Describe("SaturdayDisco", func() {
 					It("allows players to get a status update, replying to all", func() {
 						Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")))
 						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>NO GAME</strong>")))
+						Ω(le()).Should(HaveText(ContainSubstring("Weather Forecast: 🌤️ Partly Cloud: 😎 72ºF | 💧 10% | 💨 8 mph")))
 						Ω(le()).Should(HaveText(ContainSubstring("Players: player and onsijoe (2)")))
 						Ω(le()).Should(HaveText(ContainSubstring("Total: 3")))
 					})
@@ -660,6 +683,7 @@ var _ = Describe("SaturdayDisco", func() {
 					Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 					Ω(le()).Should(HaveText(ContainSubstring("Please let me know if you'll be joining us this Saturday " + gameDate)))
 					Ω(le()).Should(HaveText(ContainSubstring("Where: James Bible Park")))
+					Ω(le()).Should(HaveText(ContainSubstring("Weather Forecast: 🌤️ Partly Cloud: 😎 72ºF | 💧 10% | 💨 8 mph")))
 					Ω(le()).Should(HaveHTML(ContainSubstring(`<strong>Where</strong>: <a href="https://maps.app.goo.gl/P1vm2nkZdYLGZbxb9" target="_blank">James Bible Park</a>`)))
 					Ω(disco.GetSnapshot()).Should(HaveState(StateInviteSent))
 				})
@@ -697,6 +721,24 @@ var _ = Describe("SaturdayDisco", func() {
 					Ω(le()).Should(HaveText(ContainSubstring("Please let me know if you'll be joining us this Saturday " + gameDate)))
 					Ω(le()).Should(HaveHTML(ContainSubstring("<strong>")))
 					Ω(disco.GetSnapshot()).Should(HaveState(StateInviteSent))
+				})
+			})
+
+			Context("if the boss replies with /abort", func() {
+				BeforeEach(func() {
+					outbox.Clear()
+					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/abort"))
+					Eventually(le).ShouldNot(BeZero())
+				})
+
+				It("does not send the invitation and sends an abort e-mail", func() {
+					Ω(le()).Should(HaveSubject("Re: [invite-approval-request] Can I send this week's invite?"))
+					Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
+					Ω(le()).Should(BeSentTo(conf.BossEmail))
+					Ω(le()).Should(HaveText(ContainSubstring("Alright.  I'm aborting.  You're on the hook for keeping eyes on things.")))
+
+					Consistently(outbox.Emails).Should(HaveLen(1))
+					Ω(disco.GetSnapshot()).Should(HaveState(StateAbort))
 				})
 			})
 

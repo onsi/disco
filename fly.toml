@@ -15,6 +15,9 @@ primary_region = "den"
 [env]
   ENV = "PROD"
   PORT = "8080"
+  BOSS_EMAIL = "Onsi Fakhouri <onsijoe@gmail.com>"
+  SATURDAY_DISCO_EMAIL = "saturday-disco@sedenverultimate.net"
+  SATURDAY_DISCO_LIST = "saturday-sedenverultimate@googlegroups.com"
 
 [http_service]
   internal_port = 8080

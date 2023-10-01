@@ -7,6 +7,7 @@
 {{end}}Please let me know if you'll be joining us this Saturday **{{.GameDate}}**.
 
 {{template "game_details" .}}
+**Weather Forecast**: {{.Forecast}}
 
 Reminder that we also play at lunch during the week. Visit [sedenverultimate.net](https://www.sedenverultimate.net) to sign up for the lunchtime mailing list.
 
@@ -35,6 +36,7 @@ Can I send this week's invite?
 
 Respond with /approve or /yes or /shipit to send the invite.
 Respond with /deny or /no or to send the no-invite e-mail.
+Respond with /abort to turn off the scheduler and enter manual mode.
 Ignore this e-mail to have me send the invite eventually
 
 Anything below the your command will be added to the top of the e-mail.

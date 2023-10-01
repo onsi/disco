@@ -7,8 +7,8 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/onsi/disco/askgpt"
 	"github.com/onsi/disco/mail"
-	openai "github.com/sashabaranov/go-openai"
 )
 
 type promptData struct {
@@ -50,13 +50,10 @@ type InterpreterInt interface {
 }
 
 type Interpreter struct {
-	client *openai.Client
 }
 
-func NewInterpreter(apiKey string) *Interpreter {
-	return &Interpreter{
-		client: openai.NewClient(apiKey),
-	}
+func NewInterpreter() *Interpreter {
+	return &Interpreter{}
 }
 
 func (interpreter *Interpreter) InterpretEmail(email mail.Email, count int) (Command, error) {
@@ -72,37 +69,17 @@ func (interpreter *Interpreter) InterpretEmail(email mail.Email, count int) (Com
 	promptTemplate.Execute(prompt, promptData{Count: count})
 
 	userMessage := email.Text
-	if len(userMessage) > USER_MESSAGE_CUTOFF {
-		userMessage = userMessage[:USER_MESSAGE_CUTOFF] + "..."
-	}
 
-	resp, err := interpreter.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		Model:       openai.GPT3Dot5Turbo,
-		MaxTokens:   512,
-		Temperature: 0,
-		TopP:        1,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    openai.ChatMessageRoleSystem,
-				Content: prompt.String(),
-			},
-			{
-				Role:    openai.ChatMessageRoleUser,
-				Content: userMessage,
-			},
-		},
-	})
+	resp, err := askgpt.AskGPT3(ctx, prompt.String(), userMessage)
 
-	if err != nil {
+	if err == askgpt.ErrNoChoices {
+		return cmd, nil
+	} else if err != nil {
 		return Command{}, err
 	}
 
-	if len(resp.Choices) == 0 {
-		return cmd, nil
-	}
-
 	var response responseJSON
-	err = json.Unmarshal([]byte(resp.Choices[0].Message.Content), &response)
+	err = json.Unmarshal([]byte(resp), &response)
 	if err != nil {
 		return Command{}, err
 	}

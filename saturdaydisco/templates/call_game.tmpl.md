@@ -7,7 +7,6 @@
 {{end}}We have quorum!  **GAME ON** for **{{.GameDate}}**.
 
 {{template "game_details" .}}
-
 {{template "public_status" .}}
 
 {{template "signature" .}}{{end}}
@@ -64,8 +63,9 @@ Subject: {{template "no_game_subject" .}}
 
 Can I call no game?
 
-Respond with /approve or /yes or /shipit to send the no game email.
-Respond with /deny or /no **to abort this week**.
+Respond with /approve or /yes or /shipit to send the no game email
+Respond with /deny or /no **to abort this week**
+Respond with /abort to turn off the scheduler and enter manual mode
 Ignore this e-mail to have me send the no game eventually
 
 Anything below the your command will be added to the top of the e-mail.
