@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/onsi/say"
 )
 
 type forwardEmailAddress struct {
@@ -80,6 +82,9 @@ func ParseIncomingEmail(data []byte) (Email, error) {
 	}
 
 	fullBody := model.Text
+	say.Pln("Email Debugging:  Here's the full body")
+	say.Plni(1, "%s", fullBody)
+
 	body := &strings.Builder{}
 	lines := strings.Split(fullBody, "\n")
 	for idx, line := range lines {
@@ -99,6 +104,9 @@ func ParseIncomingEmail(data []byte) (Email, error) {
 		}
 	}
 	out.Text = body.String()
+
+	say.Pln("Email Debugging:  And here's What I extracted")
+	say.Plni(1, "%s", out.Text)
 
 	return out, nil
 }

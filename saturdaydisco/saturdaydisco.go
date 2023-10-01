@@ -81,6 +81,7 @@ const (
 	CommandAdminGameOn   CommandType = "admin_game_on"
 	CommandAdminNoGame   CommandType = "admin_no_game"
 	CommandAdminSetCount CommandType = "admin_set_count"
+	CommandAdminDebug    CommandType = "admin_debug"
 	CommandAdminInvalid  CommandType = "admin_invalid"
 
 	CommandPlayerStatus      CommandType = "player_status"
@@ -413,6 +414,8 @@ func (s *SaturdayDisco) processEmail(email mail.Email) {
 			}
 		} else if strings.HasPrefix(commandLine, "/status") {
 			c.CommandType = CommandAdminStatus
+		} else if strings.HasPrefix(commandLine, "/debug") {
+			c.CommandType = CommandAdminDebug
 		} else if strings.HasPrefix(commandLine, "/abort") {
 			c.CommandType = CommandAdminAbort
 		} else if strings.HasPrefix(commandLine, "/game-on") {
@@ -555,6 +558,13 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 	case CommandAdminStatus:
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
 			s.emailBody("boss_status", s.emailData())))
+	case CommandAdminDebug:
+		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+			mail.Markdown(s.emailBody("boss_debug",
+				s.emailData().
+					WithMessage("Here's what a **multiline message** looks like.\n\n_Woohoo!_").
+					WithError(fmt.Errorf("And this is what an error looks like!"))),
+			)))
 	case CommandAdminAbort:
 		s.sendEmail(command.Email.Reply(s.config.SaturdayDiscoEmail,
 			s.emailBody("abort", s.emailData())),
