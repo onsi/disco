@@ -17,7 +17,7 @@ func loadEmailFixture(filename string) []byte {
 
 var _ = Describe("ParseIncomingEmail", func() {
 	It("extracts the key header pieces of information from an e-mail", func() {
-		email, err := mail.ParseIncomingEmail(loadEmailFixture("email_from_ios"))
+		email, err := mail.ParseIncomingEmail(loadEmailFixture("email_from_ios"), GinkgoWriter)
 		Ω(err).ShouldNot(HaveOccurred())
 		Ω(email.From).Should(Equal(mail.EmailAddress("Onsi Fakhouri <onsijoe@gmail.com>")))
 		Ω(email.To).Should(ConsistOf(mail.EmailAddress("saturday-disco@sedenverultimate.net")))
@@ -30,7 +30,7 @@ var _ = Describe("ParseIncomingEmail", func() {
 
 	Context("when there are multiple to and CC recipients", func() {
 		It("extracts them correctly", func() {
-			email, err := mail.ParseIncomingEmail(loadEmailFixture("email_with_multiple_to_and_cc"))
+			email, err := mail.ParseIncomingEmail(loadEmailFixture("email_with_multiple_to_and_cc"), GinkgoWriter)
 			Ω(err).ShouldNot(HaveOccurred())
 			Ω(email.From).Should(Equal(mail.EmailAddress("Onsi Fakhouri <onsijoe@gmail.com>")))
 			Ω(email.To).Should(ConsistOf(mail.EmailAddress("saturday-disco@sedenverultimate.net"), mail.EmailAddress("Onsi Fakhouri <onsijoe@gmail.com>")))
@@ -45,7 +45,7 @@ var _ = Describe("ParseIncomingEmail", func() {
 
 	Describe("extracting bodies", func() {
 		It("only extracts the text portion, ignoring HTML, and it grabs everything if this email is not a reply", func() {
-			email, err := mail.ParseIncomingEmail(loadEmailFixture("email_from_ios"))
+			email, err := mail.ParseIncomingEmail(loadEmailFixture("email_from_ios"), GinkgoWriter)
 			Ω(err).ShouldNot(HaveOccurred())
 			Ω(email.Text).Should(Equal("This is an email from iOS Mail.\n\nOnsi"))
 			Ω(email.HTML).Should(BeZero())
@@ -53,12 +53,12 @@ var _ = Describe("ParseIncomingEmail", func() {
 
 		Context("when the e-mail is a reply to a prior e-mail", func() {
 			It("extracts just the text format of the most recent response, assuming it's on the top", func() {
-				email, err := mail.ParseIncomingEmail(loadEmailFixture("reply_from_ios_mail"))
+				email, err := mail.ParseIncomingEmail(loadEmailFixture("reply_from_ios_mail"), GinkgoWriter)
 				Ω(err).ShouldNot(HaveOccurred())
 				Ω(email.Text).Should(Equal("And this is my reply… from iOS Mail\n\n"))
 				Ω(email.HTML).Should(BeZero())
 
-				email, err = mail.ParseIncomingEmail(loadEmailFixture("reply_from_gmail_app"))
+				email, err = mail.ParseIncomingEmail(loadEmailFixture("reply_from_gmail_app"), GinkgoWriter)
 				Ω(err).ShouldNot(HaveOccurred())
 				Ω(email.Text).Should(Equal("And this is another rely… from the *Gmail App*.\n\n"))
 				Ω(email.HTML).Should(BeZero())

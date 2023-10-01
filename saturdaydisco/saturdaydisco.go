@@ -556,9 +556,11 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
 			s.emailBody("invalid_admin_email", s.emailData().WithError(command.Error))))
 	case CommandAdminStatus:
+		s.logi(1, "{{green}}boss is asking for status{{/}}")
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
 			s.emailBody("boss_status", s.emailData())))
 	case CommandAdminDebug:
+		s.logi(1, "{{green}}boss is asking for debug info{{/}}")
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
 			mail.Markdown(s.emailBody("boss_debug",
 				s.emailData().
@@ -566,14 +568,17 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 					WithError(fmt.Errorf("And this is what an error looks like!"))),
 			)))
 	case CommandAdminAbort:
+		s.logi(1, "{{red}}boss has asked me to abort{{/}}")
 		s.sendEmail(command.Email.Reply(s.config.SaturdayDiscoEmail,
 			s.emailBody("abort", s.emailData())),
 			StateAbort, s.replyWithFailureErrorHandler)
 	case CommandAdminGameOn:
+		s.logi(1, "{{green}}boss has asked me to send game-on{{/}}")
 		s.sendEmail(s.emailForList("game_on",
 			s.emailData().WithMessage(command.AdditionalContent)),
 			StateGameOnSent, s.replyWithFailureErrorHandler)
 	case CommandAdminNoGame:
+		s.logi(1, "{{red}}boss has asked me to send no-game{{/}}")
 		s.sendEmail(s.emailForList("no_game",
 			s.emailData().WithMessage(command.AdditionalContent)),
 			StateNoGameSent, s.replyWithFailureErrorHandler)
@@ -592,8 +597,6 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 		s.logi(1, "{{green}}player is asking for status.{{/}}")
 		s.sendEmailWithNoTransition(command.Email.ReplyAll(s.config.SaturdayDiscoEmail,
 			mail.Markdown(s.emailBody("public_status", s.emailData()))).AndCC(s.config.BossEmail))
-
-		//		s.sendEmailWithNoTransition("public-status-email") //reply-all cc boss too
 	case CommandPlayerUnsubscribe:
 		s.logi(1, "{{green}}player asking to unsubscribe.  Acking and looping in the boss.{{/}}")
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,

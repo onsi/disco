@@ -518,7 +518,8 @@ var _ = Describe("SaturdayDisco", func() {
 						Ω(le()).Should(HaveText(ContainSubstring("Weather Forecast: 🌤️ Partly Cloud: 😎 72ºF | 💧 10% | 💨 8 mph")))
 						Ω(le()).Should(HaveText(ContainSubstring("Players: player and onsijoe (2)")))
 						Ω(le()).Should(HaveText(ContainSubstring("Total: 3")))
-						Ω(le()).Should(HaveHTML(ContainSubstring("Players: player and onsijoe <strong>(2)</strong>")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Players</strong>: player and onsijoe <strong>(2)</strong>")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Total</strong>: 3")))
 					})
 				})
 
@@ -1113,7 +1114,7 @@ var _ = Describe("SaturdayDisco", func() {
 						Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 						Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 						Ω(le()).Should(HaveText(ContainSubstring("We have quorum!  GAME ON for " + gameDate)))
-						Ω(le()).Should(HaveHTML(ContainSubstring("Players: player <strong>(5)</strong>, Onsi and Josh <strong>(2)</strong>")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Players</strong>: player <strong>(5)</strong>, Onsi and Josh <strong>(2)</strong>")))
 						Ω(disco.GetSnapshot()).Should(HaveState(StateGameOnSent))
 					})
 
@@ -1124,7 +1125,7 @@ var _ = Describe("SaturdayDisco", func() {
 						Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 						Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 						Ω(le()).Should(HaveText(ContainSubstring("Join us, we're playing today!")))
-						Ω(le()).Should(HaveHTML(ContainSubstring("Players: player <strong>(5)</strong>, Onsi and Josh <strong>(2)</strong>")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Players</strong>: player <strong>(5)</strong>, Onsi and Josh <strong>(2)</strong>")))
 
 						clock.Fire()
 						Ω(clock.Time()).Should(BeOn(time.Saturday, 12))
@@ -1163,7 +1164,7 @@ var _ = Describe("SaturdayDisco", func() {
 						Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 						Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 						Ω(le()).Should(HaveText(ContainSubstring("We have quorum!  GAME ON for " + gameDate)))
-						Ω(le()).Should(HaveHTML(ContainSubstring("Players: player <strong>(5)</strong>, Onsi and Josh <strong>(2)</strong>")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Players</strong>: player <strong>(5)</strong>, Onsi and Josh <strong>(2)</strong>")))
 						Ω(disco.GetSnapshot()).Should(HaveState(StateGameOnSent))
 					})
 
@@ -1174,7 +1175,8 @@ var _ = Describe("SaturdayDisco", func() {
 						Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 						Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 						Ω(le()).Should(HaveText(ContainSubstring("Join us, we're playing today!")))
-						Ω(le()).Should(HaveHTML(ContainSubstring("Players: player <strong>(5)</strong>, Onsi and Josh <strong>(2)</strong>")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Players</strong>: player <strong>(5)</strong>, Onsi and Josh <strong>(2)</strong>")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Total</strong>: 8 🎉")))
 					})
 				})
 
@@ -1202,7 +1204,7 @@ var _ = Describe("SaturdayDisco", func() {
 						Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 						Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 						Ω(le()).Should(HaveText(ContainSubstring("Join us, we're playing today!")))
-						Ω(le()).Should(HaveHTML(ContainSubstring("Players: player <strong>(5)</strong>, Onsi and Josh <strong>(2)</strong>")))
+						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Players</strong>: player <strong>(5)</strong>, Onsi and Josh <strong>(2)</strong>")))
 					})
 				})
 

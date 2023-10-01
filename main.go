@@ -80,7 +80,7 @@ func (s *Server) IncomingEmail(c echo.Context) error {
 	if err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	email, err := mail.ParseIncomingEmail(data)
+	email, err := mail.ParseIncomingEmail(data, s.e.Logger.Output())
 	if err != nil {
 		s.e.Logger.Errorf("failed to parse incoming email: %s", err.Error())
 		return c.String(http.StatusInternalServerError, err.Error())

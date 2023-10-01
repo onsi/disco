@@ -3,6 +3,7 @@ package mail
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
 
@@ -58,7 +59,7 @@ var replyRegexes = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)` + emailRegex + `\s+wrote:`),
 }
 
-func ParseIncomingEmail(data []byte) (Email, error) {
+func ParseIncomingEmail(data []byte, debug io.Writer) (Email, error) {
 	model := forwardEmailModel{}
 	err := json.Unmarshal(data, &model)
 	if err != nil {
@@ -82,8 +83,8 @@ func ParseIncomingEmail(data []byte) (Email, error) {
 	}
 
 	fullBody := model.Text
-	say.Pln("Email Debugging:  Here's the full body")
-	say.Plni(1, "%s", fullBody)
+	say.Fpln(debug, "Email Debugging:  Here's the full body")
+	say.Fplni(debug, 1, "%s", fullBody)
 
 	body := &strings.Builder{}
 	lines := strings.Split(fullBody, "\n")
@@ -105,8 +106,8 @@ func ParseIncomingEmail(data []byte) (Email, error) {
 	}
 	out.Text = body.String()
 
-	say.Pln("Email Debugging:  And here's What I extracted")
-	say.Plni(1, "%s", out.Text)
+	say.Fpln(debug, "Email Debugging:  And here's What I extracted")
+	say.Fplni(debug, 1, "%s", out.Text)
 
 	return out, nil
 }
