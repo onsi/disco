@@ -151,6 +151,13 @@ type SubscriptionRequest struct {
 	Message        string `json:"message"`
 }
 
+func truncate(input string, maxLength int) string {
+	if len(input) > maxLength {
+		input = input[:maxLength] + "..."
+	}
+	return input
+}
+
 func (s *Server) Subscribe(c echo.Context) error {
 	say.Fplni(s.e.Logger.Output(), 0, "{{green}}Got a subscription request{{/}}")
 	var request SubscriptionRequest
@@ -158,6 +165,9 @@ func (s *Server) Subscribe(c echo.Context) error {
 		say.Fplni(s.e.Logger.Output(), 1, "{{red}}Failed to bind request %s{{/}}", err.Error())
 		return c.String(http.StatusBadRequest, err.Error())
 	}
+
+	request.Email = truncate(strings.TrimSpace(request.Email), 100)
+	request.Message = truncate(strings.TrimSpace(request.Message), 1000)
 
 	body := &strings.Builder{}
 	err := subscribeTemplate.Execute(body, request)

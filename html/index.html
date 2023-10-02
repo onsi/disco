@@ -434,7 +434,7 @@
         <div class="subscribe form" id="subscribe">
             <form action="/subscribe" method="post">
                 <div class="form-row">
-                    <input type="email" name="email" id="email" placeholder="E-mail Address" required />
+                    <input type="email" name="email" id="email" placeholder="E-mail Address" maxlength="100" required />
                     <span>
                         <input type="checkbox" id="saturday" name="saturday" checked /><label
                             for="saturday">Saturday</label>
@@ -442,7 +442,8 @@
                             for="lunchtime">Lunchtime</label>
                     </span>
                 </div>
-                <textarea name="message" id="message" placeholder="Message (optional)" rows="3"></textarea>
+                <textarea name="message" id="message" placeholder="Message (optional)" rows="3"
+                    maxlength="1000"></textarea>
                 <input type="submit" value="Subscribe" />
             </form>
         </div>
