@@ -5,7 +5,7 @@ Disco is a heavily over-engineered solution to the problem of scheduling ultimat
 - A web-page at sedenverultimate.net hosted on fly.io
 - The ability to send invite and call game/no-game on these two mailing lists:
     - saturday-se-denver-ultimate@googlegroups.com
-    - lunchtime-se-denver-ultimate@googlegroups.com
+    - lunchtime-se-denver-ultimate@googlegroups.com (coming soon)
 - A chatbot that monitors for chatter on the aforementioned mailing lists
 
 ## Third-Party Accounts/Things Needed to run Disco
@@ -17,3 +17,5 @@ All credentials are in a `.secrets` file on Onsi's laptop or stored securely in 
 - "database" is backed up on Amazon S3
 - e-mail sneding and forwarding for the disco bot is handled by forwardemail.net
 - language parsing is handled by openai.com
+- weather is provided by api.weather.gov
+- the mailing lists are hosted on googlegroups.com

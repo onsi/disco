@@ -576,6 +576,26 @@ var _ = Describe("SaturdayDisco", func() {
 			})
 		})
 
+		Describe("resetting the system", func() {
+			BeforeEach(func() {
+				clock.Fire() // invite approval
+				clock.Fire() // invite
+				Eventually(disco.GetSnapshot).Should(HaveState(StateInviteSent))
+				bossToDisco("/set onsijoe@gmail.com 3")
+				Eventually(disco.GetSnapshot).Should(HaveCount(3))
+			})
+
+			It("resets the system", func() {
+				bossToDisco("/RESET-RESET-RESET")
+				Eventually(disco.GetSnapshot).Should(HaveState(StatePending))
+				Ω(disco.GetSnapshot()).Should(HaveCount(0))
+
+				Ω(le()).Should(HaveSubject("Re: hey"))
+				Ω(le()).Should(BeSentTo(conf.BossEmail))
+				Ω(le()).Should(HaveText(ContainSubstring("Alright.  I'm resetting.  You'd better know what you're doing!")))
+			})
+		})
+
 		Describe("if a player wants to unsubscribe", func() {
 			BeforeEach(func() {
 				interpreter.SetCommand(Command{CommandType: CommandPlayerUnsubscribe})

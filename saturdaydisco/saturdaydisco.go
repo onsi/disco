@@ -78,6 +78,7 @@ const (
 
 	CommandAdminStatus   CommandType = "admin_status"
 	CommandAdminAbort    CommandType = "admin_abort"
+	CommandAdminReset    CommandType = "admin_reset"
 	CommandAdminGameOn   CommandType = "admin_game_on"
 	CommandAdminNoGame   CommandType = "admin_no_game"
 	CommandAdminSetCount CommandType = "admin_set_count"
@@ -428,6 +429,8 @@ func (s *SaturdayDisco) processEmail(email mail.Email) {
 			c.CommandType = CommandAdminDebug
 		} else if strings.HasPrefix(commandLine, "/abort") {
 			c.CommandType = CommandAdminAbort
+		} else if strings.HasPrefix(email.Text, "/RESET-RESET-RESET") {
+			c.CommandType = CommandAdminReset
 		} else if strings.HasPrefix(commandLine, "/game-on") {
 			c.CommandType = CommandAdminGameOn
 			idxFirstNewline := strings.Index(email.Text, "\n")
@@ -569,6 +572,11 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 		s.logi(1, "{{green}}boss is asking for status{{/}}")
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
 			s.emailBody("boss_status", s.emailData())))
+	case CommandAdminReset:
+		s.logi(1, "{{red}}BOSS IS RESETTING THE SYSTEM.  HOLD ON TO YOUR BUTTS.{{/}}")
+		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+			s.emailBody("reset", s.emailData())))
+		s.reset()
 	case CommandAdminDebug:
 		s.logi(1, "{{green}}boss is asking for debug info{{/}}")
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,

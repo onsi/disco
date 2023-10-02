@@ -12,10 +12,6 @@ import (
 	"github.com/onsi/disco/s3db"
 )
 
-//set up admin@sedevnerultimate.net in forwardemail and as the user-agent
-//http://www.weather.gov/documentation/services-web-api
-// why am i not gettin us units?
-
 const DEFAULT_TIMEOUT = 10 * time.Second
 const API_ENDPOINT = "https://api.weather.gov"
 const USER_AGENT = "(www.sedenverultimate.net, admin@sedenverultimate.net)"
