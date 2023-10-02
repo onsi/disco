@@ -611,13 +611,11 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 		s.logi(1, "{{green}}player asking to unsubscribe.  Acking and looping in the boss.{{/}}")
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
 			s.emailBody("unsubscribe_player_command", s.emailData())).AndCC(s.config.BossEmail))
-
 	case CommandPlayerSetCount:
 		s.logi(1, "{{green}}player sent a message signing up.{{/}}")
 		s.Participants = s.Participants.UpdateCount(command.EmailAddress, command.Count, command.Email)
-		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
-			mail.Markdown(s.emailBody("acknowledge_player_set_count", s.emailData().WithMessage("%d", command.Count)))).
-			AndCC(s.config.BossEmail))
+		s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
+			s.emailBody("acknowledge_player_set_count", s.emailData().WithMessage("%d", command.Count))))
 	case CommandPlayerUnsure:
 		if command.IsPrivatePlayerCommand {
 			s.logi(1, "{{red}}player send a private message that i'm unsure about.  CCing the boss and asking for help.{{/}}")

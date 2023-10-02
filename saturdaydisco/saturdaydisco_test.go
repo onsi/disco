@@ -454,15 +454,15 @@ var _ = Describe("SaturdayDisco", func() {
 					Eventually(disco.GetSnapshot).Should(HaveCount(1))
 				})
 
-				It("allows players to register themselves, replying only to them and CCing boss", func() {
+				It("allows players to register themselves, forwarding the e-mail boss", func() {
 					interpreter.SetCommand(Command{CommandType: CommandPlayerSetCount, Count: 2})
 					disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("brother@example.com")).WithSubject("hey").WithBody("My brother's joining too!"))
 
 					Eventually(disco.GetSnapshot).Should(HaveCount(2))
-					Ω(le()).Should(HaveSubject("Re: hey"))
-					Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail))
-					Ω(le()).Should(HaveText(ContainSubstring("I've set your count to 2.")))
-					Ω(le()).Should(HaveHTML(ContainSubstring("ve set your count to 2.")))
+					Ω(le()).Should(HaveSubject("Fwd: hey"))
+					Ω(le()).Should(BeSentTo(conf.BossEmail))
+					Ω(le()).Should(HaveText(ContainSubstring("I've set the player's count to 2.")))
+					Ω(le()).Should(HaveHTML(BeEmpty()))
 				})
 			})
 		})
