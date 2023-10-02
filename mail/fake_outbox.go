@@ -1,10 +1,14 @@
 package mail
 
 import (
+	"io"
 	"sync"
+
+	"github.com/onsi/say"
 )
 
 type FakeOutbox struct {
+	w      io.Writer
 	err    error
 	emails []Email
 	lock   *sync.Mutex
@@ -13,12 +17,21 @@ type FakeOutbox struct {
 func NewFakeOutbox() *FakeOutbox {
 	return &FakeOutbox{
 		lock: &sync.Mutex{},
+		w:    io.Discard,
 	}
+}
+
+func (o *FakeOutbox) EnableLogging(w io.Writer) {
+	o.lock.Lock()
+	defer o.lock.Unlock()
+	o.w = w
 }
 
 func (o *FakeOutbox) SendEmail(email Email) error {
 	o.lock.Lock()
 	defer o.lock.Unlock()
+	say.Fpln(o.w, "Sending email:")
+	say.Fplni(o.w, 1, "%s", email)
 	o.emails = append(o.emails, email)
 	return o.err
 }

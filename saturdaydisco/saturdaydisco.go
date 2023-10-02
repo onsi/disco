@@ -132,6 +132,7 @@ type SaturdayDisco struct {
 	db          s3db.S3DBInt
 	commandC    chan Command
 	snapshotC   chan chan<- SaturdayDiscoSnapshot
+	templateC   chan chan<- TemplateData
 	config      config.Config
 	lock        *sync.Mutex
 	ctx         context.Context
@@ -173,6 +174,7 @@ func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockIn
 		db:          db,
 		commandC:    make(chan Command),
 		snapshotC:   make(chan chan<- SaturdayDiscoSnapshot),
+		templateC:   make(chan chan<- TemplateData),
 		w:           w,
 
 		config: config,
@@ -250,6 +252,12 @@ func (s *SaturdayDisco) HandleIncomingEmail(email mail.Email) {
 func (s *SaturdayDisco) GetSnapshot() SaturdayDiscoSnapshot {
 	c := make(chan SaturdayDiscoSnapshot)
 	s.snapshotC <- c
+	return <-c
+}
+
+func (s *SaturdayDisco) TemplateData() TemplateData {
+	c := make(chan TemplateData)
+	s.templateC <- c
 	return <-c
 }
 
@@ -331,6 +339,8 @@ func (s *SaturdayDisco) dance() {
 			s.log("{{yellow}}received a command{{/}}")
 			s.handleCommand(command)
 			s.backup()
+		case c := <-s.templateC:
+			c <- s.emailData()
 		case c := <-s.snapshotC:
 			c <- s.SaturdayDiscoSnapshot.dup()
 		}

@@ -51,6 +51,18 @@ func (f Forecast) TemperatureEmoji() string {
 	}
 }
 
+func (f Forecast) PrecipitationClassName() string {
+	if f.ProbabilityOfPrecipitation < 20 {
+		return "dry"
+	} else if f.ProbabilityOfPrecipitation < 50 {
+		return "possible"
+	} else if f.ProbabilityOfPrecipitation < 80 {
+		return "probable"
+	} else {
+		return "definite"
+	}
+}
+
 func (f Forecast) String() string {
 	if f.IsZero() {
 		return "Weather forecast is unavailable"
