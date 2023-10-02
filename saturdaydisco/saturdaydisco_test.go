@@ -313,7 +313,7 @@ var _ = Describe("SaturdayDisco", func() {
 			})
 		})
 
-		Describe("when a player sends an e-mail that includes the list", func() {
+		Describe("when a player sends an e-mail that includes the list or boss", func() {
 			Context("and disco is unsure if its a command", func() {
 				It("does nothing", func() {
 					interpreter.SetCommand(Command{CommandType: CommandPlayerUnsure})
@@ -321,12 +321,20 @@ var _ = Describe("SaturdayDisco", func() {
 					Consistently(le).Should(BeZero())
 				})
 			})
+
+			Context("and disco is unsure if its a command", func() {
+				It("does nothing", func() {
+					interpreter.SetCommand(Command{CommandType: CommandPlayerUnsure})
+					disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.BossEmail).WithSubject("hey").WithBody("I'm in!"))
+					Consistently(le).Should(BeZero())
+				})
+			})
 		})
 
-		Describe("when a player sends an e-mail just to disco and disco is unsure", func() {
+		Describe("when a player sends an e-mail that doesn't include the boss and disco is unsure", func() {
 			It("replies and CCs the boss", func() {
 				interpreter.SetCommand(Command{CommandType: CommandPlayerUnsure})
-				disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail).WithSubject("hey").WithBody("Make me a bagel."))
+				disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, "someone-else@example.com").WithSubject("hey").WithBody("Make me a bagel."))
 				Eventually(le).Should(HaveSubject("Re: hey"))
 				Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail))
 				Ω(le()).Should(HaveText(ContainSubstring("I'm not sure what you're asking me to do.  I'm CCing the boss to help.")))

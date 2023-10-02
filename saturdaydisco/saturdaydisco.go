@@ -380,7 +380,7 @@ func (s *SaturdayDisco) processEmail(email mail.Email) {
 		email.To[0].Equals(s.config.SaturdayDiscoEmail)
 	isAdminReply := isAdminCommand && strings.HasPrefix(email.Subject, "Re: [")
 	isPotentialPlayerCommand := !email.From.Equals(s.config.BossEmail) && email.IncludesRecipient(s.config.SaturdayDiscoList)
-	isPrivatePlayerCommand := !email.From.Equals(s.config.BossEmail) && !email.IncludesRecipient(s.config.SaturdayDiscoList) && len(email.Recipients()) == 1
+	isPrivatePlayerCommand := !email.From.Equals(s.config.BossEmail) && !email.IncludesRecipient(s.config.SaturdayDiscoList) && !email.IncludesRecipient(s.config.BossEmail)
 
 	var err error
 	if isAdminReply {
