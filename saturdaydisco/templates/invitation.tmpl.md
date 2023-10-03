@@ -36,6 +36,7 @@ Can I send this week's invite?
 
 Respond with /approve or /yes or /shipit to send the invite.
 Respond with /deny or /no or to send the no-invite e-mail.
+Respond with /delay <int> to delay the invite by <int> hours.
 Respond with /abort to turn off the scheduler and enter manual mode.
 Ignore this e-mail to have me send the invite eventually (on {{.NextEvent}})
 

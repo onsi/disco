@@ -100,6 +100,7 @@ type Command struct {
 	IsPrivatePlayerCommand bool
 
 	Approved          bool
+	Delay             int
 	AdditionalContent string
 
 	EmailAddress mail.EmailAddress
@@ -372,6 +373,7 @@ func (s *SaturdayDisco) backup() {
 }
 
 var setCommandRegex = regexp.MustCompile(`^/set\s+(.+)+\s+(\d+)$`)
+var delayCommandRegex = regexp.MustCompile(`^/delay\s+(\d+)$`)
 
 func (s *SaturdayDisco) processEmail(email mail.Email) {
 	s.logi(0, "{{yellow}}Processing Email:{{/}}")
@@ -404,14 +406,25 @@ func (s *SaturdayDisco) processEmail(email mail.Email) {
 			c.Error = fmt.Errorf("invalid reply subject: %s", email.Subject)
 		}
 		if c.Error == nil {
-			if strings.HasPrefix(email.Text, "/approve") || strings.HasPrefix(email.Text, "/yes") || strings.HasPrefix(email.Text, "/shipit") {
+			commandLine := strings.Split(strings.TrimSpace(email.Text), "\n")[0]
+			if strings.HasPrefix(commandLine, "/approve") || strings.HasPrefix(commandLine, "/yes") || strings.HasPrefix(commandLine, "/shipit") {
 				c.Approved = true
-			} else if strings.HasPrefix(email.Text, "/deny") || strings.HasPrefix(email.Text, "/no") {
+			} else if strings.HasPrefix(commandLine, "/deny") || strings.HasPrefix(commandLine, "/no") {
 				c.Approved = false
-			} else if strings.HasPrefix(email.Text, "/abort") {
+			} else if match := delayCommandRegex.FindAllStringSubmatch(commandLine, -1); match != nil {
+				c.Delay, err = strconv.Atoi(match[0][1])
+				if c.Delay <= 0 {
+					c.Error = fmt.Errorf("invalid delay count for /delay command: %s - must be > 0", match[0][1])
+				}
+				if err != nil {
+					c.Error = fmt.Errorf("invalid delay count for /delay command: %s", match[0][1])
+				}
+			} else if strings.HasPrefix(commandLine, "/RESET-RESET-RESET") {
+				c.CommandType = CommandAdminReset
+			} else if strings.HasPrefix(commandLine, "/abort") {
 				c.CommandType = CommandAdminAbort
 			} else {
-				c.Error = fmt.Errorf("invalid command in reply, must be one of /approve, /yes, /shipit, /deny, or /no")
+				c.Error = fmt.Errorf("invalid command in reply, must be one of /approve, /yes, /shipit, /deny, /no, /delay <int>, /abort, or /RESET-RESET-RESET")
 			}
 		}
 		if c.Error == nil {
@@ -650,15 +663,20 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 func (s *SaturdayDisco) handleReplyCommand(command Command) {
 	data := s.emailData().WithMessage(command.AdditionalContent).WithError(command.Error)
 	var expectedState SaturdayDiscoState
+	var requestedApproval string
 	switch command.CommandType {
 	case CommandRequestedInviteApprovalReply:
 		expectedState = StateRequestedInviteApproval
+		requestedApproval = "invite"
 	case CommandRequestedBadgerApprovalReply:
 		expectedState = StateRequestedBadgerApproval
+		requestedApproval = "badger"
 	case CommandRequestedGameOnApprovalReply:
 		expectedState = StateRequestedGameOnApproval
+		requestedApproval = "game on"
 	case CommandRequestedNoGameApprovalReply:
 		expectedState = StateRequestedNoGameApproval
+		requestedApproval = "no game"
 	}
 	if s.State != expectedState {
 		s.logi(1, "{{red}}boss sent me a reply command: %s, but i'm in the wrong state: %s{{/}}", command.CommandType, s.State)
@@ -668,6 +686,15 @@ func (s *SaturdayDisco) handleReplyCommand(command Command) {
 		))
 		return
 	}
+	if command.Delay > 0 {
+		s.logi(1, "{{green}}boss says to delay the next event by %d hours{{/}}", command.Delay)
+		s.NextEvent = s.NextEvent.Add(time.Duration(command.Delay) * time.Hour)
+		s.alarmClock.SetAlarm(s.NextEvent)
+		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+			s.emailBody("acknowledge_delay", s.emailData().WithMessage("the %s email by %d hours", requestedApproval, command.Delay))))
+		return
+	}
+
 	switch command.CommandType {
 	case CommandRequestedInviteApprovalReply:
 		if command.Approved {

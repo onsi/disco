@@ -739,6 +739,64 @@ var _ = Describe("SaturdayDisco", func() {
 				})
 			})
 
+			Context("if the boss asks for a delay", func() {
+				Context("and the delay is malformed", func() {
+					BeforeEach(func() {
+						outbox.Clear()
+						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay"))
+					})
+
+					It("returns an error and doesn't change the timer", func() {
+						Eventually(le).ShouldNot(BeZero())
+						Ω(le()).Should(BeSentTo(conf.BossEmail))
+						Ω(le()).Should(HaveText(ContainSubstring("invalid command in reply, must be one of /approve, /yes, /shipit, /deny, /no, /delay <int>, /abort, or /RESET-RESET-RESET")))
+
+						outbox.Clear()
+						clock.Fire()
+						Eventually(le).Should(HaveSubject("Saturday Bible Park Frisbee " + gameDate))
+						Ω(clock.Time()).Should(BeOn(time.Tuesday, 10))
+					})
+				})
+
+				Context("and the delay is for 0 hours", func() {
+					BeforeEach(func() {
+						outbox.Clear()
+						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 0"))
+					})
+
+					It("returns an error and doesn't change the timer", func() {
+						Eventually(le).ShouldNot(BeZero())
+						Ω(le()).Should(BeSentTo(conf.BossEmail))
+						Ω(le()).Should(HaveText(ContainSubstring("invalid delay count for /delay command: 0 - must be > 0")))
+
+						outbox.Clear()
+						clock.Fire()
+						Eventually(le).Should(HaveSubject("Saturday Bible Park Frisbee " + gameDate))
+						Ω(clock.Time()).Should(BeOn(time.Tuesday, 10))
+					})
+				})
+
+				Context("and the delay is for some positive number of hours", func() {
+					BeforeEach(func() {
+						outbox.Clear()
+						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
+					})
+
+					It("acknowledges the request and delays sending the invite by that many hours", func() {
+						Eventually(le).ShouldNot(BeZero())
+						Ω(le()).Should(HaveSubject("Re: [invite-approval-request] Can I send this week's invite?"))
+						Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
+						Ω(le()).Should(BeSentTo(conf.BossEmail))
+						Ω(le()).Should(HaveText(ContainSubstring("I've delayed sending the invite email by 1 hours")))
+
+						outbox.Clear()
+						clock.Fire()
+						Eventually(le).Should(HaveSubject("Saturday Bible Park Frisbee " + gameDate))
+						Ω(clock.Time()).Should(BeOn(time.Tuesday, 11)) // 1 hour later
+					})
+				})
+			})
+
 			Context("if the boss replies in the affirmative", func() {
 				BeforeEach(func() {
 					outbox.Clear()
@@ -846,7 +904,7 @@ var _ = Describe("SaturdayDisco", func() {
 				It("tells the boss", func() {
 					bossToDisco("Re: [invite-approval-request] hey", "/yeppers")
 					Eventually(le).Should(HaveSubject("Re: [invite-approval-request] hey"))
-					Ω(le()).Should(HaveText(ContainSubstring("invalid command in reply, must be one of /approve, /yes, /shipit, /deny, or /no")))
+					Ω(le()).Should(HaveText(ContainSubstring("invalid command in reply, must be one of /approve, /yes, /shipit, /deny, /no, /delay <int>, /abort, or /RESET-RESET-RESET")))
 				})
 			})
 		})
@@ -918,7 +976,6 @@ var _ = Describe("SaturdayDisco", func() {
 							Ω(le()).Should(HaveHTML(BeEmpty()))
 							Ω(disco.GetSnapshot()).Should(HaveState(StateBadgerSent))
 						})
-
 					})
 				})
 
@@ -966,7 +1023,26 @@ var _ = Describe("SaturdayDisco", func() {
 						clock.Fire()
 						Ω(clock.Time()).Should(BeOn(time.Friday, 6))
 					})
+				})
 
+				Context("if the boss asks for a delay", func() {
+					BeforeEach(func() {
+						outbox.Clear()
+						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
+					})
+
+					It("acknowledges the request and delays sending the invite by that many hours", func() {
+						Eventually(le).ShouldNot(BeZero())
+						Ω(le()).Should(HaveSubject("Re: [badger-approval-request] Can I badger folks?"))
+						Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
+						Ω(le()).Should(BeSentTo(conf.BossEmail))
+						Ω(le()).Should(HaveText(ContainSubstring("I've delayed sending the badger email by 1 hours")))
+
+						outbox.Clear()
+						clock.Fire()
+						Eventually(le).Should(HaveSubject("Last Call! " + gameDate))
+						Ω(clock.Time()).Should(BeOn(time.Thursday, 19)) // 1 hour later
+					})
 				})
 
 				Context("if the boss replies in the negative", func() {
@@ -1182,8 +1258,8 @@ var _ = Describe("SaturdayDisco", func() {
 							Ω(le()).Should(HaveHTML(BeEmpty()))
 							Ω(disco.GetSnapshot()).Should(HaveState(StateGameOnSent))
 						})
-
 					})
+
 				})
 
 				Context("if the boss replies in the affirmative", func() {
@@ -1239,6 +1315,26 @@ var _ = Describe("SaturdayDisco", func() {
 						Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 						Ω(le()).Should(HaveText(ContainSubstring("Join us, we're playing today!")))
 						Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Players</strong>: player <strong>(5)</strong>, Onsi and Josh <strong>(2)</strong>")))
+					})
+				})
+
+				Context("if the boss asks for a delay", func() {
+					BeforeEach(func() {
+						outbox.Clear()
+						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
+					})
+
+					It("acknowledges the request and delays sending the invite by that many hours", func() {
+						Eventually(le).ShouldNot(BeZero())
+						Ω(le()).Should(HaveSubject("Re: [game-on-approval-request] Can I call GAME ON?"))
+						Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
+						Ω(le()).Should(BeSentTo(conf.BossEmail))
+						Ω(le()).Should(HaveText(ContainSubstring("I've delayed sending the game on email by 1 hours")))
+
+						outbox.Clear()
+						clock.Fire()
+						Eventually(le).Should(HaveSubject("GAME ON THIS SATURDAY! " + gameDate))
+						Ω(clock.Time()).Should(BeOn(time.Thursday, 19)) // 1 hour later
 					})
 				})
 
@@ -1416,6 +1512,26 @@ var _ = Describe("SaturdayDisco", func() {
 					Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 					Ω(le()).Should(BeSentTo(conf.BossEmail))
 					Ω(le()).Should(HaveText(ContainSubstring("Alright.  I'm aborting.  You're on the hook for keeping eyes on things.")))
+				})
+			})
+
+			Context("if the boss asks for a delay", func() {
+				BeforeEach(func() {
+					outbox.Clear()
+					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
+				})
+
+				It("acknowledges the request and delays sending the invite by that many hours", func() {
+					Eventually(le).ShouldNot(BeZero())
+					Eventually(le).Should(HaveSubject("Re: [no-game-approval-request] Can I call NO GAME?"))
+					Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
+					Ω(le()).Should(BeSentTo(conf.BossEmail))
+					Ω(le()).Should(HaveText(ContainSubstring("I've delayed sending the no game email by 1 hours")))
+
+					outbox.Clear()
+					clock.Fire()
+					Eventually(le).Should(HaveSubject("No Saturday Game This Week " + gameDate))
+					Ω(clock.Time()).Should(BeOn(time.Friday, 11)) // 1 hour later
 				})
 			})
 

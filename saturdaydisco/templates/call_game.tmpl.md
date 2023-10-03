@@ -33,6 +33,7 @@ Can I call game on?
 
 Respond with /approve or /yes or /shipit to send the game on email.
 Respond with /deny or /no or **to send the no game e-mail**.
+Respond with /delay <int> to delay the invite by <int> hours.
 Ignore this e-mail to have me send the game on eventually (on {{.NextEvent}})
 
 Anything below the your command will be added to the top of the e-mail.
@@ -65,6 +66,7 @@ Can I call no game?
 
 Respond with /approve or /yes or /shipit to send the no game email
 Respond with /deny or /no **to abort this week**
+Respond with /delay <int> to delay the invite by <int> hours.
 Respond with /abort to turn off the scheduler and enter manual mode
 Ignore this e-mail to have me send the no game eventually (on {{.NextEvent}})
 
