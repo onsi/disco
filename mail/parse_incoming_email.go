@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"regexp"
 	"strings"
 
@@ -51,34 +52,26 @@ type forwardEmailModel struct {
 
 var emailRegex = `[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+`
 var replyRegexes = []*regexp.Regexp{
-	regexp.MustCompile(`^>.*`),
-	regexp.MustCompile(`(?i)^.*on.*(\n)?wrote:$`),
-	regexp.MustCompile(`(?i)-+\s*original\s+message\s*-+\s*$`),
-	regexp.MustCompile(`(?i)-+\s*forwarded\s+message\s*-+\s*$`),
-	regexp.MustCompile(`(?i)From:\s*` + emailRegex),
-	regexp.MustCompile(`(?i)` + emailRegex + `\s+wrote:`),
+	regexp.MustCompile(`(?m)^>.*`),
+	regexp.MustCompile(`(?m)^On.*(\s?).*@.*wrote:`),
+	regexp.MustCompile(`(?m)^On.*@.*(\s?).*wrote:`),
+	regexp.MustCompile(`(?im)-+\s*(original|forwarded)\s+message\s*-+\s*$`),
+	regexp.MustCompile(`(?im)From:\s*` + emailRegex),
+	regexp.MustCompile(`(?im)` + emailRegex + `\s+wrote:`),
 }
 
 func ExtractTopMostPortion(fullBody string) string {
-	body := &strings.Builder{}
-	lines := strings.Split(fullBody, "\n")
-	for idx, line := range lines {
-		isDelimiter := false
-		for _, regex := range replyRegexes {
-			if regex.MatchString(line) {
-				isDelimiter = true
-				break
-			}
-		}
-		if isDelimiter {
-			break
-		}
-		body.WriteString(line)
-		if idx < len(lines)-1 {
-			body.WriteString("\n")
+	winner := math.MaxInt
+	for _, regex := range replyRegexes {
+		index := regex.FindStringIndex(fullBody)
+		if index != nil && index[0] < winner {
+			winner = index[0]
 		}
 	}
-	return body.String()
+	if winner == math.MaxInt {
+		return fullBody
+	}
+	return fullBody[:winner]
 }
 
 func ParseIncomingEmail(data []byte, debug io.Writer) (Email, error) {

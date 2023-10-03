@@ -67,7 +67,7 @@ func synthesizeReplyBodies(email Email, body any) (string, string) {
 	text := &strings.Builder{}
 	text.WriteString(bodyText)
 	text.WriteString("\n\n")
-	fmt.Fprintf(text, "> On %s, %s wrote:\n\n", email.Date, email.From)
+	fmt.Fprintf(text, "On %s, %s wrote:\n", email.Date, email.From)
 	for idx, line := range lines {
 		text.WriteString("> ")
 		text.WriteString(line)

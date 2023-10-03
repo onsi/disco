@@ -470,6 +470,7 @@ var _ = Describe("SaturdayDisco", func() {
 					Ω(le()).Should(HaveSubject("Fwd: hey"))
 					Ω(le()).Should(BeSentTo(conf.BossEmail))
 					Ω(le()).Should(HaveText(ContainSubstring("I've set the player's count to 2.")))
+					Ω(le()).Should(HaveText(ContainSubstring("Send me a:\n\n/set player@example.com N")))
 					Ω(le()).Should(HaveHTML(BeEmpty()))
 				})
 			})

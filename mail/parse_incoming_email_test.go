@@ -70,5 +70,12 @@ var _ = Describe("ParseIncomingEmail", func() {
 				Ω(mail.ExtractTopMostPortion(string(fullBody))).Should(Equal("/set Redacted Redacted <redacted.r.redacted@gmail.com> 2\n"))
 			})
 		})
+
+		Context("when the e-mail is a reply", func() {
+			It("correctly extracts the body", func() {
+				fullBody := loadEmailFixture("real_reply.email")
+				Ω(mail.ExtractTopMostPortion(string(fullBody))).Should(Equal("I'm in\n"))
+			})
+		})
 	})
 })

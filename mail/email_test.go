@@ -87,7 +87,7 @@ var _ = Describe("Email", func() {
 			Ω(email.To).Should(ConsistOf(EmailAddress("onsijoe@gmail.com")))
 			Ω(email.CC).Should(BeEmpty())
 			Ω(email.Subject).Should(Equal("Re: Original Subject"))
-			Ω(email.Text).Should(Equal("Got your message.\n\nThanks!\n\n> On Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:\n\n> My **original** text\n> Is _here_!"))
+			Ω(email.Text).Should(Equal("Got your message.\n\nThanks!\n\nOn Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:\n> My **original** text\n> Is _here_!"))
 			Ω(email.HTML).Should(Equal("<p>Got <strong>your</strong> message.</p>\n\n<p><em>Thanks!</em></p>\n\n<div><blockquote type=\"cite\">On Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:<br><br></blockquote></div>\n<blockquote type=\"cite\"><div>My **original** text<br>Is _here_!</div></blockquote>\n"))
 		})
 
@@ -104,7 +104,7 @@ var _ = Describe("Email", func() {
 			Ω(email.To).Should(ConsistOf(EmailAddress("onsijoe@gmail.com")))
 			Ω(email.CC).Should(BeEmpty())
 			Ω(email.Subject).Should(Equal("Re: Original Subject"))
-			Ω(email.Text).Should(Equal("Got **your** message.\n\n_Thanks!_\n\n> On Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:\n\n> My **original** text\n> Is _here_!"))
+			Ω(email.Text).Should(Equal("Got **your** message.\n\n_Thanks!_\n\nOn Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:\n> My **original** text\n> Is _here_!"))
 			Ω(email.HTML).Should(BeZero())
 		})
 
@@ -121,7 +121,7 @@ var _ = Describe("Email", func() {
 				//note this does not include the replyer's e-mail address
 			))
 			Ω(email.Subject).Should(Equal("Re: Original Subject"))
-			Ω(email.Text).Should(Equal("Got your message.\n\nThanks!\n\n> On Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:\n\n> My **original** text\n> Is _here_!"))
+			Ω(email.Text).Should(Equal("Got your message.\n\nThanks!\n\nOn Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:\n> My **original** text\n> Is _here_!"))
 			Ω(email.HTML).Should(Equal("<p>Got <strong>your</strong> message.</p>\n\n<p><em>Thanks!</em></p>\n\n<div><blockquote type=\"cite\">On Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:<br><br></blockquote></div>\n<blockquote type=\"cite\"><div>My **original** text<br>Is _here_!</div></blockquote>\n"))
 		})
 
@@ -162,7 +162,7 @@ var _ = Describe("Email", func() {
 			Ω(email.To).Should(ConsistOf(EmailAddress("thirdparty@example.com")))
 			Ω(email.CC).Should(BeEmpty())
 			Ω(email.Subject).Should(Equal("Fwd: Original Subject"))
-			Ω(email.Text).Should(Equal("Check this out.\n\n> On Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:\n\n> My **original** text\n> Is _here_!"))
+			Ω(email.Text).Should(Equal("Check this out.\n\nOn Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:\n> My **original** text\n> Is _here_!"))
 			Ω(email.HTML).Should(Equal("<p>Check <strong>this</strong> out.</p>\n\n<div><blockquote type=\"cite\">On Sun, 24 Sep 2023 13:48:58 -0600, onsijoe@gmail.com wrote:<br><br></blockquote></div>\n<blockquote type=\"cite\"><div>My **original** text<br>Is _here_!</div></blockquote>\n"))
 		})
 	})

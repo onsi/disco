@@ -1,29 +1,36 @@
-/* boss_status the email */
+/* boss_status the email - a full report with more detail */
 {{define "boss_status_body"}}Hey boss,
 
 Here's the status report.
 
-{{template "boss_status" .}}
-
-{{template "signature" .}}{{end}}
-
-/* boss_status snippet */
-{{define "boss_status"}}Current State: {{.State}}
+Weather Forecast: {{.Forecast}}
+Current State: {{.State}}
 Next Event on: {{.NextEvent}}
+Total Count: {{.Participants.Count}}
+Has Quorum: {{.HasQuorum}}
 
 Participants:{{range $idx, $participant := .Participants}}
 - {{$participant.Address}}: {{$participant.Count}}
 {{$participant.IndentedRelevantEmails}}
 {{- end}}
 
-Total Count: {{.Participants.Count}}
-Has Quorum: {{.HasQuorum}}
-
-Weather Forecast: {{.Forecast}}{{end}}
-
 Commands: /status, /game-on, /no-game, /abort, /set Player Name <player@example.com> N
 Any content on the line below /game-on and /no-game is sent with the e-mail
 /abort stops the scheduler but continues to track players and allows you to manually control /game-on and /no-game
+/RESET-RESET-REST resets the system to pending and drops all the data.  Beware!
+
+{{template "signature" .}}{{end}}
+
+/* boss_status snippet */
+{{define "boss_status"}}Current State: {{.State}}
+Next Event on: {{.NextEvent}}
+Total Count: {{.Participants.Count}}
+Has Quorum: {{.HasQuorum}}
+Participants:{{range $idx, $participant := .Participants}}
+- {{$participant.Address}}: {{$participant.Count}}
+{{- end}}{{end}}
+
+
 
 /* public_status_body */
 {{define "public_status_body"}}Hey there,
