@@ -53,10 +53,32 @@ var emailRegex = `[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+`
 var replyRegexes = []*regexp.Regexp{
 	regexp.MustCompile(`^>.*`),
 	regexp.MustCompile(`(?i)^.*on.*(\n)?wrote:$`),
-	regexp.MustCompile(`(?i)-+original\s+message-+\s*$$`),
+	regexp.MustCompile(`(?i)-+\s*original\s+message\s*-+\s*$`),
+	regexp.MustCompile(`(?i)-+\s*forwarded\s+message\s*-+\s*$`),
 	regexp.MustCompile(`(?i)From:\s*` + emailRegex),
-	regexp.MustCompile(`(?i)<` + emailRegex + ">"),
 	regexp.MustCompile(`(?i)` + emailRegex + `\s+wrote:`),
+}
+
+func ExtractTopMostPortion(fullBody string) string {
+	body := &strings.Builder{}
+	lines := strings.Split(fullBody, "\n")
+	for idx, line := range lines {
+		isDelimiter := false
+		for _, regex := range replyRegexes {
+			if regex.MatchString(line) {
+				isDelimiter = true
+				break
+			}
+		}
+		if isDelimiter {
+			break
+		}
+		body.WriteString(line)
+		if idx < len(lines)-1 {
+			body.WriteString("\n")
+		}
+	}
+	return body.String()
 }
 
 func ParseIncomingEmail(data []byte, debug io.Writer) (Email, error) {
@@ -86,25 +108,7 @@ func ParseIncomingEmail(data []byte, debug io.Writer) (Email, error) {
 	say.Fpln(debug, "Email Debugging:  Here's the full body")
 	say.Fplni(debug, 1, "%s", fullBody)
 
-	body := &strings.Builder{}
-	lines := strings.Split(fullBody, "\n")
-	for idx, line := range lines {
-		isDelimiter := false
-		for _, regex := range replyRegexes {
-			if regex.MatchString(line) {
-				isDelimiter = true
-				break
-			}
-		}
-		if isDelimiter {
-			break
-		}
-		body.WriteString(line)
-		if idx < len(lines)-1 {
-			body.WriteString("\n")
-		}
-	}
-	out.Text = body.String()
+	out.Text = ExtractTopMostPortion(fullBody)
 
 	say.Fpln(debug, "Email Debugging:  And here's What I extracted")
 	say.Fplni(debug, 1, "%s", out.Text)
