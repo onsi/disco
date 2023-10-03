@@ -37,7 +37,7 @@ Can I send this week's invite?
 Respond with /approve or /yes or /shipit to send the invite.
 Respond with /deny or /no or to send the no-invite e-mail.
 Respond with /abort to turn off the scheduler and enter manual mode.
-Ignore this e-mail to have me send the invite eventually
+Ignore this e-mail to have me send the invite eventually (on {{.NextEvent}})
 
 Anything below the your command will be added to the top of the e-mail.
 

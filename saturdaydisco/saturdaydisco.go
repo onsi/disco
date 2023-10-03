@@ -37,6 +37,8 @@ const QUORUM = 8
 
 const day = 24 * time.Hour
 const RETRY_DELAY = 5 * time.Minute
+const ApprovalTime = 4 * time.Hour
+
 const KEY = "saturday-disco"
 
 type SaturdayDiscoState string
@@ -141,8 +143,9 @@ type SaturdayDisco struct {
 }
 
 type TemplateData struct {
-	GameDate string
-	GameTime string
+	GameDate  string
+	GameTime  string
+	NextEvent string
 	SaturdayDiscoSnapshot
 	HasQuorum bool
 	GameOn    bool
@@ -151,6 +154,11 @@ type TemplateData struct {
 
 	Message string
 	Error   error
+}
+
+func (e TemplateData) WithNextEvent(t time.Time) TemplateData {
+	e.NextEvent = t.Format("Monday 1/2 3:04pm")
+	return e
 }
 
 func (e TemplateData) WithMessage(format string, args ...any) TemplateData {
@@ -294,7 +302,7 @@ func (s *SaturdayDisco) emailData() TemplateData {
 		GameOn:                s.State == StateGameOnSent || s.State == StateReminderSent,
 		GameOff:               s.State == StateNoInviteSent || s.State == StateNoGameSent,
 		Forecast:              forecast,
-	}
+	}.WithNextEvent(s.NextEvent)
 }
 
 func (s *SaturdayDisco) emailSubject(name string, data TemplateData) string {
@@ -479,7 +487,7 @@ func (s *SaturdayDisco) transitionTo(state SaturdayDiscoState) {
 	case StateBadgerSent, StateBadgerNotSent:
 		s.NextEvent = s.T.Add(-day - 4*time.Hour) //Friday, 6am
 	case StateRequestedInviteApproval, StateRequestedBadgerApproval, StateRequestedGameOnApproval, StateRequestedNoGameApproval:
-		s.NextEvent = s.alarmClock.Time().Add(4 * time.Hour) //you get 4 hours to reply, Boss
+		s.NextEvent = s.alarmClock.Time().Add(ApprovalTime) //you get 4 hours to reply, Boss
 	case StateGameOnSent:
 		s.NextEvent = s.T.Add(-4 * time.Hour) //Saturday, 6am
 	case StateNoInviteSent, StateNoGameSent, StateReminderSent, StateAbort:
@@ -496,7 +504,7 @@ func (s *SaturdayDisco) performNextEvent() {
 	switch s.State {
 	case StatePending:
 		s.logi(1, "{{coral}}sending invite approval request to boss{{/}}")
-		s.sendEmail(s.emailForBoss("request_invite_approval", data),
+		s.sendEmail(s.emailForBoss("request_invite_approval", data.WithNextEvent(s.alarmClock.Time().Add(ApprovalTime))),
 			StateRequestedInviteApproval, s.retryNextEventErrorHandler)
 
 	case StateRequestedInviteApproval:
@@ -506,17 +514,17 @@ func (s *SaturdayDisco) performNextEvent() {
 	case StateInviteSent:
 		if s.hasQuorum() {
 			s.logi(1, "{{coral}}we have quorum!  asking for permission to send game-on{{/}}")
-			s.sendEmail(s.emailForBoss("request_game_on_approval", data),
+			s.sendEmail(s.emailForBoss("request_game_on_approval", data.WithNextEvent(s.alarmClock.Time().Add(ApprovalTime))),
 				StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
 			s.logi(1, "{{coral}}sending badger approval request to boss{{/}}")
-			s.sendEmail(s.emailForBoss("request_badger_approval", data),
+			s.sendEmail(s.emailForBoss("request_badger_approval", data.WithNextEvent(s.alarmClock.Time().Add(ApprovalTime))),
 				StateRequestedBadgerApproval, s.retryNextEventErrorHandler)
 		}
 	case StateRequestedBadgerApproval:
 		if s.hasQuorum() {
 			s.logi(1, "{{coral}}we have quorum!  asking for permission to send game-on{{/}}")
-			s.sendEmail(s.emailForBoss("request_game_on_approval", data),
+			s.sendEmail(s.emailForBoss("request_game_on_approval", data.WithNextEvent(s.alarmClock.Time().Add(ApprovalTime))),
 				StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
 			s.logi(1, "{{green}}time's up, sending badger e-mail{{/}}")
@@ -526,11 +534,11 @@ func (s *SaturdayDisco) performNextEvent() {
 	case StateBadgerSent, StateBadgerNotSent:
 		if s.hasQuorum() {
 			s.logi(1, "{{coral}}we have quorum!  asking for permission to send game-on{{/}}")
-			s.sendEmail(s.emailForBoss("request_game_on_approval", data),
+			s.sendEmail(s.emailForBoss("request_game_on_approval", data.WithNextEvent(s.alarmClock.Time().Add(ApprovalTime))),
 				StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
 			s.logi(1, "{{coral}}we still don't have quorum.  asking for permission to send no-game{{/}}")
-			s.sendEmail(s.emailForBoss("request_no_game_approval", data),
+			s.sendEmail(s.emailForBoss("request_no_game_approval", data.WithNextEvent(s.alarmClock.Time().Add(ApprovalTime))),
 				StateRequestedNoGameApproval, s.retryNextEventErrorHandler)
 		}
 	case StateRequestedGameOnApproval:
@@ -540,13 +548,13 @@ func (s *SaturdayDisco) performNextEvent() {
 				StateGameOnSent, s.retryNextEventErrorHandler)
 		} else {
 			s.logi(1, "{{coral}}we lost quorum.  asking for permission to send no-game{{/}}")
-			s.sendEmail(s.emailForBoss("request_no_game_approval", data),
+			s.sendEmail(s.emailForBoss("request_no_game_approval", data.WithNextEvent(s.alarmClock.Time().Add(ApprovalTime))),
 				StateRequestedNoGameApproval, s.retryNextEventErrorHandler)
 		}
 	case StateRequestedNoGameApproval:
 		if s.hasQuorum() {
 			s.logi(1, "{{coral}}we have quorum!  asking for permission to send game-on{{/}}")
-			s.sendEmail(s.emailForBoss("request_game_on_approval", data),
+			s.sendEmail(s.emailForBoss("request_game_on_approval", data.WithNextEvent(s.alarmClock.Time().Add(ApprovalTime))),
 				StateRequestedGameOnApproval, s.retryNextEventErrorHandler)
 		} else {
 			s.logi(1, "{{green}}time's up, sending no-game e-mail{{/}}")
@@ -692,7 +700,7 @@ func (s *SaturdayDisco) handleReplyCommand(command Command) {
 					s.config.SaturdayDiscoEmail,
 					s.emailBody("invalid_admin_email", data.WithError(fmt.Errorf("Quorum was lost before this approval came in.  Starting the No-Game flow soon."))),
 				))
-				s.sendEmail(s.emailForBoss("request_no_game_approval", data),
+				s.sendEmail(s.emailForBoss("request_no_game_approval", data.WithNextEvent(s.alarmClock.Time().Add(ApprovalTime))),
 					StateRequestedNoGameApproval, s.replyWithFailureErrorHandler)
 			}
 		} else {
@@ -707,7 +715,7 @@ func (s *SaturdayDisco) handleReplyCommand(command Command) {
 				s.config.SaturdayDiscoEmail,
 				s.emailBody("invalid_admin_email", data.WithError(fmt.Errorf("Quorum was gained before this came in.  Starting the Game-On flow soon."))),
 			))
-			s.sendEmail(s.emailForBoss("request_game_on_approval", data),
+			s.sendEmail(s.emailForBoss("request_game_on_approval", data.WithNextEvent(s.alarmClock.Time().Add(ApprovalTime))),
 				StateRequestedGameOnApproval, s.replyWithFailureErrorHandler)
 		} else {
 			if command.Approved {

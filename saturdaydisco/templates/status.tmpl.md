@@ -9,6 +9,7 @@ Here's the status report.
 
 /* boss_status snippet */
 {{define "boss_status"}}Current State: {{.State}}
+Next Event on: {{.NextEvent}}
 
 Participants:{{range $idx, $participant := .Participants}}
 - {{$participant.Address}}: {{$participant.Count}}
