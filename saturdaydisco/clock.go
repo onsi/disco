@@ -44,7 +44,7 @@ func NewAlarmClock() *AlarmClock {
 }
 
 func (a *AlarmClock) Time() time.Time {
-	return time.Now()
+	return time.Now().In(Timezone)
 }
 
 func (a *AlarmClock) C() <-chan time.Time {
