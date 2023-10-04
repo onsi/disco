@@ -153,9 +153,10 @@ type TemplateData struct {
 	GameOff   bool
 	Forecast  weather.Forecast
 
-	Message    string
-	Error      error
-	Attachment any
+	Message       string
+	Error         error
+	EmailDebugKey string
+	Attachment    any
 }
 
 func (e TemplateData) WithNextEvent(t time.Time) TemplateData {
@@ -179,6 +180,11 @@ func (e TemplateData) WithError(err error) TemplateData {
 
 func (e TemplateData) WithAttachment(attachment any) TemplateData {
 	e.Attachment = attachment
+	return e
+}
+
+func (e TemplateData) WithEmailDebugKey(key string) TemplateData {
+	e.EmailDebugKey = key
 	return e
 }
 
@@ -651,7 +657,7 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 		s.logi(1, "{{green}}player sent a message signing up.{{/}}")
 		s.Participants = s.Participants.UpdateCount(command.EmailAddress, command.Count, command.Email)
 		s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
-			s.emailBody("acknowledge_player_set_count", s.emailData().WithMessage("%d", command.Count).WithAttachment(command.EmailAddress))))
+			s.emailBody("acknowledge_player_set_count", s.emailData().WithMessage("%d", command.Count).WithAttachment(command.EmailAddress).WithEmailDebugKey(command.Email.DebugKey))))
 	case CommandPlayerUnsure:
 		if command.IsPrivatePlayerCommand {
 			s.logi(1, "{{red}}player send a private message that i'm unsure about.  CCing the boss and asking for help.{{/}}")

@@ -16,6 +16,7 @@ type Markdown string
 type Email struct {
 	MessageID string
 	InReplyTo string
+	DebugKey  string
 
 	From    EmailAddress
 	To      EmailAddresses
@@ -28,7 +29,7 @@ type Email struct {
 }
 
 func (e Email) String() string {
-	return fmt.Sprintf("From: %s on %s\nTo: %s\nCC: %s\nSubject: %s\n\n%s", e.From, e.Date, e.To, e.CC, e.Subject, e.Text)
+	return fmt.Sprintf("From: %s on %s\nTo: %s\nCC: %s\nSubject: %s\nDebug Key: %s\n\n%s", e.From, e.Date, e.To, e.CC, e.Subject, e.DebugKey, e.Text)
 }
 
 func stripMarkdown(md Markdown) string {

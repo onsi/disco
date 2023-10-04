@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/onsi/disco/mail"
+	"github.com/onsi/disco/s3db"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -16,8 +17,13 @@ func loadEmailFixture(filename string) []byte {
 }
 
 var _ = Describe("ParseIncomingEmail", func() {
+	var db *s3db.FakeS3DB
+	BeforeEach(func() {
+		db = s3db.NewFakeS3DB()
+	})
+
 	It("extracts the key header pieces of information from an e-mail", func() {
-		email, err := mail.ParseIncomingEmail(loadEmailFixture("email_from_ios.json"), GinkgoWriter)
+		email, err := mail.ParseIncomingEmail(db, loadEmailFixture("email_from_ios.json"), GinkgoWriter)
 		Ω(err).ShouldNot(HaveOccurred())
 		Ω(email.From).Should(Equal(mail.EmailAddress("Onsi Fakhouri <onsijoe@gmail.com>")))
 		Ω(email.To).Should(ConsistOf(mail.EmailAddress("saturday-disco@sedenverultimate.net")))
@@ -28,9 +34,16 @@ var _ = Describe("ParseIncomingEmail", func() {
 		Ω(email.Date).Should(Equal("Sat, 23 Sep 2023 16:47:41 -0600"))
 	})
 
+	It("stores the raw version of the email in the db for future debugging", func() {
+		rawEmail := loadEmailFixture("email_from_ios.json")
+		email, err := mail.ParseIncomingEmail(db, rawEmail, GinkgoWriter)
+		Ω(err).ShouldNot(HaveOccurred())
+		Eventually(db.FetchObject).WithArguments(email.DebugKey).Should(Equal(rawEmail))
+	})
+
 	Context("when there are multiple to and CC recipients", func() {
 		It("extracts them correctly", func() {
-			email, err := mail.ParseIncomingEmail(loadEmailFixture("email_with_multiple_to_and_cc.json"), GinkgoWriter)
+			email, err := mail.ParseIncomingEmail(db, loadEmailFixture("email_with_multiple_to_and_cc.json"), GinkgoWriter)
 			Ω(err).ShouldNot(HaveOccurred())
 			Ω(email.From).Should(Equal(mail.EmailAddress("Onsi Fakhouri <onsijoe@gmail.com>")))
 			Ω(email.To).Should(ConsistOf(mail.EmailAddress("saturday-disco@sedenverultimate.net"), mail.EmailAddress("Onsi Fakhouri <onsijoe@gmail.com>")))
@@ -45,7 +58,7 @@ var _ = Describe("ParseIncomingEmail", func() {
 
 	Describe("extracting bodies", func() {
 		It("only extracts the text portion, ignoring HTML, and it grabs everything if this email is not a reply", func() {
-			email, err := mail.ParseIncomingEmail(loadEmailFixture("email_from_ios.json"), GinkgoWriter)
+			email, err := mail.ParseIncomingEmail(db, loadEmailFixture("email_from_ios.json"), GinkgoWriter)
 			Ω(err).ShouldNot(HaveOccurred())
 			Ω(email.Text).Should(Equal("This is an email from iOS Mail.\n\nOnsi"))
 			Ω(email.HTML).Should(BeZero())
@@ -53,12 +66,12 @@ var _ = Describe("ParseIncomingEmail", func() {
 
 		Context("when the e-mail is a reply to a prior e-mail", func() {
 			It("extracts just the text format of the most recent response, assuming it's on the top", func() {
-				email, err := mail.ParseIncomingEmail(loadEmailFixture("reply_from_ios_mail.json"), GinkgoWriter)
+				email, err := mail.ParseIncomingEmail(db, loadEmailFixture("reply_from_ios_mail.json"), GinkgoWriter)
 				Ω(err).ShouldNot(HaveOccurred())
 				Ω(email.Text).Should(Equal("And this is my reply… from iOS Mail\n\n"))
 				Ω(email.HTML).Should(BeZero())
 
-				email, err = mail.ParseIncomingEmail(loadEmailFixture("reply_from_gmail_app.json"), GinkgoWriter)
+				email, err = mail.ParseIncomingEmail(db, loadEmailFixture("reply_from_gmail_app.json"), GinkgoWriter)
 				Ω(err).ShouldNot(HaveOccurred())
 				Ω(email.Text).Should(Equal("And this is another rely… from the *Gmail App*.\n\n"))
 				Ω(email.HTML).Should(BeZero())

@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/onsi/say"
 )
 
@@ -74,13 +75,29 @@ func ExtractTopMostPortion(fullBody string) string {
 	return fullBody[:winner]
 }
 
-func ParseIncomingEmail(data []byte, debug io.Writer) (Email, error) {
+type S3DBInt interface {
+	PutObject(key string, data []byte) error
+}
+
+func ParseIncomingEmail(db S3DBInt, data []byte, debug io.Writer) (Email, error) {
+	//upload e-mail to S3 so we can debug?
+	debugKey := "email/" + uuid.New().String()
+	say.Fplni(debug, 1, "Email Debugging:  Storing raw email in S3 with key %s", debugKey)
+	go func() {
+		err := db.PutObject(debugKey, data)
+		if err != nil {
+			say.Fplni(debug, 2, "{{red}}Email Debugging:  Failed to store key %s{{/}}", debugKey)
+		}
+	}()
+
 	model := forwardEmailModel{}
 	err := json.Unmarshal(data, &model)
 	if err != nil {
 		return Email{}, err
 	}
-	out := Email{}
+	out := Email{
+		DebugKey: debugKey,
+	}
 	froms := model.From.asEmailAddresses()
 	if len(froms) == 0 {
 		return Email{}, fmt.Errorf("no from address found")
@@ -98,13 +115,9 @@ func ParseIncomingEmail(data []byte, debug io.Writer) (Email, error) {
 	}
 
 	fullBody := model.Text
-	say.Fpln(debug, "Email Debugging:  Here's the full body")
-	say.Fplni(debug, 1, "%s", fullBody)
-
 	out.Text = ExtractTopMostPortion(fullBody)
-
-	say.Fpln(debug, "Email Debugging:  And here's What I extracted")
-	say.Fplni(debug, 1, "%s", out.Text)
+	say.Fpln(debug, "Email Debugging: Extracted email")
+	say.Fplni(debug, 1, "%s", out)
 
 	return out, nil
 }

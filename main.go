@@ -24,6 +24,7 @@ type Server struct {
 	config        config.Config
 	outbox        mail.OutboxInt
 	saturdayDisco *saturdaydisco.SaturdayDisco
+	db            s3db.S3DBInt
 
 	TempEmails []string
 }
@@ -49,7 +50,7 @@ func (s *Server) Start() error {
 	var saturdayDisco *saturdaydisco.SaturdayDisco
 
 	if s.config.IsDev() {
-		db := s3db.NewFakeS3DB()
+		s.db = s3db.NewFakeS3DB()
 		outbox := mail.NewFakeOutbox()
 		outbox.EnableLogging(s.e.Logger.Output())
 		s.outbox = outbox
@@ -59,8 +60,8 @@ func (s *Server) Start() error {
 			saturdaydisco.NewAlarmClock(),
 			s.outbox,
 			saturdaydisco.NewInterpreter(),
-			weather.NewForecaster(db),
-			db,
+			weather.NewForecaster(s.db),
+			s.db,
 		)
 		// some fake data just so we can better inspect the web page
 		saturdayDisco.SaturdayDiscoSnapshot = saturdaydisco.SaturdayDiscoSnapshot{
@@ -77,8 +78,7 @@ func (s *Server) Start() error {
 			T:         saturdayDisco.T,
 		}
 	} else {
-		var db *s3db.S3DB
-		db, err = s3db.NewS3DB()
+		s.db, err = s3db.NewS3DB()
 		if err != nil {
 			return err
 		}
@@ -90,8 +90,8 @@ func (s *Server) Start() error {
 			saturdaydisco.NewAlarmClock(),
 			s.outbox,
 			saturdaydisco.NewInterpreter(),
-			weather.NewForecaster(db),
-			db,
+			weather.NewForecaster(s.db),
+			s.db,
 		)
 	}
 	if err != nil {
@@ -121,7 +121,7 @@ func (s *Server) IncomingEmail(c echo.Context) error {
 	if err != nil {
 		return c.NoContent(http.StatusInternalServerError)
 	}
-	email, err := mail.ParseIncomingEmail(data, s.e.Logger.Output())
+	email, err := mail.ParseIncomingEmail(s.db, data, s.e.Logger.Output())
 	if err != nil {
 		s.e.Logger.Errorf("failed to parse incoming email: %s", err.Error())
 		return c.String(http.StatusInternalServerError, err.Error())
