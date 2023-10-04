@@ -1,0 +1,490 @@
+{
+    "attachments": [],
+    "headers": "ARC-Seal: i=3; a=rsa-sha256; t=1696435391; cv=pass; d=forwardemail.net;\r\n s=default;\r\n b=fcaI0ZtUu97tuCrHYKyKgX9aZ2Q6hbPTiEd01L8ySX3UUMkt2Lyf7wpD6qAW/O42B4X1VXDC+\r\n lhFZb1H/Wu4ZU6ffVvrOjRqFukBqDt4KEtfzQFtqwOdw6Th/2Fh/on9Gb3j/ru9VSC4RKyInN6b\r\n DBjeCgkDHJo8nAE/wvTXozM=\r\nARC-Message-Signature: i=3; a=rsa-sha256; c=relaxed/relaxed;\r\n d=forwardemail.net; h=List-Unsubscribe: List-Archive: List-Help:\r\n List-Post: List-ID: Reply-To: Content-Type: MIME-Version: Subject:\r\n References: In-Reply-To: Message-ID: To: From: Date; q=dns/txt; s=default;\r\n t=1696435391; bh=byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=;\r\n b=hdfeHSJXLOs5pPqnfyFHzmQxZRhbXD/sPCKBTMxIqjXp6tew9LGUSbnYltfB2SjMd/8j+ng0S\r\n R7cd7BQGafPnFZEvl+aclFHqRLUqlCYzIGD0xaWyPvlQ3oKniAi50YSbgtt6QVJNX5r73hIjAXA\r\n tYrvudHuIBfqtkA31ByxPvg=\r\nARC-Authentication-Results: i=3; mx2.forwardemail.net;\r\n dkim=pass header.i=@googlegroups.com header.s=20230601 header.a=rsa-sha256 header.b=\"uFZ/zZWs\";\r\n spf=pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as permitted\r\n sender) smtp.mailfrom=saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com smtp.helo=mail-yw1-f192.google.com;\r\n arc=pass (i=2 spf=pass dkim=pass dkdomain=yahoo.com dmarc=pass fromdomain=yahoo.com);\r\n dmarc=pass (p=NONE arc=pass) header.from=googlegroups.com header.d=googlegroups.com;\r\n bimi=skipped (too lax DMARC policy)\r\nReceived-SPF: pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as\r\n permitted sender) client-ip=209.85.128.192;\r\nAuthentication-Results: mx2.forwardemail.net;\r\n dkim=pass header.i=@googlegroups.com header.s=20230601 header.a=rsa-sha256 header.b=\"uFZ/zZWs\";\r\n spf=pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as permitted\r\n sender) smtp.mailfrom=saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com smtp.helo=mail-yw1-f192.google.com;\r\n arc=pass (i=2 spf=pass dkim=pass dkdomain=yahoo.com dmarc=pass fromdomain=yahoo.com);\r\n dmarc=pass (p=NONE arc=pass) header.from=googlegroups.com header.d=googlegroups.com;\r\n bimi=skipped (too lax DMARC policy)\r\n",
+    "headerLines": [
+        {
+            "key": "arc-seal",
+            "line": "ARC-Seal: i=3; a=rsa-sha256; t=1696435391; cv=pass; d=forwardemail.net;\r\n s=default;\r\n b=fcaI0ZtUu97tuCrHYKyKgX9aZ2Q6hbPTiEd01L8ySX3UUMkt2Lyf7wpD6qAW/O42B4X1VXDC+\r\n lhFZb1H/Wu4ZU6ffVvrOjRqFukBqDt4KEtfzQFtqwOdw6Th/2Fh/on9Gb3j/ru9VSC4RKyInN6b\r\n DBjeCgkDHJo8nAE/wvTXozM="
+        },
+        {
+            "key": "arc-message-signature",
+            "line": "ARC-Message-Signature: i=3; a=rsa-sha256; c=relaxed/relaxed;\r\n d=forwardemail.net; h=List-Unsubscribe: List-Archive: List-Help:\r\n List-Post: List-ID: Reply-To: Content-Type: MIME-Version: Subject:\r\n References: In-Reply-To: Message-ID: To: From: Date; q=dns/txt; s=default;\r\n t=1696435391; bh=byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=;\r\n b=hdfeHSJXLOs5pPqnfyFHzmQxZRhbXD/sPCKBTMxIqjXp6tew9LGUSbnYltfB2SjMd/8j+ng0S\r\n R7cd7BQGafPnFZEvl+aclFHqRLUqlCYzIGD0xaWyPvlQ3oKniAi50YSbgtt6QVJNX5r73hIjAXA\r\n tYrvudHuIBfqtkA31ByxPvg="
+        },
+        {
+            "key": "arc-authentication-results",
+            "line": "ARC-Authentication-Results: i=3; mx2.forwardemail.net;\r\n dkim=pass header.i=@googlegroups.com header.s=20230601 header.a=rsa-sha256 header.b=\"uFZ/zZWs\";\r\n spf=pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as permitted\r\n sender) smtp.mailfrom=saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com smtp.helo=mail-yw1-f192.google.com;\r\n arc=pass (i=2 spf=pass dkim=pass dkdomain=yahoo.com dmarc=pass fromdomain=yahoo.com);\r\n dmarc=pass (p=NONE arc=pass) header.from=googlegroups.com header.d=googlegroups.com;\r\n bimi=skipped (too lax DMARC policy)"
+        },
+        {
+            "key": "received-spf",
+            "line": "Received-SPF: pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as\r\n permitted sender) client-ip=209.85.128.192;"
+        },
+        {
+            "key": "authentication-results",
+            "line": "Authentication-Results: mx2.forwardemail.net;\r\n dkim=pass header.i=@googlegroups.com header.s=20230601 header.a=rsa-sha256 header.b=\"uFZ/zZWs\";\r\n spf=pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as permitted\r\n sender) smtp.mailfrom=saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com smtp.helo=mail-yw1-f192.google.com;\r\n arc=pass (i=2 spf=pass dkim=pass dkdomain=yahoo.com dmarc=pass fromdomain=yahoo.com);\r\n dmarc=pass (p=NONE arc=pass) header.from=googlegroups.com header.d=googlegroups.com;\r\n bimi=skipped (too lax DMARC policy)"
+        },
+        {
+            "key": "x-original-to",
+            "line": "X-Original-To: saturday-disco@sedenverultimate.net"
+        },
+        {
+            "key": "x-complaints-to",
+            "line": "X-Complaints-To: abuse@forwardemail.net"
+        },
+        {
+            "key": "x-report-abuse-to",
+            "line": "X-Report-Abuse-To: abuse@forwardemail.net"
+        },
+        {
+            "key": "x-report-abuse",
+            "line": "X-Report-Abuse: abuse@forwardemail.net"
+        },
+        {
+            "key": "x-forwardemail-sender",
+            "line": "X-ForwardEmail-Sender: rfc822;\r\n saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com,\r\n mail-yw1-f192.google.com, 209.85.128.192"
+        },
+        {
+            "key": "x-forwardemail-version",
+            "line": "X-ForwardEmail-Version: 10.0.0-alpha"
+        },
+        {
+            "key": "received",
+            "line": "Received: by mail-yw1-f192.google.com with SMTP id 00721157ae682-59f7d109926sf31793577b3.2\r\n        for <saturday-disco@sedenverultimate.net>; Wed, 04 Oct 2023 09:03:05 -0700 (PDT)"
+        },
+        {
+            "key": "arc-seal",
+            "line": "ARC-Seal: i=2; a=rsa-sha256; t=1696435155; cv=pass;\r\n        d=google.com; s=arc-20160816;\r\n        b=CKDT93GBCU616AJ7pNExfP/qIrAE/Uf7paooqd3tLJ6gCUOpmcSbynBWwTKan4Mh4N\r\n         PwBhqoyrQwEcO+EowkROQ0khOvW4Ouy2ScfsqF02Gy2GagG0G+k+NKFrz0xGaKywi5id\r\n         /i6z59W3LXfLzkdxk5h61FDsHB0kpWAZPiZ2/kOseWjjSICmLCULrevCGUA5Cqb08SzG\r\n         4+KXtKhtHBZpMLUkPXyEMsMYRt/M8+SPMsX9smvEiAl8LV9O0GnyEtl0vY28UsLApoBg\r\n         Ein8WI5jMgBwHxTxPKEiwG8nMpGb7/Hxe36nMf1LnGl5iZislwhh3rjhmwaxsb5t4XoY\r\n         +NVA=="
+        },
+        {
+            "key": "arc-message-signature",
+            "line": "ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;\r\n        h=list-unsubscribe:list-archive:list-help:list-post:list-id\r\n         :mailing-list:precedence:reply-to:mime-version:subject:references\r\n         :in-reply-to:message-id:to:from:date:dkim-signature;\r\n        bh=byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=;\r\n        fh=JvcyBG/A9ZNWIrolqWJo2rWvDV0tLFspp9TRmLNyicQ=;\r\n        b=de67h9Q6xPy7nd/X2+ILEqfgXSt+ckT/eTh67XuHRiiFCN9v12kVGMbqjGcUCB3CmT\r\n         9O8syuiuBGLVCi4ZfhRXPZ9EVqtxZzRBGU3NfeN/+4y8ZMZi+e77N/ZcALPmWk2QgkD6\r\n         jZLaHzd3VYnCRklmw2E+tkmZ2EtYEaFLMDo21TkwwZODQWGarU9Gro6Iz/3668SRwd1i\r\n         vjffoPh0miMyDVsZn/yiXJmyHmkauSXdLMtA/7bLUUgm/zK22Hd2J4EKbCTrOGJkYTzM\r\n         0xRN9FqwEbT1dz1uGlGbZ5wEyHpvVaRvzqY3LzCbLnZRf6oSSVSV9pWwmdd4OEfMFyvr\r\n         PBtA=="
+        },
+        {
+            "key": "arc-authentication-results",
+            "line": "ARC-Authentication-Results: i=2; gmr-mx.google.com;\r\n       dkim=pass header.i=@yahoo.com header.s=s2048 header.b=AoQ9pVCh;\r\n       spf=pass (google.com: domain of redactedplayer@yahoo.com designates 74.6.130.121 as permitted sender) smtp.mailfrom=redactedplayer@yahoo.com;\r\n       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=yahoo.com"
+        },
+        {
+            "key": "dkim-signature",
+            "line": "DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=googlegroups.com; s=20230601; t=1696435155; x=1697039955; darn=sedenverultimate.net;\r\n        h=list-unsubscribe:list-archive:list-help:list-post:list-id\r\n         :mailing-list:precedence:reply-to:x-original-authentication-results\r\n         :x-original-sender:mime-version:subject:references:in-reply-to\r\n         :message-id:to:from:date:from:to:cc:subject:date:message-id:reply-to;\r\n        bh=byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=;\r\n        b=uFZ/zZWsNxH/h1YU9v01rVIItxdKd7H31jDhwMv7DXodwcx+pIjFo2gisUkReKbgH8\r\n         PpIOVPhQ7M2mU0tfoUlAm21oleGI8ChBFIIrLfdhvjuSlUjhN45FB8vrYw1hRrbHi7+Y\r\n         xa4LzxckpEmHV5cYCwhFw452NMApcMaAYLgv4YlmM5u+aIteEvFTPQV4V9gruG2HAMGo\r\n         GlT5ysMW60B5srpJR32PjCVWpQSwqiNZPMv6+lmFmaj3/pZ0DFiKR6Q4BUjZWy25Ln2A\r\n         gzCQQyUhIqjQ8zfj37EYy1xrCUvveh5n6Uaqao85xw6hSDbwtS8tU7lGPse/5ipngod4\r\n         pR8Q=="
+        },
+        {
+            "key": "x-google-dkim-signature",
+            "line": "X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=1e100.net; s=20230601; t=1696435155; x=1697039955;\r\n        h=list-unsubscribe:list-archive:list-help:list-post\r\n         :x-spam-checked-in-group:list-id:mailing-list:precedence:reply-to\r\n         :x-original-authentication-results:x-original-sender:mime-version\r\n         :subject:references:in-reply-to:message-id:to:from:date:x-beenthere\r\n         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;\r\n        bh=byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=;\r\n        b=HKM+TC2qMCDuXtUUIlLMAO0RxL8BOTeoTfLzYWGeFDTzMynX1adU/Vm40YlwNJhnev\r\n         /5B61oyBr3SjXDAhh7JE7W+9IzWTzsVs93/4+z+leUMHpuOX2zkZ5sEj7PtwcjNes+cz\r\n         /feKLOGBDQqo3qX090ctm53yzo6EDElGNzWPSgeFM+O+rTBGjTZmqdrm05g3IOCE0RL6\r\n         HBYwHeTBPpndzIqCyQwIIR2wU1BPoaZVhuGlvpYPoK4l9dpf/5LmdJecUM4vjeiVnBeT\r\n         jPW7YLN4IsOOiDwGJEzIKyNj2vL7MugK29ysHThdG4JSw2kCUrBShXiYce85ia2I06Of\r\n         AbVQ=="
+        },
+        {
+            "key": "x-gm-message-state",
+            "line": "X-Gm-Message-State: AOJu0YxkcECDmkCEjkF8ZVQlFMvhlTOUy4ksLDW1gDeyCDbSF+bgENaT\r\n\t+lJAP809ee8VZU1Np32ZkqY="
+        },
+        {
+            "key": "x-google-smtp-source",
+            "line": "X-Google-Smtp-Source: AGHT+IG+V9zIJJW+x6E+CPxix6NpyV7NGGfxdXWCo8KOUYhfe5yBrIKsXACUHpagAZ1CIlqMr30/hA=="
+        },
+        {
+            "key": "x-received",
+            "line": "X-Received: by 2002:a05:6870:1590:b0:1e1:e3a7:c414 with SMTP id j16-20020a056870159000b001e1e3a7c414mr2997970oab.16.1696434226323;\r\n        Wed, 04 Oct 2023 08:43:46 -0700 (PDT)"
+        },
+        {
+            "key": "x-beenthere",
+            "line": "X-BeenThere: saturday-sedenverultimate@googlegroups.com"
+        },
+        {
+            "key": "received",
+            "line": "Received: by 2002:a05:6870:3046:b0:1e1:5fe1:87e with SMTP id\r\n u6-20020a056870304600b001e15fe1087els1001191oau.0.-pod-prod-02-us; Wed, 04\r\n Oct 2023 08:43:45 -0700 (PDT)"
+        },
+        {
+            "key": "x-received",
+            "line": "X-Received: by 2002:a05:6358:2605:b0:12b:e45b:3fac with SMTP id l5-20020a056358260500b0012be45b3facmr3000460rwc.32.1696434225395;\r\n        Wed, 04 Oct 2023 08:43:45 -0700 (PDT)"
+        },
+        {
+            "key": "arc-seal",
+            "line": "ARC-Seal: i=1; a=rsa-sha256; t=1696434225; cv=none;\r\n        d=google.com; s=arc-20160816;\r\n        b=o+ly5DH0hTiZ6e0W7b42LIa20BNQTn74z+OxOSadwQhA6CrMAG6UselDE63tgEHuQo\r\n         IGK2oYjDll5HoL7lwxeLY4aaK0Bf6LhasVYxQXUqZp7YkuRvRCLAIV06boMcsmNMvgEA\r\n         LN2h9bOCcm4XeFKdtkSHDsdzkerj5/1XKcseCyPy7A7jWNLUdS07ci69UMXFD3pBte9i\r\n         qHY6VYPycnXaaFqLXDTT6fAW5cQFxQ6KKcKWOamCAzVCKqsUL00AHhRca0PoeVkaF20E\r\n         xFzbdNjNl18wyYHrO9xip+as4JIZGQ8a+vEVPh+6p3nCppFXpaJWjklQoukKw3yPxSgA\r\n         L3wQ=="
+        },
+        {
+            "key": "arc-message-signature",
+            "line": "ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;\r\n        h=mime-version:subject:references:in-reply-to:message-id:to:from:date\r\n         :dkim-signature;\r\n        bh=WbkIINSPq64ftCddHcwNXcYRFgjvfIlJYqL9EJ3SbmA=;\r\n        fh=JvcyBG/A9ZNWIrolqWJo2rWvDV0tLFspp9TRmLNyicQ=;\r\n        b=QNHloyyeGxAA9l6Pcy7LEwm1GpuWDw69UGo2ync6VKs+rETM30e/RFdD8HYUlIzma/\r\n         oAmKGAU/DzEo9Q3kv21RHahFb4gCb+8vx2315vEbe+kYPhGT0deXLO05DsYxBnnxqB6r\r\n         X1qQPdZi3urRMjTbC9269NCfphhYYyZgHQUiDEmrxw2U4efgAr+cTboUpX6xtvrJybtD\r\n         9QEycqI2LBg/IFFzX3WwAjEYDh+8jFHtOETXjtVip1RlRFWOUZOqGkXY0QuSt1nSOLBA\r\n         TZz9S8JvugMsvjX35/2Hkowzm2AisFf+4RdN24XsOHSypdC7GrRkH/dVR4R+wxnEwiNw\r\n         /vWg=="
+        },
+        {
+            "key": "arc-authentication-results",
+            "line": "ARC-Authentication-Results: i=1; gmr-mx.google.com;\r\n       dkim=pass header.i=@yahoo.com header.s=s2048 header.b=AoQ9pVCh;\r\n       spf=pass (google.com: domain of redactedplayer@yahoo.com designates 74.6.130.121 as permitted sender) smtp.mailfrom=redactedplayer@yahoo.com;\r\n       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=yahoo.com"
+        },
+        {
+            "key": "received",
+            "line": "Received: from sonic316-11.consmr.mail.bf2.yahoo.com (sonic316-11.consmr.mail.bf2.yahoo.com. [74.6.130.121])\r\n        by gmr-mx.google.com with ESMTPS id lw14-20020a17090b180e00b00276a78ed402si102674pjb.1.2023.10.04.08.43.45\r\n        for <saturday-sedenverultimate@googlegroups.com>\r\n        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);\r\n        Wed, 04 Oct 2023 08:43:45 -0700 (PDT)"
+        },
+        {
+            "key": "received-spf",
+            "line": "Received-SPF: pass (google.com: domain of redactedplayer@yahoo.com designates 74.6.130.121 as permitted sender) client-ip=74.6.130.121;"
+        },
+        {
+            "key": "x-sonic-dkim-sign",
+            "line": "X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1696434224; bh=kPEUCvkvEn9fRxQT1PjIlujUpuO/dzJeSjL9tc902Cy=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=DqPe4E0e4bxMA76ST3PG+IV0bd1DZcL0EwYldXmFWq0kUgWy4vc6wdWX1teKYxSUf0Ps8u0P2zEOp8Z0Zmjf/YeBhkm1XvzpGhgrcOWLeFV6a7yyUlkQgfKnFD0so8gPS/eNIHPZuHdEDKaWs5u2Qp/MoDGU5SApTv5jUTQLa1vDKjevm/22GeDt72h7TEcsxEUxN6bQFXXawN1jj4028pd3vkNVC9DRJIewFWAFb+/JdORz6eCBJXuzX2DxHmPdOoXA9NTROEbuGVpMJUYR5LhMe2qicMS2Txx1Dqgbx2Cv+1z22Fzs37j73Z1UDa/TfGrAXAi1g+L8mFqf0BxRQA=="
+        },
+        {
+            "key": "x-ymail-osg",
+            "line": "X-YMail-OSG: 1SriO50VM1mR.FxBLpiUz1rRqHHK55AAgj3mrRn1BnEJJBa.uZCqVWyNQC790uV\r\n gZn.2IVFDmUwcWosv1_8R_aS57XSDtRb4xLE0RuqPF.xqfoPk1BXVn3Pd_Ysv1TSvrVNMloR4dgi\r\n jhrcEg6MW4KHB0JunNCklSGm4NJcORDFpeEJjzfKVmm1Bw46889WjUrtaTrOh7Gjo9AOW3lQucAY\r\n WVtYxuxrMHgvqpAEHw_2hjxivVtiltJf3n8faa3YRa8SZzCuV3vKzp0VVdaPaZFyby6FCYAwarve\r\n xCVtQq6Me5lcrmHaZu3KBM.sWQ_pl6M.9PV0tO5tqIsmDGQhxuSo25mKwzfDDEWfiDJdr1h2OwDi\r\n gDJi2mOAzMFgPXjQ3DzIBNFgRpjdBh4HRHTvCoSZJ8AmnF1gsUzjiLOQVb_rdayw39pyRXLCG1Fj\r\n xAyflFwmxPdrxunA4tTwK4qzwCB2IcCy7w.OEUCkZcxTQV0PnC_pLAi3AKpaMLA9ahGxm_Jqb4Kg\r\n twuwEaqR0wMFxkI03zex39WU0JrMSi5n11ZNDR.1._p1Nq3csKT3PGAEcHS80o4W6myhApDF8xQX\r\n IAs8GwGF_0P6CsS7Yr7BHX1b6CuMliec8wpgorEkCpO7Ld0EbdW2K5fL9q9xWLTOayCd8beLr18X\r\n 3t4tYGli_XN.1jEfzeXY44xHhB.dkMtit6kBYq9TvdAzkKYxmDo6d6lyOGFIGCAUmQtZP64kCk87\r\n GpwTGjCz41oAEtWdCjywIFaHhRs7CtmrtEepY2PBTMTW_DOsyiT9AL3mka1tevxzHRzbRC8aBUNf\r\n OI2vu.Q2f9exxfLFEj4_5Jq6bEqepNYR1Irs0ZIMlOOGXYlfjVItwFWkFIShAqUZC8IxGNMUZG_q\r\n YMlGvyJRzoT5.8888vHr4yAf7S6htGQ1aJLSwFr2gcWvXbUlXwBmLWIj_9URZ6l8u8tryUQVmxSG\r\n K42cpXYTXco4n8ZP7wXFTa49bORCi9IFnJHSmUXFbwwR65295Z6sH06fxlRccaoDGikgiOt_EV2S\r\n YD88deNBqemMu_Y2hex6q0srNskqOe5BzIGoHQxMo6ScJ.63ErebdVMKaSkd7QJO1wA9jTe94tfq\r\n ShynsQxMW1OsHee8N4yuhKf8PMvEHjqtYFihA11Tblu9glyhoQxFP2ywBT4cPfalt7eYYCh29_pk\r\n 9CdqEDgLyRySC9PDrsQj9OuuRFQEyBWKKxQlHkbStbh6nSI9_49eOGnEL5hSfrG.kZF.7a5gYJEs\r\n wktEFxsJwPj.edNh.diZsFgnJZCKM2ebAab6pk9Tc3n9WYXekQdMPg6NVLdiHbq.oa8AMwQof5LL\r\n qs996SbFypmMa9osslVQLv0C7sNWRB2CV9JBD1pRTSvBhYYWuXBhnR2bLUNNP2HYzaraKQA0hnz4\r\n 562CMdAz6NdHfystqaQbgl1XNq_B90o0bJc_vhY27E9agvzMrbLq5QtoGCqc7qi_owKfd.iP2Snl\r\n B4T6dFF_12xhqswx9Z_TlfRIcjnIsB6okRMuxXdE7TeZrCFj3aYt5mW2bIfeBjmLfD7clRSVpSG2\r\n jqQ1PyBqmK1CPCDHsK1wLtnAVqBvWLQvGaQmNaKF41deSneQJ_WTQg2h0h3vA9DYKrYPKV9eKuQI\r\n zbZItUC1wnBuFxBpXRPp0sLaqjFartKgRr_lfWCKs5gjWYEsqfnSAR7m7nLRymkW6B9Oaz2Euszu\r\n HLDvnGCWT6sbvy49q6otyJF4R4LL_vhDWjuXt0Fs90pNwYQnYg_lwBAAD8BxVJY2Rpqga.rLVeFk\r\n LPBDQ2tY_DJihcHqsWhxk6Mfjdx.PkdRUpWFSWtVbvhVcJm0cmUrJ7DO9Ezp5nUIXODfx3E4P2o3\r\n z.6iYXPw5cfczDSFTrtEOXZvtlzZtZmgX9MoLJz66YzuI2PQF77N5IlKWNsy3svrldtLLmSxlGq9\r\n W.SH8J104xEgtGrIu2B56yckEWgZEPrgM1qWB7N4R25l7lOtDmu7MXwMm0l94_XSmiw76nZSSYhi\r\n p1qeAl1GdEG0yojuP55c5wAoTOdsvz7YumIflIT.a2uLbq7H39A0tpTzcIOexBBOQ9s1MGWumKCm\r\n .15v78Ea0HlZMLu4AA6Y9TPqNZqd4Dd1YQ4vS2ozx8CJfiubAm.hk1xhN3jR0O5NpKKLkFLP6fkj\r\n ysEiM3MzbMqwdGcqpsBdOtSFesSYPQpS9rbPSMTIhuvkPjAongdzEgLryeZRQc2oUVgJgurqg4mX\r\n IjoJSVaQtmcI8iC0tHD1584vY1DpO2cmAB7VwjzZ5LOXGb_7lKc_9"
+        },
+        {
+            "key": "x-sonic-mf",
+            "line": "X-Sonic-MF: <redactedplayer@yahoo.com>"
+        },
+        {
+            "key": "x-sonic-id",
+            "line": "X-Sonic-ID: 3e127325-2305-450e-9e31-ccd741645a26"
+        },
+        {
+            "key": "received",
+            "line": "Received: from sonic.gate.mail.ne1.yahoo.com by sonic316.consmr.mail.bf2.yahoo.com with HTTP; Wed, 4 Oct 2023 15:43:44 +0000"
+        },
+        {
+            "key": "date",
+            "line": "Date: Wed, 4 Oct 2023 15:43:41 +0000 (UTC)"
+        },
+        {
+            "key": "from",
+            "line": "From: \"'Redacted Player' via Saturday Southeast Denver Ultimate\" <saturday-sedenverultimate@googlegroups.com>"
+        },
+        {
+            "key": "to",
+            "line": "To: \"saturday-sedenverultimate@googlegroups.com\" <saturday-sedenverultimate@googlegroups.com>, \r\n\tSaturday Disco <saturday-disco@sedenverultimate.net>, \r\n\tOther Player <other_player@yahoo.com>"
+        },
+        {
+            "key": "message-id",
+            "line": "Message-ID: <91861266.5887163.1696434221130@mail.yahoo.com>"
+        },
+        {
+            "key": "in-reply-to",
+            "line": "In-Reply-To: <855086374.1741393.1696389364726@mail.yahoo.com>"
+        },
+        {
+            "key": "references",
+            "line": "References: <d58dfdf5-caeb-4337-7402-3e8dae2003e0@sedenverultimate.net> <855086374.1741393.1696389364726@mail.yahoo.com>"
+        },
+        {
+            "key": "subject",
+            "line": "Subject: Re: Saturday Bible Park Frisbee 10/7/23"
+        },
+        {
+            "key": "mime-version",
+            "line": "MIME-Version: 1.0"
+        },
+        {
+            "key": "content-type",
+            "line": "Content-Type: multipart/alternative; \r\n\tboundary=\"----=_Part_5887162_675398998.1696434221128\""
+        },
+        {
+            "key": "x-mailer",
+            "line": "X-Mailer: WebService/1.1.21797 YMailNoble"
+        },
+        {
+            "key": "content-length",
+            "line": "Content-Length: 6606"
+        },
+        {
+            "key": "x-original-sender",
+            "line": "X-Original-Sender: redactedplayer@yahoo.com"
+        },
+        {
+            "key": "x-original-authentication-results",
+            "line": "X-Original-Authentication-Results: gmr-mx.google.com;       dkim=pass\r\n header.i=@yahoo.com header.s=s2048 header.b=AoQ9pVCh;       spf=pass\r\n (google.com: domain of redactedplayer@yahoo.com designates 74.6.130.121 as\r\n permitted sender) smtp.mailfrom=redactedplayer@yahoo.com;       dmarc=pass\r\n (p=REJECT sp=REJECT dis=NONE) header.from=yahoo.com"
+        },
+        {
+            "key": "x-original-from",
+            "line": "X-Original-From: Redacted Player <redactedplayer@yahoo.com>"
+        },
+        {
+            "key": "reply-to",
+            "line": "Reply-To: Redacted Player <redactedplayer@yahoo.com>"
+        },
+        {
+            "key": "precedence",
+            "line": "Precedence: list"
+        },
+        {
+            "key": "mailing-list",
+            "line": "Mailing-list: list saturday-sedenverultimate@googlegroups.com; contact saturday-sedenverultimate+owners@googlegroups.com"
+        },
+        {
+            "key": "list-id",
+            "line": "List-ID: <saturday-sedenverultimate.googlegroups.com>"
+        },
+        {
+            "key": "x-spam-checked-in-group",
+            "line": "X-Spam-Checked-In-Group: saturday-sedenverultimate@googlegroups.com"
+        },
+        {
+            "key": "x-google-group-id",
+            "line": "X-Google-Group-Id: 143701321910"
+        },
+        {
+            "key": "list-post",
+            "line": "List-Post: <https://groups.google.com/group/saturday-sedenverultimate/post>, <mailto:saturday-sedenverultimate@googlegroups.com>"
+        },
+        {
+            "key": "list-help",
+            "line": "List-Help: <https://groups.google.com/support/>, <mailto:saturday-sedenverultimate+help@googlegroups.com>"
+        },
+        {
+            "key": "list-archive",
+            "line": "List-Archive: <https://groups.google.com/group/saturday-sedenverultimate"
+        },
+        {
+            "key": "list-unsubscribe",
+            "line": "List-Unsubscribe: <mailto:googlegroups-manage+143701321910+unsubscribe@googlegroups.com>,\r\n <https://groups.google.com/group/saturday-sedenverultimate/subscribe>"
+        }
+    ],
+    "html": "<html><head></head><body><div class=\"ydpa1aa7ad5yahoo-style-wrap\" style=\"font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:16px;\"><div></div>\n        <div>I'll be there!</div><div><br></div>\n        \n        <div id=\"ydpa1aa7ad5yahoo_quoted_7414571283\" class=\"ydpa1aa7ad5yahoo_quoted\">\n            <div style=\"font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:13px;color:#26282a;\">\n                \n                <div>\n                    On Tuesday, October 3, 2023 at 09:16:10 PM MDT, 'Other Player' via Saturday Southeast Denver Ultimate &lt;saturday-sedenverultimate@googlegroups.com&gt; wrote:\n                </div>\n                <div><br></div>\n                <div><br></div>\n                <div><div id=\"ydpa1aa7ad5yiv4675834746\"><div><div style=\"font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:16px;\" class=\"ydpa1aa7ad5yiv4675834746ydp3258c7e8yahoo-style-wrap\"><div></div>\n        <div dir=\"ltr\">I'm in - bringing Redacted as well.</div><div><br></div>\n        \n        </div><div id=\"ydpa1aa7ad5yiv4675834746ydp47c770d9yahoo_quoted_6719948818\" class=\"ydpa1aa7ad5yiv4675834746ydp47c770d9yahoo_quoted\">\n            <div style=\"font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:13px;color:#26282a;\">\n                \n                <div>\n                    On Tuesday, October 3, 2023 at 02:00:12 PM MDT, Saturday Disco &lt;saturday-disco@sedenverultimate.net&gt; wrote:\n                </div>\n                <div><br></div>\n                <div><br></div>\n                <div><div id=\"ydpa1aa7ad5yiv4675834746ydp47c770d9yiv0139340922\"><p>Please let me know if you’ll be joining us this Saturday <strong>10/7/23</strong>.</p>\n\n<p><strong>Where</strong>: <a href=\"https://maps.app.goo.gl/P1vm2nkZdYLGZbxb9\" rel=\"nofollow\" target=\"_blank\">James Bible Park</a><br>\n<strong>When</strong>: Saturday, 10:00am<br>\n<strong>What</strong>: Bring a red and a blue shirt if you have them<br>\n<strong>Weather Forecast</strong>: ☀️ Sunny: 😎 58ºF | 💧 2% | 💨 6 mph</p>\n\n<p>Reminder that we also play at lunch during the week. Visit <a href=\"https://www.sedenverultimate.net\" rel=\"nofollow\" target=\"_blank\">sedenverultimate.net</a> to sign up for the lunchtime mailing list.</p>\n\n<p>Disco 🪩\n<a href=\"https://www.sedenverultimate.net\" rel=\"nofollow\" target=\"_blank\">sedenverultimate.net</a></p>\n\n<p></p>\n\n-- <br>\nYou received this message because you are subscribed to the Google Groups \"Saturday Southeast Denver Ultimate\" group.<br>\nTo unsubscribe from this group and stop receiving emails from it, send an email to <a href=\"mailto:saturday-sedenverultimate+unsubscribe@googlegroups.com\" rel=\"nofollow\" target=\"_blank\">saturday-sedenverultimate+unsubscribe@googlegroups.com</a>.<br>\nTo view this discussion on the web visit <a href=\"https://groups.google.com/d/msgid/saturday-sedenverultimate/d58dfdf5-caeb-4337-7402-3e8dae2003e0%40sedenverultimate.net?utm_medium=email&amp;utm_source=footer\" rel=\"nofollow\" target=\"_blank\">https://groups.google.com/d/msgid/saturday-sedenverultimate/d58dfdf5-caeb-4337-7402-3e8dae2003e0%40sedenverultimate.net</a>.<br>\nFor more options, visit <a href=\"https://groups.google.com/d/optout\" rel=\"nofollow\" target=\"_blank\">https://groups.google.com/d/optout</a>.<br>\n</div></div>\n            </div>\n        </div></div>\n\n<p></p>\n\n-- <br>\nYou received this message because you are subscribed to the Google Groups \"Saturday Southeast Denver Ultimate\" group.<br>\nTo unsubscribe from this group and stop receiving emails from it, send an email to <a href=\"mailto:saturday-sedenverultimate+unsubscribe@googlegroups.com\" rel=\"nofollow\" target=\"_blank\">saturday-sedenverultimate+unsubscribe@googlegroups.com</a>.<br>\nTo view this discussion on the web visit <a href=\"https://groups.google.com/d/msgid/saturday-sedenverultimate/855086374.1741393.1696389364726%40mail.yahoo.com?utm_medium=email&amp;utm_source=footer\" rel=\"nofollow\" target=\"_blank\">https://groups.google.com/d/msgid/saturday-sedenverultimate/855086374.1741393.1696389364726%40mail.yahoo.com</a>.<br>\nFor more options, visit <a href=\"https://groups.google.com/d/optout\" rel=\"nofollow\" target=\"_blank\">https://groups.google.com/d/optout</a>.<br>\n</div></div>\n            </div>\n        </div></div></body></html>\n\n<p></p>\n\n-- <br />\nYou received this message because you are subscribed to the Google Groups &quot;Saturday Southeast Denver Ultimate&quot; group.<br />\nTo unsubscribe from this group and stop receiving emails from it, send an email to <a href=\"mailto:saturday-sedenverultimate+unsubscribe@googlegroups.com\">saturday-sedenverultimate+unsubscribe@googlegroups.com</a>.<br />\nTo view this discussion on the web visit <a href=\"https://groups.google.com/d/msgid/saturday-sedenverultimate/91861266.5887163.1696434221130%40mail.yahoo.com?utm_medium=email&utm_source=footer\">https://groups.google.com/d/msgid/saturday-sedenverultimate/91861266.5887163.1696434221130%40mail.yahoo.com</a>.<br />\nFor more options, visit <a href=\"https://groups.google.com/d/optout\">https://groups.google.com/d/optout</a>.<br />\n",
+    "text": " I'll be there!\n    On Tuesday, October 3, 2023 at 09:16:10 PM MDT, 'Other Player' via Saturday Southeast Denver Ultimate <saturday-sedenverultimate@googlegroups.com> wrote:  \n \n  I'm in - bringing Redacted as well.\n    On Tuesday, October 3, 2023 at 02:00:12 PM MDT, Saturday Disco <saturday-disco@sedenverultimate.net> wrote:  \n \n \nPlease let me know if you’ll be joining us this Saturday 10/7/23.\n\nWhere: James Bible Park\nWhen: Saturday, 10:00am\nWhat: Bring a red and a blue shirt if you have them\nWeather Forecast: ☀️ Sunny: 😎 58ºF | 💧 2% | 💨 6 mph\n\nReminder that we also play at lunch during the week. Visit sedenverultimate.net to sign up for the lunchtime mailing list.\n\nDisco 🪩sedenverultimate.net\n\n\n-- \nYou received this message because you are subscribed to the Google Groups \"Saturday Southeast Denver Ultimate\" group.\nTo unsubscribe from this group and stop receiving emails from it, send an email to saturday-sedenverultimate+unsubscribe@googlegroups.com.\nTo view this discussion on the web visit https://groups.google.com/d/msgid/saturday-sedenverultimate/d58dfdf5-caeb-4337-7402-3e8dae2003e0%40sedenverultimate.net.\nFor more options, visit https://groups.google.com/d/optout.\n  \n\n-- \nYou received this message because you are subscribed to the Google Groups \"Saturday Southeast Denver Ultimate\" group.\nTo unsubscribe from this group and stop receiving emails from it, send an email to saturday-sedenverultimate+unsubscribe@googlegroups.com.\nTo view this discussion on the web visit https://groups.google.com/d/msgid/saturday-sedenverultimate/855086374.1741393.1696389364726%40mail.yahoo.com.\nFor more options, visit https://groups.google.com/d/optout.\n  \n\n-- \nYou received this message because you are subscribed to the Google Groups \"Saturday Southeast Denver Ultimate\" group.\nTo unsubscribe from this group and stop receiving emails from it, send an email to saturday-sedenverultimate+unsubscribe@googlegroups.com.\nTo view this discussion on the web visit https://groups.google.com/d/msgid/saturday-sedenverultimate/91861266.5887163.1696434221130%40mail.yahoo.com.\nFor more options, visit https://groups.google.com/d/optout.\n",
+    "textAsHtml": "<p>I&apos;ll be there!<br/>    On Tuesday, October 3, 2023 at 09:16:10 PM MDT, &apos;Other Player&apos; via Saturday Southeast Denver Ultimate &lt;<a href=\"mailto:saturday-sedenverultimate@googlegroups.com\">saturday-sedenverultimate@googlegroups.com</a>&gt; wrote:</p><p>  I&apos;m in - bringing Redacted as well.<br/>    On Tuesday, October 3, 2023 at 02:00:12 PM MDT, Saturday Disco &lt;<a href=\"mailto:saturday-disco@sedenverultimate.net\">saturday-disco@sedenverultimate.net</a>&gt; wrote:</p><p>Please let me know if you&rsquo;ll be joining us this Saturday 10/7/23.</p><p>Where: James Bible Park<br/>When: Saturday, 10:00am<br/>What: Bring a red and a blue shirt if you have them<br/>Weather Forecast: &#x2600;&#xFE0F; Sunny: &#x1F60E; 58&ordm;F | &#x1F4A7; 2% | &#x1F4A8; 6 mph</p><p>Reminder that we also play at lunch during the week. Visit <a href=\"http://sedenverultimate.net\">sedenverultimate.net</a> to sign up for the lunchtime mailing list.</p><p>Disco <a href=\"http://🪩sedenverultimate.net\">🪩sedenverultimate.net</a></p><p>--<br/>You received this message because you are subscribed to the Google Groups &quot;Saturday Southeast Denver Ultimate&quot; group.<br/>To unsubscribe from this group and stop receiving emails from it, send an email to <a href=\"mailto:saturday-sedenverultimate+unsubscribe@googlegroups.com\">saturday-sedenverultimate+unsubscribe@googlegroups.com</a>.<br/>To view this discussion on the web visit <a href=\"https://groups.google.com/d/msgid/saturday-sedenverultimate/d58dfdf5-caeb-4337-7402-3e8dae2003e0%40sedenverultimate.net\">https://groups.google.com/d/msgid/saturday-sedenverultimate/d58dfdf5-caeb-4337-7402-3e8dae2003e0%40sedenverultimate.net</a>.<br/>For more options, visit <a href=\"https://groups.google.com/d/optout\">https://groups.google.com/d/optout</a>.</p><p>--<br/>You received this message because you are subscribed to the Google Groups &quot;Saturday Southeast Denver Ultimate&quot; group.<br/>To unsubscribe from this group and stop receiving emails from it, send an email to <a href=\"mailto:saturday-sedenverultimate+unsubscribe@googlegroups.com\">saturday-sedenverultimate+unsubscribe@googlegroups.com</a>.<br/>To view this discussion on the web visit <a href=\"https://groups.google.com/d/msgid/saturday-sedenverultimate/855086374.1741393.1696389364726%40mail.yahoo.com\">https://groups.google.com/d/msgid/saturday-sedenverultimate/855086374.1741393.1696389364726%40mail.yahoo.com</a>.<br/>For more options, visit <a href=\"https://groups.google.com/d/optout\">https://groups.google.com/d/optout</a>.</p><p>--<br/>You received this message because you are subscribed to the Google Groups &quot;Saturday Southeast Denver Ultimate&quot; group.<br/>To unsubscribe from this group and stop receiving emails from it, send an email to <a href=\"mailto:saturday-sedenverultimate+unsubscribe@googlegroups.com\">saturday-sedenverultimate+unsubscribe@googlegroups.com</a>.<br/>To view this discussion on the web visit <a href=\"https://groups.google.com/d/msgid/saturday-sedenverultimate/91861266.5887163.1696434221130%40mail.yahoo.com\">https://groups.google.com/d/msgid/saturday-sedenverultimate/91861266.5887163.1696434221130%40mail.yahoo.com</a>.<br/>For more options, visit <a href=\"https://groups.google.com/d/optout\">https://groups.google.com/d/optout</a>.</p>",
+    "subject": "Re: Saturday Bible Park Frisbee 10/7/23",
+    "references": [
+        "<d58dfdf5-caeb-4337-7402-3e8dae2003e0@sedenverultimate.net>",
+        "<855086374.1741393.1696389364726@mail.yahoo.com>"
+    ],
+    "date": "2023-10-04T15:43:41.000Z",
+    "to": {
+        "value": [
+            {
+                "address": "saturday-sedenverultimate@googlegroups.com",
+                "name": ""
+            },
+            {
+                "address": "saturday-disco@sedenverultimate.net",
+                "name": "Saturday Disco"
+            },
+            {
+                "address": "other_player@yahoo.com",
+                "name": "Other Player"
+            }
+        ],
+        "html": "<span class=\"mp_address_group\"><a href=\"mailto:saturday-sedenverultimate@googlegroups.com\" class=\"mp_address_email\">saturday-sedenverultimate@googlegroups.com</a></span>, <span class=\"mp_address_group\"><span class=\"mp_address_name\">Saturday Disco</span> &lt;<a href=\"mailto:saturday-disco@sedenverultimate.net\" class=\"mp_address_email\">saturday-disco@sedenverultimate.net</a>&gt;</span>, <span class=\"mp_address_group\"><span class=\"mp_address_name\">Other Player</span> &lt;<a href=\"mailto:other_player@yahoo.com\" class=\"mp_address_email\">other_player@yahoo.com</a>&gt;</span>",
+        "text": "saturday-sedenverultimate@googlegroups.com, Saturday Disco <saturday-disco@sedenverultimate.net>, Other Player <other_player@yahoo.com>"
+    },
+    "from": {
+        "value": [
+            {
+                "address": "saturday-sedenverultimate@googlegroups.com",
+                "name": "'Redacted Player' via Saturday Southeast Denver Ultimate"
+            }
+        ],
+        "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">&#x27;Redacted Player&#x27; via Saturday Southeast Denver Ultimate</span> &lt;<a href=\"mailto:saturday-sedenverultimate@googlegroups.com\" class=\"mp_address_email\">saturday-sedenverultimate@googlegroups.com</a>&gt;</span>",
+        "text": "'Redacted Player' via Saturday Southeast Denver Ultimate <saturday-sedenverultimate@googlegroups.com>"
+    },
+    "messageId": "<91861266.5887163.1696434221130@mail.yahoo.com>",
+    "inReplyTo": "<855086374.1741393.1696389364726@mail.yahoo.com>",
+    "replyTo": {
+        "value": [
+            {
+                "address": "redactedplayer@yahoo.com",
+                "name": "Redacted Player"
+            }
+        ],
+        "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">Redacted Player</span> &lt;<a href=\"mailto:redactedplayer@yahoo.com\" class=\"mp_address_email\">redactedplayer@yahoo.com</a>&gt;</span>",
+        "text": "Redacted Player <redactedplayer@yahoo.com>"
+    },
+    "raw": "ARC-Seal: i=3; a=rsa-sha256; t=1696435391; cv=pass; d=forwardemail.net;\r\n s=default;\r\n b=fcaI0ZtUu97tuCrHYKyKgX9aZ2Q6hbPTiEd01L8ySX3UUMkt2Lyf7wpD6qAW/O42B4X1VXDC+\r\n lhFZb1H/Wu4ZU6ffVvrOjRqFukBqDt4KEtfzQFtqwOdw6Th/2Fh/on9Gb3j/ru9VSC4RKyInN6b\r\n DBjeCgkDHJo8nAE/wvTXozM=\r\nARC-Message-Signature: i=3; a=rsa-sha256; c=relaxed/relaxed;\r\n d=forwardemail.net; h=List-Unsubscribe: List-Archive: List-Help:\r\n List-Post: List-ID: Reply-To: Content-Type: MIME-Version: Subject:\r\n References: In-Reply-To: Message-ID: To: From: Date; q=dns/txt; s=default;\r\n t=1696435391; bh=byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=;\r\n b=hdfeHSJXLOs5pPqnfyFHzmQxZRhbXD/sPCKBTMxIqjXp6tew9LGUSbnYltfB2SjMd/8j+ng0S\r\n R7cd7BQGafPnFZEvl+aclFHqRLUqlCYzIGD0xaWyPvlQ3oKniAi50YSbgtt6QVJNX5r73hIjAXA\r\n tYrvudHuIBfqtkA31ByxPvg=\r\nARC-Authentication-Results: i=3; mx2.forwardemail.net;\r\n dkim=pass header.i=@googlegroups.com header.s=20230601 header.a=rsa-sha256 header.b=\"uFZ/zZWs\";\r\n spf=pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as permitted\r\n sender) smtp.mailfrom=saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com smtp.helo=mail-yw1-f192.google.com;\r\n arc=pass (i=2 spf=pass dkim=pass dkdomain=yahoo.com dmarc=pass fromdomain=yahoo.com);\r\n dmarc=pass (p=NONE arc=pass) header.from=googlegroups.com header.d=googlegroups.com;\r\n bimi=skipped (too lax DMARC policy)\r\nReceived-SPF: pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as\r\n permitted sender) client-ip=209.85.128.192;\r\nAuthentication-Results: mx2.forwardemail.net;\r\n dkim=pass header.i=@googlegroups.com header.s=20230601 header.a=rsa-sha256 header.b=\"uFZ/zZWs\";\r\n spf=pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as permitted\r\n sender) smtp.mailfrom=saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com smtp.helo=mail-yw1-f192.google.com;\r\n arc=pass (i=2 spf=pass dkim=pass dkdomain=yahoo.com dmarc=pass fromdomain=yahoo.com);\r\n dmarc=pass (p=NONE arc=pass) header.from=googlegroups.com header.d=googlegroups.com;\r\n bimi=skipped (too lax DMARC policy)\r\nX-Original-To: saturday-disco@sedenverultimate.net\r\nX-Complaints-To: abuse@forwardemail.net\r\nX-Report-Abuse-To: abuse@forwardemail.net\r\nX-Report-Abuse: abuse@forwardemail.net\r\nX-ForwardEmail-Sender: rfc822;\r\n saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com,\r\n mail-yw1-f192.google.com, 209.85.128.192\r\nX-ForwardEmail-Version: 10.0.0-alpha\r\nReceived: by mail-yw1-f192.google.com with SMTP id 00721157ae682-59f7d109926sf31793577b3.2\r\n        for <saturday-disco@sedenverultimate.net>; Wed, 04 Oct 2023 09:03:05 -0700 (PDT)\r\nARC-Seal: i=2; a=rsa-sha256; t=1696435155; cv=pass;\r\n        d=google.com; s=arc-20160816;\r\n        b=CKDT93GBCU616AJ7pNExfP/qIrAE/Uf7paooqd3tLJ6gCUOpmcSbynBWwTKan4Mh4N\r\n         PwBhqoyrQwEcO+EowkROQ0khOvW4Ouy2ScfsqF02Gy2GagG0G+k+NKFrz0xGaKywi5id\r\n         /i6z59W3LXfLzkdxk5h61FDsHB0kpWAZPiZ2/kOseWjjSICmLCULrevCGUA5Cqb08SzG\r\n         4+KXtKhtHBZpMLUkPXyEMsMYRt/M8+SPMsX9smvEiAl8LV9O0GnyEtl0vY28UsLApoBg\r\n         Ein8WI5jMgBwHxTxPKEiwG8nMpGb7/Hxe36nMf1LnGl5iZislwhh3rjhmwaxsb5t4XoY\r\n         +NVA==\r\nARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;\r\n        h=list-unsubscribe:list-archive:list-help:list-post:list-id\r\n         :mailing-list:precedence:reply-to:mime-version:subject:references\r\n         :in-reply-to:message-id:to:from:date:dkim-signature;\r\n        bh=byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=;\r\n        fh=JvcyBG/A9ZNWIrolqWJo2rWvDV0tLFspp9TRmLNyicQ=;\r\n        b=de67h9Q6xPy7nd/X2+ILEqfgXSt+ckT/eTh67XuHRiiFCN9v12kVGMbqjGcUCB3CmT\r\n         9O8syuiuBGLVCi4ZfhRXPZ9EVqtxZzRBGU3NfeN/+4y8ZMZi+e77N/ZcALPmWk2QgkD6\r\n         jZLaHzd3VYnCRklmw2E+tkmZ2EtYEaFLMDo21TkwwZODQWGarU9Gro6Iz/3668SRwd1i\r\n         vjffoPh0miMyDVsZn/yiXJmyHmkauSXdLMtA/7bLUUgm/zK22Hd2J4EKbCTrOGJkYTzM\r\n         0xRN9FqwEbT1dz1uGlGbZ5wEyHpvVaRvzqY3LzCbLnZRf6oSSVSV9pWwmdd4OEfMFyvr\r\n         PBtA==\r\nARC-Authentication-Results: i=2; gmr-mx.google.com;\r\n       dkim=pass header.i=@yahoo.com header.s=s2048 header.b=AoQ9pVCh;\r\n       spf=pass (google.com: domain of redactedplayer@yahoo.com designates 74.6.130.121 as permitted sender) smtp.mailfrom=redactedplayer@yahoo.com;\r\n       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=yahoo.com\r\nDKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=googlegroups.com; s=20230601; t=1696435155; x=1697039955; darn=sedenverultimate.net;\r\n        h=list-unsubscribe:list-archive:list-help:list-post:list-id\r\n         :mailing-list:precedence:reply-to:x-original-authentication-results\r\n         :x-original-sender:mime-version:subject:references:in-reply-to\r\n         :message-id:to:from:date:from:to:cc:subject:date:message-id:reply-to;\r\n        bh=byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=;\r\n        b=uFZ/zZWsNxH/h1YU9v01rVIItxdKd7H31jDhwMv7DXodwcx+pIjFo2gisUkReKbgH8\r\n         PpIOVPhQ7M2mU0tfoUlAm21oleGI8ChBFIIrLfdhvjuSlUjhN45FB8vrYw1hRrbHi7+Y\r\n         xa4LzxckpEmHV5cYCwhFw452NMApcMaAYLgv4YlmM5u+aIteEvFTPQV4V9gruG2HAMGo\r\n         GlT5ysMW60B5srpJR32PjCVWpQSwqiNZPMv6+lmFmaj3/pZ0DFiKR6Q4BUjZWy25Ln2A\r\n         gzCQQyUhIqjQ8zfj37EYy1xrCUvveh5n6Uaqao85xw6hSDbwtS8tU7lGPse/5ipngod4\r\n         pR8Q==\r\nX-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=1e100.net; s=20230601; t=1696435155; x=1697039955;\r\n        h=list-unsubscribe:list-archive:list-help:list-post\r\n         :x-spam-checked-in-group:list-id:mailing-list:precedence:reply-to\r\n         :x-original-authentication-results:x-original-sender:mime-version\r\n         :subject:references:in-reply-to:message-id:to:from:date:x-beenthere\r\n         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;\r\n        bh=byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=;\r\n        b=HKM+TC2qMCDuXtUUIlLMAO0RxL8BOTeoTfLzYWGeFDTzMynX1adU/Vm40YlwNJhnev\r\n         /5B61oyBr3SjXDAhh7JE7W+9IzWTzsVs93/4+z+leUMHpuOX2zkZ5sEj7PtwcjNes+cz\r\n         /feKLOGBDQqo3qX090ctm53yzo6EDElGNzWPSgeFM+O+rTBGjTZmqdrm05g3IOCE0RL6\r\n         HBYwHeTBPpndzIqCyQwIIR2wU1BPoaZVhuGlvpYPoK4l9dpf/5LmdJecUM4vjeiVnBeT\r\n         jPW7YLN4IsOOiDwGJEzIKyNj2vL7MugK29ysHThdG4JSw2kCUrBShXiYce85ia2I06Of\r\n         AbVQ==\r\nX-Gm-Message-State: AOJu0YxkcECDmkCEjkF8ZVQlFMvhlTOUy4ksLDW1gDeyCDbSF+bgENaT\r\n\t+lJAP809ee8VZU1Np32ZkqY=\r\nX-Google-Smtp-Source: AGHT+IG+V9zIJJW+x6E+CPxix6NpyV7NGGfxdXWCo8KOUYhfe5yBrIKsXACUHpagAZ1CIlqMr30/hA==\r\nX-Received: by 2002:a05:6870:1590:b0:1e1:e3a7:c414 with SMTP id j16-20020a056870159000b001e1e3a7c414mr2997970oab.16.1696434226323;\r\n        Wed, 04 Oct 2023 08:43:46 -0700 (PDT)\r\nX-BeenThere: saturday-sedenverultimate@googlegroups.com\r\nReceived: by 2002:a05:6870:3046:b0:1e1:5fe1:87e with SMTP id\r\n u6-20020a056870304600b001e15fe1087els1001191oau.0.-pod-prod-02-us; Wed, 04\r\n Oct 2023 08:43:45 -0700 (PDT)\r\nX-Received: by 2002:a05:6358:2605:b0:12b:e45b:3fac with SMTP id l5-20020a056358260500b0012be45b3facmr3000460rwc.32.1696434225395;\r\n        Wed, 04 Oct 2023 08:43:45 -0700 (PDT)\r\nARC-Seal: i=1; a=rsa-sha256; t=1696434225; cv=none;\r\n        d=google.com; s=arc-20160816;\r\n        b=o+ly5DH0hTiZ6e0W7b42LIa20BNQTn74z+OxOSadwQhA6CrMAG6UselDE63tgEHuQo\r\n         IGK2oYjDll5HoL7lwxeLY4aaK0Bf6LhasVYxQXUqZp7YkuRvRCLAIV06boMcsmNMvgEA\r\n         LN2h9bOCcm4XeFKdtkSHDsdzkerj5/1XKcseCyPy7A7jWNLUdS07ci69UMXFD3pBte9i\r\n         qHY6VYPycnXaaFqLXDTT6fAW5cQFxQ6KKcKWOamCAzVCKqsUL00AHhRca0PoeVkaF20E\r\n         xFzbdNjNl18wyYHrO9xip+as4JIZGQ8a+vEVPh+6p3nCppFXpaJWjklQoukKw3yPxSgA\r\n         L3wQ==\r\nARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;\r\n        h=mime-version:subject:references:in-reply-to:message-id:to:from:date\r\n         :dkim-signature;\r\n        bh=WbkIINSPq64ftCddHcwNXcYRFgjvfIlJYqL9EJ3SbmA=;\r\n        fh=JvcyBG/A9ZNWIrolqWJo2rWvDV0tLFspp9TRmLNyicQ=;\r\n        b=QNHloyyeGxAA9l6Pcy7LEwm1GpuWDw69UGo2ync6VKs+rETM30e/RFdD8HYUlIzma/\r\n         oAmKGAU/DzEo9Q3kv21RHahFb4gCb+8vx2315vEbe+kYPhGT0deXLO05DsYxBnnxqB6r\r\n         X1qQPdZi3urRMjTbC9269NCfphhYYyZgHQUiDEmrxw2U4efgAr+cTboUpX6xtvrJybtD\r\n         9QEycqI2LBg/IFFzX3WwAjEYDh+8jFHtOETXjtVip1RlRFWOUZOqGkXY0QuSt1nSOLBA\r\n         TZz9S8JvugMsvjX35/2Hkowzm2AisFf+4RdN24XsOHSypdC7GrRkH/dVR4R+wxnEwiNw\r\n         /vWg==\r\nARC-Authentication-Results: i=1; gmr-mx.google.com;\r\n       dkim=pass header.i=@yahoo.com header.s=s2048 header.b=AoQ9pVCh;\r\n       spf=pass (google.com: domain of redactedplayer@yahoo.com designates 74.6.130.121 as permitted sender) smtp.mailfrom=redactedplayer@yahoo.com;\r\n       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=yahoo.com\r\nReceived: from sonic316-11.consmr.mail.bf2.yahoo.com (sonic316-11.consmr.mail.bf2.yahoo.com. [74.6.130.121])\r\n        by gmr-mx.google.com with ESMTPS id lw14-20020a17090b180e00b00276a78ed402si102674pjb.1.2023.10.04.08.43.45\r\n        for <saturday-sedenverultimate@googlegroups.com>\r\n        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);\r\n        Wed, 04 Oct 2023 08:43:45 -0700 (PDT)\r\nReceived-SPF: pass (google.com: domain of redactedplayer@yahoo.com designates 74.6.130.121 as permitted sender) client-ip=74.6.130.121;\r\nX-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1696434224; bh=kPEUCvkvEn9fRxQT1PjIlujUpuO/dzJeSjL9tc902Cy=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=DqPe4E0e4bxMA76ST3PG+IV0bd1DZcL0EwYldXmFWq0kUgWy4vc6wdWX1teKYxSUf0Ps8u0P2zEOp8Z0Zmjf/YeBhkm1XvzpGhgrcOWLeFV6a7yyUlkQgfKnFD0so8gPS/eNIHPZuHdEDKaWs5u2Qp/MoDGU5SApTv5jUTQLa1vDKjevm/22GeDt72h7TEcsxEUxN6bQFXXawN1jj4028pd3vkNVC9DRJIewFWAFb+/JdORz6eCBJXuzX2DxHmPdOoXA9NTROEbuGVpMJUYR5LhMe2qicMS2Txx1Dqgbx2Cv+1z22Fzs37j73Z1UDa/TfGrAXAi1g+L8mFqf0BxRQA==\r\nX-YMail-OSG: 1SriO50VM1mR.FxBLpiUz1rRqHHK55AAgj3mrRn1BnEJJBa.uZCqVWyNQC790uV\r\n gZn.2IVFDmUwcWosv1_8R_aS57XSDtRb4xLE0RuqPF.xqfoPk1BXVn3Pd_Ysv1TSvrVNMloR4dgi\r\n jhrcEg6MW4KHB0JunNCklSGm4NJcORDFpeEJjzfKVmm1Bw46889WjUrtaTrOh7Gjo9AOW3lQucAY\r\n WVtYxuxrMHgvqpAEHw_2hjxivVtiltJf3n8faa3YRa8SZzCuV3vKzp0VVdaPaZFyby6FCYAwarve\r\n xCVtQq6Me5lcrmHaZu3KBM.sWQ_pl6M.9PV0tO5tqIsmDGQhxuSo25mKwzfDDEWfiDJdr1h2OwDi\r\n gDJi2mOAzMFgPXjQ3DzIBNFgRpjdBh4HRHTvCoSZJ8AmnF1gsUzjiLOQVb_rdayw39pyRXLCG1Fj\r\n xAyflFwmxPdrxunA4tTwK4qzwCB2IcCy7w.OEUCkZcxTQV0PnC_pLAi3AKpaMLA9ahGxm_Jqb4Kg\r\n twuwEaqR0wMFxkI03zex39WU0JrMSi5n11ZNDR.1._p1Nq3csKT3PGAEcHS80o4W6myhApDF8xQX\r\n IAs8GwGF_0P6CsS7Yr7BHX1b6CuMliec8wpgorEkCpO7Ld0EbdW2K5fL9q9xWLTOayCd8beLr18X\r\n 3t4tYGli_XN.1jEfzeXY44xHhB.dkMtit6kBYq9TvdAzkKYxmDo6d6lyOGFIGCAUmQtZP64kCk87\r\n GpwTGjCz41oAEtWdCjywIFaHhRs7CtmrtEepY2PBTMTW_DOsyiT9AL3mka1tevxzHRzbRC8aBUNf\r\n OI2vu.Q2f9exxfLFEj4_5Jq6bEqepNYR1Irs0ZIMlOOGXYlfjVItwFWkFIShAqUZC8IxGNMUZG_q\r\n YMlGvyJRzoT5.8888vHr4yAf7S6htGQ1aJLSwFr2gcWvXbUlXwBmLWIj_9URZ6l8u8tryUQVmxSG\r\n K42cpXYTXco4n8ZP7wXFTa49bORCi9IFnJHSmUXFbwwR65295Z6sH06fxlRccaoDGikgiOt_EV2S\r\n YD88deNBqemMu_Y2hex6q0srNskqOe5BzIGoHQxMo6ScJ.63ErebdVMKaSkd7QJO1wA9jTe94tfq\r\n ShynsQxMW1OsHee8N4yuhKf8PMvEHjqtYFihA11Tblu9glyhoQxFP2ywBT4cPfalt7eYYCh29_pk\r\n 9CdqEDgLyRySC9PDrsQj9OuuRFQEyBWKKxQlHkbStbh6nSI9_49eOGnEL5hSfrG.kZF.7a5gYJEs\r\n wktEFxsJwPj.edNh.diZsFgnJZCKM2ebAab6pk9Tc3n9WYXekQdMPg6NVLdiHbq.oa8AMwQof5LL\r\n qs996SbFypmMa9osslVQLv0C7sNWRB2CV9JBD1pRTSvBhYYWuXBhnR2bLUNNP2HYzaraKQA0hnz4\r\n 562CMdAz6NdHfystqaQbgl1XNq_B90o0bJc_vhY27E9agvzMrbLq5QtoGCqc7qi_owKfd.iP2Snl\r\n B4T6dFF_12xhqswx9Z_TlfRIcjnIsB6okRMuxXdE7TeZrCFj3aYt5mW2bIfeBjmLfD7clRSVpSG2\r\n jqQ1PyBqmK1CPCDHsK1wLtnAVqBvWLQvGaQmNaKF41deSneQJ_WTQg2h0h3vA9DYKrYPKV9eKuQI\r\n zbZItUC1wnBuFxBpXRPp0sLaqjFartKgRr_lfWCKs5gjWYEsqfnSAR7m7nLRymkW6B9Oaz2Euszu\r\n HLDvnGCWT6sbvy49q6otyJF4R4LL_vhDWjuXt0Fs90pNwYQnYg_lwBAAD8BxVJY2Rpqga.rLVeFk\r\n LPBDQ2tY_DJihcHqsWhxk6Mfjdx.PkdRUpWFSWtVbvhVcJm0cmUrJ7DO9Ezp5nUIXODfx3E4P2o3\r\n z.6iYXPw5cfczDSFTrtEOXZvtlzZtZmgX9MoLJz66YzuI2PQF77N5IlKWNsy3svrldtLLmSxlGq9\r\n W.SH8J104xEgtGrIu2B56yckEWgZEPrgM1qWB7N4R25l7lOtDmu7MXwMm0l94_XSmiw76nZSSYhi\r\n p1qeAl1GdEG0yojuP55c5wAoTOdsvz7YumIflIT.a2uLbq7H39A0tpTzcIOexBBOQ9s1MGWumKCm\r\n .15v78Ea0HlZMLu4AA6Y9TPqNZqd4Dd1YQ4vS2ozx8CJfiubAm.hk1xhN3jR0O5NpKKLkFLP6fkj\r\n ysEiM3MzbMqwdGcqpsBdOtSFesSYPQpS9rbPSMTIhuvkPjAongdzEgLryeZRQc2oUVgJgurqg4mX\r\n IjoJSVaQtmcI8iC0tHD1584vY1DpO2cmAB7VwjzZ5LOXGb_7lKc_9\r\nX-Sonic-MF: <redactedplayer@yahoo.com>\r\nX-Sonic-ID: 3e127325-2305-450e-9e31-ccd741645a26\r\nReceived: from sonic.gate.mail.ne1.yahoo.com by sonic316.consmr.mail.bf2.yahoo.com with HTTP; Wed, 4 Oct 2023 15:43:44 +0000\r\nDate: Wed, 4 Oct 2023 15:43:41 +0000 (UTC)\r\nFrom: \"'Redacted Player' via Saturday Southeast Denver Ultimate\" <saturday-sedenverultimate@googlegroups.com>\r\nTo: \"saturday-sedenverultimate@googlegroups.com\" <saturday-sedenverultimate@googlegroups.com>, \r\n\tSaturday Disco <saturday-disco@sedenverultimate.net>, \r\n\tOther Player <other_player@yahoo.com>\r\nMessage-ID: <91861266.5887163.1696434221130@mail.yahoo.com>\r\nIn-Reply-To: <855086374.1741393.1696389364726@mail.yahoo.com>\r\nReferences: <d58dfdf5-caeb-4337-7402-3e8dae2003e0@sedenverultimate.net> <855086374.1741393.1696389364726@mail.yahoo.com>\r\nSubject: Re: Saturday Bible Park Frisbee 10/7/23\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; \r\n\tboundary=\"----=_Part_5887162_675398998.1696434221128\"\r\nX-Mailer: WebService/1.1.21797 YMailNoble\r\nContent-Length: 6606\r\nX-Original-Sender: redactedplayer@yahoo.com\r\nX-Original-Authentication-Results: gmr-mx.google.com;       dkim=pass\r\n header.i=@yahoo.com header.s=s2048 header.b=AoQ9pVCh;       spf=pass\r\n (google.com: domain of redactedplayer@yahoo.com designates 74.6.130.121 as\r\n permitted sender) smtp.mailfrom=redactedplayer@yahoo.com;       dmarc=pass\r\n (p=REJECT sp=REJECT dis=NONE) header.from=yahoo.com\r\nX-Original-From: Redacted Player <redactedplayer@yahoo.com>\r\nReply-To: Redacted Player <redactedplayer@yahoo.com>\r\nPrecedence: list\r\nMailing-list: list saturday-sedenverultimate@googlegroups.com; contact saturday-sedenverultimate+owners@googlegroups.com\r\nList-ID: <saturday-sedenverultimate.googlegroups.com>\r\nX-Spam-Checked-In-Group: saturday-sedenverultimate@googlegroups.com\r\nX-Google-Group-Id: 143701321910\r\nList-Post: <https://groups.google.com/group/saturday-sedenverultimate/post>, <mailto:saturday-sedenverultimate@googlegroups.com>\r\nList-Help: <https://groups.google.com/support/>, <mailto:saturday-sedenverultimate+help@googlegroups.com>\r\nList-Archive: <https://groups.google.com/group/saturday-sedenverultimate\r\nList-Unsubscribe: <mailto:googlegroups-manage+143701321910+unsubscribe@googlegroups.com>,\r\n <https://groups.google.com/group/saturday-sedenverultimate/subscribe>\r\n\r\n------=_Part_5887162_675398998.1696434221128\r\nContent-Type: text/plain; charset=\"UTF-8\"\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n I'll be there!\r\n    On Tuesday, October 3, 2023 at 09:16:10 PM MDT, 'Other Player' via Sa=\r\nturday Southeast Denver Ultimate <saturday-sedenverultimate@googlegroups.co=\r\nm> wrote: =20\r\n=20\r\n  I'm in - bringing Redacted as well.\r\n    On Tuesday, October 3, 2023 at 02:00:12 PM MDT, Saturday Disco <saturda=\r\ny-disco@sedenverultimate.net> wrote: =20\r\n=20\r\n=20\r\nPlease let me know if you=E2=80=99ll be joining us this Saturday 10/7/23.\r\n\r\nWhere: James Bible Park\r\nWhen: Saturday, 10:00am\r\nWhat: Bring a red and a blue shirt if you have them\r\nWeather Forecast: =E2=98=80=EF=B8=8F Sunny: =F0=9F=98=8E 58=C2=BAF | =F0=9F=\r\n=92=A7 2% | =F0=9F=92=A8 6 mph\r\n\r\nReminder that we also play at lunch during the week. Visit sedenverultimate=\r\n.net to sign up for the lunchtime mailing list.\r\n\r\nDisco =F0=9F=AA=A9sedenverultimate.net\r\n\r\n\r\n--=20\r\nYou received this message because you are subscribed to the Google Groups \"=\r\nSaturday Southeast Denver Ultimate\" group.\r\nTo unsubscribe from this group and stop receiving emails from it, send an e=\r\nmail to saturday-sedenverultimate+unsubscribe@googlegroups.com.\r\nTo view this discussion on the web visit https://groups.google.com/d/msgid/=\r\nsaturday-sedenverultimate/d58dfdf5-caeb-4337-7402-3e8dae2003e0%40sedenverul=\r\ntimate.net.\r\nFor more options, visit https://groups.google.com/d/optout.\r\n =20\r\n\r\n--=20\r\nYou received this message because you are subscribed to the Google Groups \"=\r\nSaturday Southeast Denver Ultimate\" group.\r\nTo unsubscribe from this group and stop receiving emails from it, send an e=\r\nmail to saturday-sedenverultimate+unsubscribe@googlegroups.com.\r\nTo view this discussion on the web visit https://groups.google.com/d/msgid/=\r\nsaturday-sedenverultimate/855086374.1741393.1696389364726%40mail.yahoo.com.\r\nFor more options, visit https://groups.google.com/d/optout.\r\n =20\r\n\r\n--=20\r\nYou received this message because you are subscribed to the Google Groups \"=\r\nSaturday Southeast Denver Ultimate\" group.\r\nTo unsubscribe from this group and stop receiving emails from it, send an e=\r\nmail to saturday-sedenverultimate+unsubscribe@googlegroups.com.\r\nTo view this discussion on the web visit https://groups.google.com/d/msgid/=\r\nsaturday-sedenverultimate/91861266.5887163.1696434221130%40mail.yahoo.com.\r\nFor more options, visit https://groups.google.com/d/optout.\r\n\r\n------=_Part_5887162_675398998.1696434221128\r\nContent-Type: text/html; charset=\"UTF-8\"\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<html><head></head><body><div class=3D\"ydpa1aa7ad5yahoo-style-wrap\" style=\r\n=3D\"font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:16px=\r\n;\"><div></div>\r\n        <div>I'll be there!</div><div><br></div>\r\n       =20\r\n        <div id=3D\"ydpa1aa7ad5yahoo_quoted_7414571283\" class=3D\"ydpa1aa7ad5=\r\nyahoo_quoted\">\r\n            <div style=3D\"font-family:'Helvetica Neue', Helvetica, Arial, s=\r\nans-serif;font-size:13px;color:#26282a;\">\r\n               =20\r\n                <div>\r\n                    On Tuesday, October 3, 2023 at 09:16:10 PM MDT, 'Other =\r\nPlayer' via Saturday Southeast Denver Ultimate &lt;saturday-sedenverultim=\r\nate@googlegroups.com&gt; wrote:\r\n                </div>\r\n                <div><br></div>\r\n                <div><br></div>\r\n                <div><div id=3D\"ydpa1aa7ad5yiv4675834746\"><div><div style=\r\n=3D\"font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:16px=\r\n;\" class=3D\"ydpa1aa7ad5yiv4675834746ydp3258c7e8yahoo-style-wrap\"><div></div=\r\n>\r\n        <div dir=3D\"ltr\">I'm in - bringing Redacted as well.</div><div><br></div=\r\n>\r\n       =20\r\n        </div><div id=3D\"ydpa1aa7ad5yiv4675834746ydp47c770d9yahoo_quoted_67=\r\n19948818\" class=3D\"ydpa1aa7ad5yiv4675834746ydp47c770d9yahoo_quoted\">\r\n            <div style=3D\"font-family:'Helvetica Neue', Helvetica, Arial, s=\r\nans-serif;font-size:13px;color:#26282a;\">\r\n               =20\r\n                <div>\r\n                    On Tuesday, October 3, 2023 at 02:00:12 PM MDT, Saturda=\r\ny Disco &lt;saturday-disco@sedenverultimate.net&gt; wrote:\r\n                </div>\r\n                <div><br></div>\r\n                <div><br></div>\r\n                <div><div id=3D\"ydpa1aa7ad5yiv4675834746ydp47c770d9yiv01393=\r\n40922\"><p>Please let me know if you=E2=80=99ll be joining us this Saturday =\r\n<strong>10/7/23</strong>.</p>\r\n\r\n<p><strong>Where</strong>: <a href=3D\"https://maps.app.goo.gl/P1vm2nkZdYLGZ=\r\nbxb9\" rel=3D\"nofollow\" target=3D\"_blank\">James Bible Park</a><br>\r\n<strong>When</strong>: Saturday, 10:00am<br>\r\n<strong>What</strong>: Bring a red and a blue shirt if you have them<br>\r\n<strong>Weather Forecast</strong>: =E2=98=80=EF=B8=8F Sunny: =F0=9F=98=8E 5=\r\n8=C2=BAF | =F0=9F=92=A7 2% | =F0=9F=92=A8 6 mph</p>\r\n\r\n<p>Reminder that we also play at lunch during the week. Visit <a href=3D\"ht=\r\ntps://www.sedenverultimate.net\" rel=3D\"nofollow\" target=3D\"_blank\">sedenver=\r\nultimate.net</a> to sign up for the lunchtime mailing list.</p>\r\n\r\n<p>Disco =F0=9F=AA=A9\r\n<a href=3D\"https://www.sedenverultimate.net\" rel=3D\"nofollow\" target=3D\"_bl=\r\nank\">sedenverultimate.net</a></p>\r\n\r\n<p></p>\r\n\r\n-- <br>\r\nYou received this message because you are subscribed to the Google Groups \"=\r\nSaturday Southeast Denver Ultimate\" group.<br>\r\nTo unsubscribe from this group and stop receiving emails from it, send an e=\r\nmail to <a href=3D\"mailto:saturday-sedenverultimate+unsubscribe@googlegroup=\r\ns.com\" rel=3D\"nofollow\" target=3D\"_blank\">saturday-sedenverultimate+unsubsc=\r\nribe@googlegroups.com</a>.<br>\r\nTo view this discussion on the web visit <a href=3D\"https://groups.google.c=\r\nom/d/msgid/saturday-sedenverultimate/d58dfdf5-caeb-4337-7402-3e8dae2003e0%4=\r\n0sedenverultimate.net?utm_medium=3Demail&amp;utm_source=3Dfooter\" rel=3D\"no=\r\nfollow\" target=3D\"_blank\">https://groups.google.com/d/msgid/saturday-sedenv=\r\nerultimate/d58dfdf5-caeb-4337-7402-3e8dae2003e0%40sedenverultimate.net</a>.=\r\n<br>\r\nFor more options, visit <a href=3D\"https://groups.google.com/d/optout\" rel=\r\n=3D\"nofollow\" target=3D\"_blank\">https://groups.google.com/d/optout</a>.<br>\r\n</div></div>\r\n            </div>\r\n        </div></div>\r\n\r\n<p></p>\r\n\r\n-- <br>\r\nYou received this message because you are subscribed to the Google Groups \"=\r\nSaturday Southeast Denver Ultimate\" group.<br>\r\nTo unsubscribe from this group and stop receiving emails from it, send an e=\r\nmail to <a href=3D\"mailto:saturday-sedenverultimate+unsubscribe@googlegroup=\r\ns.com\" rel=3D\"nofollow\" target=3D\"_blank\">saturday-sedenverultimate+unsubsc=\r\nribe@googlegroups.com</a>.<br>\r\nTo view this discussion on the web visit <a href=3D\"https://groups.google.c=\r\nom/d/msgid/saturday-sedenverultimate/855086374.1741393.1696389364726%40mail=\r\n.yahoo.com?utm_medium=3Demail&amp;utm_source=3Dfooter\" rel=3D\"nofollow\" tar=\r\nget=3D\"_blank\">https://groups.google.com/d/msgid/saturday-sedenverultimate/=\r\n855086374.1741393.1696389364726%40mail.yahoo.com</a>.<br>\r\nFor more options, visit <a href=3D\"https://groups.google.com/d/optout\" rel=\r\n=3D\"nofollow\" target=3D\"_blank\">https://groups.google.com/d/optout</a>.<br>\r\n</div></div>\r\n            </div>\r\n        </div></div></body></html>\r\n\r\n<p></p>\r\n\r\n-- <br />\r\nYou received this message because you are subscribed to the Google Groups &=\r\nquot;Saturday Southeast Denver Ultimate&quot; group.<br />\r\nTo unsubscribe from this group and stop receiving emails from it, send an e=\r\nmail to <a href=3D\"mailto:saturday-sedenverultimate+unsubscribe@googlegroup=\r\ns.com\">saturday-sedenverultimate+unsubscribe@googlegroups.com</a>.<br />\r\nTo view this discussion on the web visit <a href=3D\"https://groups.google.c=\r\nom/d/msgid/saturday-sedenverultimate/91861266.5887163.1696434221130%40mail.=\r\nyahoo.com?utm_medium=3Demail&utm_source=3Dfooter\">https://groups.google.com=\r\n/d/msgid/saturday-sedenverultimate/91861266.5887163.1696434221130%40mail.ya=\r\nhoo.com</a>.<br />\r\nFor more options, visit <a href=3D\"https://groups.google.com/d/optout\">http=\r\ns://groups.google.com/d/optout</a>.<br />\r\n\r\n------=_Part_5887162_675398998.1696434221128--\r\n",
+    "dkim": {
+        "headerFrom": [
+            "saturday-sedenverultimate@googlegroups.com"
+        ],
+        "envelopeFrom": "saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com",
+        "results": [
+            {
+                "signingDomain": "googlegroups.com",
+                "selector": "20230601",
+                "signature": "uFZ/zZWsNxH/h1YU9v01rVIItxdKd7H31jDhwMv7DXodwcx+pIjFo2gisUkReKbgH8PpIOVPhQ7M2mU0tfoUlAm21oleGI8ChBFIIrLfdhvjuSlUjhN45FB8vrYw1hRrbHi7+Yxa4LzxckpEmHV5cYCwhFw452NMApcMaAYLgv4YlmM5u+aIteEvFTPQV4V9gruG2HAMGoGlT5ysMW60B5srpJR32PjCVWpQSwqiNZPMv6+lmFmaj3/pZ0DFiKR6Q4BUjZWy25Ln2AgzCQQyUhIqjQ8zfj37EYy1xrCUvveh5n6Uaqao85xw6hSDbwtS8tU7lGPse/5ipngod4pR8Q==",
+                "algo": "rsa-sha256",
+                "format": "relaxed/relaxed",
+                "bodyHash": "byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=",
+                "bodyHashExpecting": "byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=",
+                "signingHeaders": {
+                    "keys": "List-Unsubscribe: List-Archive: List-Help: List-Post: List-ID: Mailing-list: Precedence: Reply-To: X-Original-Authentication-Results: X-Original-Sender: MIME-Version: Subject: References: In-Reply-To: Message-ID: To: From: Date",
+                    "headers": [
+                        "List-Unsubscribe: <mailto:googlegroups-manage+143701321910+unsubscribe@googlegroups.com>,\r\n <https://groups.google.com/group/saturday-sedenverultimate/subscribe>",
+                        "List-Archive: <https://groups.google.com/group/saturday-sedenverultimate",
+                        "List-Help: <https://groups.google.com/support/>, <mailto:saturday-sedenverultimate+help@googlegroups.com>",
+                        "List-Post: <https://groups.google.com/group/saturday-sedenverultimate/post>, <mailto:saturday-sedenverultimate@googlegroups.com>",
+                        "List-ID: <saturday-sedenverultimate.googlegroups.com>",
+                        "Mailing-list: list saturday-sedenverultimate@googlegroups.com; contact saturday-sedenverultimate+owners@googlegroups.com",
+                        "Precedence: list",
+                        "Reply-To: Redacted Player <redactedplayer@yahoo.com>",
+                        "X-Original-Authentication-Results: gmr-mx.google.com;       dkim=pass\r\n header.i=@yahoo.com header.s=s2048 header.b=AoQ9pVCh;       spf=pass\r\n (google.com: domain of redactedplayer@yahoo.com designates 74.6.130.121 as\r\n permitted sender) smtp.mailfrom=redactedplayer@yahoo.com;       dmarc=pass\r\n (p=REJECT sp=REJECT dis=NONE) header.from=yahoo.com",
+                        "X-Original-Sender: redactedplayer@yahoo.com",
+                        "MIME-Version: 1.0",
+                        "Subject: Re: Saturday Bible Park Frisbee 10/7/23",
+                        "References: <d58dfdf5-caeb-4337-7402-3e8dae2003e0@sedenverultimate.net> <855086374.1741393.1696389364726@mail.yahoo.com>",
+                        "In-Reply-To: <855086374.1741393.1696389364726@mail.yahoo.com>",
+                        "Message-ID: <91861266.5887163.1696434221130@mail.yahoo.com>",
+                        "To: \"saturday-sedenverultimate@googlegroups.com\" <saturday-sedenverultimate@googlegroups.com>, \r\n\tSaturday Disco <saturday-disco@sedenverultimate.net>, \r\n\tOther Player <other_player@yahoo.com>",
+                        "From: \"'Redacted Player' via Saturday Southeast Denver Ultimate\" <saturday-sedenverultimate@googlegroups.com>",
+                        "Date: Wed, 4 Oct 2023 15:43:41 +0000 (UTC)"
+                    ]
+                },
+                "status": {
+                    "result": "pass",
+                    "header": {
+                        "i": "@googlegroups.com",
+                        "s": "20230601",
+                        "a": "rsa-sha256",
+                        "b": "uFZ/zZWs"
+                    },
+                    "aligned": "googlegroups.com"
+                },
+                "canonBodyLength": 7774,
+                "publicKey": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAx2o55j0C6ICu56VEjwYJ\n08SzfxSiOhkxagGBPUwHpxzy5M+2+btk0gRaZCdtxZMIv8dXrpPY56bPaNILimWD\n/7emYrSNldr2nvw0DGE0DiV51WGZRwgVAquzQ3KOvoqRNPlFrusmFtxitZowUjCf\nz9aTEhJ9hHnweqhApeF/R2I++XegCzaAuyhXWEyCIW3qijFPNdMcBbGomXnWSsRP\n/PQNVD0PTCgt9R5PMMzbjb/TqU4HHqbljw6GMIySJOiApOQGGyMFtarE2mwKvbiF\n0roerdkHMll6Ya83zsvWDmdO74VUBpAMG8o56RbZ1thbm+cG4UaacwfZAYIst4+3\ndwIDAQAB\n-----END PUBLIC KEY-----",
+                "modulusLength": 2048,
+                "rr": "v=DKIM1;k=rsa;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAx2o55j0C6ICu56VEjwYJ08SzfxSiOhkxagGBPUwHpxzy5M+2+btk0gRaZCdtxZMIv8dXrpPY56bPaNILimWD/7emYrSNldr2nvw0DGE0DiV51WGZRwgVAquzQ3KOvoqRNPlFrusmFtxitZowUjCfz9aTEhJ9hHnweqhApeF/R2I++XegCzaAuyhXWEyCIW3qijFPNdMcBbGomXnWSsRP/PQNVD0PTCgt9R5PMMzbjb/TqU4HHqbljw6GMIySJOiApOQGGyMFtarE2mwKvbiF0roerdkHMll6Ya83zsvWDmdO74VUBpAMG8o56RbZ1thbm+cG4UaacwfZAYIst4+3dwIDAQAB",
+                "info": "dkim=pass header.i=@googlegroups.com header.s=20230601 header.a=rsa-sha256 header.b=\"uFZ/zZWs\""
+            }
+        ]
+    },
+    "spf": {
+        "domain": "googlegroups.com",
+        "client-ip": "209.85.128.192",
+        "helo": "mail-yw1-f192.google.com",
+        "envelope-from": "saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com",
+        "rr": "v=spf1 redirect=_spf.google.com",
+        "status": {
+            "result": "pass",
+            "comment": "mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as permitted sender",
+            "smtp": {
+                "mailfrom": "saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com",
+                "helo": "mail-yw1-f192.google.com"
+            }
+        },
+        "header": "Received-SPF: pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as\r\n permitted sender) client-ip=209.85.128.192;",
+        "info": "spf=pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as permitted sender) smtp.mailfrom=saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com smtp.helo=mail-yw1-f192.google.com",
+        "lookups": {
+            "limit": 10,
+            "count": 2,
+            "void": 0,
+            "subqueries": {}
+        }
+    },
+    "arc": {
+        "status": {
+            "result": "pass",
+            "comment": "i=2 spf=pass dkim=pass dkdomain=yahoo.com dmarc=pass fromdomain=yahoo.com"
+        },
+        "i": 2,
+        "signature": {
+            "signingDomain": "google.com",
+            "selector": "arc-20160816",
+            "signature": "de67h9Q6xPy7nd/X2+ILEqfgXSt+ckT/eTh67XuHRiiFCN9v12kVGMbqjGcUCB3CmT9O8syuiuBGLVCi4ZfhRXPZ9EVqtxZzRBGU3NfeN/+4y8ZMZi+e77N/ZcALPmWk2QgkD6jZLaHzd3VYnCRklmw2E+tkmZ2EtYEaFLMDo21TkwwZODQWGarU9Gro6Iz/3668SRwd1ivjffoPh0miMyDVsZn/yiXJmyHmkauSXdLMtA/7bLUUgm/zK22Hd2J4EKbCTrOGJkYTzM0xRN9FqwEbT1dz1uGlGbZ5wEyHpvVaRvzqY3LzCbLnZRf6oSSVSV9pWwmdd4OEfMFyvrPBtA==",
+            "algo": "rsa-sha256",
+            "format": "relaxed/relaxed",
+            "bodyHash": "byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=",
+            "bodyHashExpecting": "byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=",
+            "signingHeaders": {
+                "keys": "List-Unsubscribe: List-Archive: List-Help: List-Post: List-ID: Mailing-list: Precedence: Reply-To: MIME-Version: Subject: References: In-Reply-To: Message-ID: To: From: Date: DKIM-Signature",
+                "headers": [
+                    "List-Unsubscribe: <mailto:googlegroups-manage+143701321910+unsubscribe@googlegroups.com>,\r\n <https://groups.google.com/group/saturday-sedenverultimate/subscribe>",
+                    "List-Archive: <https://groups.google.com/group/saturday-sedenverultimate",
+                    "List-Help: <https://groups.google.com/support/>, <mailto:saturday-sedenverultimate+help@googlegroups.com>",
+                    "List-Post: <https://groups.google.com/group/saturday-sedenverultimate/post>, <mailto:saturday-sedenverultimate@googlegroups.com>",
+                    "List-ID: <saturday-sedenverultimate.googlegroups.com>",
+                    "Mailing-list: list saturday-sedenverultimate@googlegroups.com; contact saturday-sedenverultimate+owners@googlegroups.com",
+                    "Precedence: list",
+                    "Reply-To: Redacted Player <redactedplayer@yahoo.com>",
+                    "MIME-Version: 1.0",
+                    "Subject: Re: Saturday Bible Park Frisbee 10/7/23",
+                    "References: <d58dfdf5-caeb-4337-7402-3e8dae2003e0@sedenverultimate.net> <855086374.1741393.1696389364726@mail.yahoo.com>",
+                    "In-Reply-To: <855086374.1741393.1696389364726@mail.yahoo.com>",
+                    "Message-ID: <91861266.5887163.1696434221130@mail.yahoo.com>",
+                    "To: \"saturday-sedenverultimate@googlegroups.com\" <saturday-sedenverultimate@googlegroups.com>, \r\n\tSaturday Disco <saturday-disco@sedenverultimate.net>, \r\n\tOther Player <other_player@yahoo.com>",
+                    "From: \"'Redacted Player' via Saturday Southeast Denver Ultimate\" <saturday-sedenverultimate@googlegroups.com>",
+                    "Date: Wed, 4 Oct 2023 15:43:41 +0000 (UTC)",
+                    "DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=googlegroups.com; s=20230601; t=1696435155; x=1697039955; darn=sedenverultimate.net;\r\n        h=list-unsubscribe:list-archive:list-help:list-post:list-id\r\n         :mailing-list:precedence:reply-to:x-original-authentication-results\r\n         :x-original-sender:mime-version:subject:references:in-reply-to\r\n         :message-id:to:from:date:from:to:cc:subject:date:message-id:reply-to;\r\n        bh=byC0v6Jkxyss7egI4JVkELSPnXvRt9xPhfZnGzQbmpA=;\r\n        b=uFZ/zZWsNxH/h1YU9v01rVIItxdKd7H31jDhwMv7DXodwcx+pIjFo2gisUkReKbgH8\r\n         PpIOVPhQ7M2mU0tfoUlAm21oleGI8ChBFIIrLfdhvjuSlUjhN45FB8vrYw1hRrbHi7+Y\r\n         xa4LzxckpEmHV5cYCwhFw452NMApcMaAYLgv4YlmM5u+aIteEvFTPQV4V9gruG2HAMGo\r\n         GlT5ysMW60B5srpJR32PjCVWpQSwqiNZPMv6+lmFmaj3/pZ0DFiKR6Q4BUjZWy25Ln2A\r\n         gzCQQyUhIqjQ8zfj37EYy1xrCUvveh5n6Uaqao85xw6hSDbwtS8tU7lGPse/5ipngod4\r\n         pR8Q=="
+                ]
+            },
+            "status": {
+                "result": "pass",
+                "header": {
+                    "i": "@google.com",
+                    "s": "arc-20160816",
+                    "a": "rsa-sha256",
+                    "b": "de67h9Q6"
+                }
+            },
+            "canonBodyLength": 7774,
+            "publicKey": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1Lztpxs7yUxQEsbDFhjM\nc9kZVZu5P/COYEUIX4B39IL4SXAbv4viIlT9E6F6iZmTh1go7+9WQLywwgwjXMJx\n/Dz0RgMoPeyp5NRy4l320DPYibNqVMWa5iQ2WiImQC0en1O9uhLLvzaSZJ03fvGm\nCo9jMo0GwKzLNe14xMgn/px2L5N/3IKlKX4bqUAJTUt8L993ZlWzvgMnSFSt8B+e\nuSKSrtAiopdy4r1yO4eN5goBASrGW0eLQc1lYouNvCrcTQpos4/GEAqiGzpqueJL\nmBfOO4clNvVvpPkvQs2BHw9I9LmIjaMxTNGxkGBRaP3utDiKXXqu1K+LRzl0HCNS\ndQIDAQAB\n-----END PUBLIC KEY-----",
+            "modulusLength": 2048,
+            "rr": "k=rsa;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1Lztpxs7yUxQEsbDFhjMc9kZVZu5P/COYEUIX4B39IL4SXAbv4viIlT9E6F6iZmTh1go7+9WQLywwgwjXMJx/Dz0RgMoPeyp5NRy4l320DPYibNqVMWa5iQ2WiImQC0en1O9uhLLvzaSZJ03fvGmCo9jMo0GwKzLNe14xMgn/px2L5N/3IKlKX4bqUAJTUt8L993ZlWzvgMnSFSt8B+euSKSrtAiopdy4r1yO4eN5goBASrGW0eLQc1lYouNvCrcTQpos4/GEAqiGzpqueJLmBfOO4clNvVvpPkvQs2BHw9I9LmIjaMxTNGxkGBRaP3utDiKXXqu1K+LRzl0HCNSdQIDAQAB"
+        },
+        "authenticationResults": {
+            "mta": "gmr-mx.google.com",
+            "dkim": [
+                {
+                    "result": "pass",
+                    "header": {
+                        "i": "@yahoo.com",
+                        "s": "s2048",
+                        "b": "AoQ9pVCh"
+                    }
+                }
+            ],
+            "spf": {
+                "result": "pass",
+                "smtp": {
+                    "mailfrom": "redactedplayer@yahoo.com"
+                },
+                "comment": "google.com: domain of redactedplayer@yahoo.com designates 74.6.130.121 as permitted sender"
+            },
+            "dmarc": {
+                "result": "pass",
+                "header": {
+                    "from": "yahoo.com"
+                },
+                "comment": "p=REJECT sp=REJECT dis=NONE"
+            }
+        },
+        "info": "arc=pass (i=2 spf=pass dkim=pass dkdomain=yahoo.com dmarc=pass fromdomain=yahoo.com)",
+        "authResults": "mx2.forwardemail.net;\r\n dkim=pass header.i=@googlegroups.com header.s=20230601 header.a=rsa-sha256 header.b=\"uFZ/zZWs\";\r\n spf=pass (mx2.forwardemail.net: domain of saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com designates 209.85.128.192 as permitted\r\n sender) smtp.mailfrom=saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com smtp.helo=mail-yw1-f192.google.com;\r\n arc=pass (i=2 spf=pass dkim=pass dkdomain=yahoo.com dmarc=pass fromdomain=yahoo.com);\r\n dmarc=pass (p=NONE arc=pass) header.from=googlegroups.com header.d=googlegroups.com;\r\n bimi=skipped (too lax DMARC policy)"
+    },
+    "dmarc": {
+        "status": {
+            "result": "pass",
+            "comment": "p=NONE arc=pass",
+            "header": {
+                "from": "googlegroups.com",
+                "d": "googlegroups.com"
+            }
+        },
+        "domain": "googlegroups.com",
+        "policy": "none",
+        "p": "none",
+        "sp": "none",
+        "rr": "v=DMARC1; p=none; rua=mailto:mailauth-reports@google.com",
+        "alignment": {
+            "spf": {
+                "result": "googlegroups.com",
+                "strict": false
+            },
+            "dkim": {
+                "result": "googlegroups.com",
+                "strict": false
+            }
+        },
+        "info": "dmarc=pass (p=NONE arc=pass) header.from=googlegroups.com header.d=googlegroups.com"
+    },
+    "bimi": {
+        "status": {
+            "header": {},
+            "result": "skipped",
+            "comment": "too lax DMARC policy"
+        },
+        "info": "bimi=skipped (too lax DMARC policy)"
+    },
+    "recipients": [
+        "saturday-disco@sedenverultimate.net"
+    ],
+    "session": {
+        "recipient": "saturday-disco@sedenverultimate.net",
+        "remoteAddress": "209.85.128.192",
+        "remotePort": 47219,
+        "clientHostname": "mail-yw1-f192.google.com",
+        "hostNameAppearsAs": "mail-yw1-f192.google.com",
+        "sender": "saturday-sedenverultimate+bncBCNPN5XB4EBBBMUQ62UAMGQEN6W3POY@googlegroups.com",
+        "mta": "mx2.forwardemail.net",
+        "arrivalDate": "2023-10-04T16:03:05.452Z",
+        "arrivalTime": 1696435385452
+    }
+}

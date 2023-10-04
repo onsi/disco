@@ -56,6 +56,21 @@ var _ = Describe("ParseIncomingEmail", func() {
 		})
 	})
 
+	Describe("handling mailing list e-mails", func() {
+		Context("when a user replies all and we get two e-mails - one to the list and one to disco", func() {
+			It("extracts the actual e-mail address not the weird 'via mailing list' email address. also we spotcheck the real-life fixtures to ensure the IDs are the same", func() {
+				all, err := mail.ParseIncomingEmail(db, loadEmailFixture("mailing_list_reply_all.email"), GinkgoWriter)
+				Ω(err).ShouldNot(HaveOccurred())
+				Ω(all.From).Should(Equal(mail.EmailAddress("Redacted Player <redactedplayer@yahoo.com>")))
+
+				toDisco, err := mail.ParseIncomingEmail(db, loadEmailFixture("mailing_list_reply_disco.email"), GinkgoWriter)
+				Ω(err).ShouldNot(HaveOccurred())
+
+				Ω(all.MessageID).Should(Equal(toDisco.MessageID), "These e-mails represent the same e-mail")
+			})
+		})
+	})
+
 	Describe("extracting bodies", func() {
 		It("only extracts the text portion, ignoring HTML, and it grabs everything if this email is not a reply", func() {
 			email, err := mail.ParseIncomingEmail(db, loadEmailFixture("email_from_ios.json"), GinkgoWriter)

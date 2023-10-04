@@ -4,7 +4,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/onsi/disco/mail"
 	. "github.com/onsi/disco/mail"
 )
 
@@ -115,9 +114,9 @@ var _ = Describe("Email", func() {
 			Ω(email.From).Should(Equal(EmailAddress("disco@sedenverultimate.net")))
 			Ω(email.To).Should(ConsistOf(EmailAddress("onsijoe@gmail.com")))
 			Ω(email.CC).Should(ConsistOf(
-				mail.EmailAddress("list@googlegroups.com"),
-				mail.EmailAddress("someone@else.com"),
-				mail.EmailAddress("yet-another@someone.com"),
+				EmailAddress("list@googlegroups.com"),
+				EmailAddress("someone@else.com"),
+				EmailAddress("yet-another@someone.com"),
 				//note this does not include the replyer's e-mail address
 			))
 			Ω(email.Subject).Should(Equal("Re: Original Subject"))
@@ -144,9 +143,9 @@ var _ = Describe("Email", func() {
 			Ω(email.From).Should(Equal(EmailAddress("disco@sedenverultimate.net")))
 			Ω(email.To).Should(ConsistOf(EmailAddress("onsijoe@gmail.com")))
 			Ω(email.CC).Should(ConsistOf(
-				mail.EmailAddress("list@googlegroups.com"),
-				mail.EmailAddress("someone@else.com"),
-				mail.EmailAddress("yet-another@someone.com"),
+				EmailAddress("list@googlegroups.com"),
+				EmailAddress("someone@else.com"),
+				EmailAddress("yet-another@someone.com"),
 				//note this does not include the replyer's e-mail address
 			))
 			Ω(email.Subject).Should(Equal("Re: Original Subject"))

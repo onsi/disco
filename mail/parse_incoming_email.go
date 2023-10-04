@@ -43,6 +43,7 @@ type forwardEmailHeader struct {
 
 type forwardEmailModel struct {
 	From      forwardEmailAddressField `json:"from"`
+	ReplyTo   forwardEmailAddressField `json:"replyTo"`
 	To        forwardEmailAddressField `json:"to"`
 	CC        forwardEmailAddressField `json:"cc"`
 	Subject   string                   `json:"subject"`
@@ -103,6 +104,14 @@ func ParseIncomingEmail(db S3DBInt, data []byte, debug io.Writer) (Email, error)
 		return Email{}, fmt.Errorf("no from address found")
 	}
 	out.From = froms[0]
+	if strings.Contains(out.From.Address(), "googlegroups.com") {
+		replyTos := model.ReplyTo.asEmailAddresses()
+		if len(replyTos) == 0 {
+			return Email{}, fmt.Errorf("from address included googlegroups.com, but no reply-to found")
+		} else {
+			out.From = replyTos[0]
+		}
+	}
 	out.To = model.To.asEmailAddresses()
 	out.CC = model.CC.asEmailAddresses()
 	out.Subject = model.Subject
