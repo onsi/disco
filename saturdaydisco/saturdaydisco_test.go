@@ -953,6 +953,7 @@ var _ = Describe("SaturdayDisco", func() {
 						Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 						Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 						Ω(le()).Should(HaveText(ContainSubstring("We're still short.  Anyone forget to respond?")))
+						Ω(le()).Should(HaveText(ContainSubstring("player (7)")))
 						Ω(disco.GetSnapshot()).Should(HaveState(StateBadgerSent))
 					})
 
@@ -1462,6 +1463,7 @@ var _ = Describe("SaturdayDisco", func() {
 					Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 					Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 					Ω(le()).Should(HaveText(HavePrefix("No Saturday game this week.  We'll try again next week!")))
+					Ω(le()).Should(HaveText(ContainSubstring("onsijoe (7)")))
 					Ω(disco.GetSnapshot()).Should(HaveState(StateNoGameSent))
 				})
 

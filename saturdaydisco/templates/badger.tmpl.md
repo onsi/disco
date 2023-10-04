@@ -6,6 +6,10 @@
 
 {{end}}**We're still short**.  Anyone forget to respond?
 
+Here are the folks who've signed up so far: {{.Participants.Public}}
+
+If we missed your reply, please let us know ASAP!
+
 {{template "signature" .}}{{end}}
 
 /* Request Badger Approval */

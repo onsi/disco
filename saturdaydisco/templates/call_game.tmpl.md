@@ -19,6 +19,10 @@
 
 {{end}}No Saturday game this week.  We'll try again next week!
 
+Here are the folks who've signed up so far: {{.Participants.Public}}
+
+If we missed your reply, please let us know ASAP!
+
 Reminder that we also play at lunch during the week. Visit [sedenverultimate.net](https://www.sedenverultimate.net) to sign up for the lunchtime mailing list.
 
 {{template "signature" .}}{{end}}
