@@ -42,7 +42,7 @@ If the email is indicating that no player can join set "count" to 0.
 
 4. If you’re unsure what the user is requesting, or if you think the email is just banter or random social conversation, send an empty JSON response (i.e. '{}')`))
 
-const DEFAULT_TIMEOUT = 10 * time.Second
+const DEFAULT_TIMEOUT = 20 * time.Second
 const USER_MESSAGE_CUTOFF = 1000
 
 type InterpreterInt interface {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -30,7 +31,13 @@ var _ = Describe("SaturdayDisco", func() {
 	var playerEmail mail.EmailAddress
 
 	var le func() mail.Email
-	var bossToDisco = func(args ...string) {
+	var handleIncomingEmail = func(m mail.Email) mail.Email {
+		GinkgoHelper()
+		m.MessageID = uuid.New().String() //fake the message ID to simulate how real e-mails behave
+		disco.HandleIncomingEmail(m)
+		return m
+	}
+	var bossToDisco = func(args ...string) mail.Email {
 		GinkgoHelper()
 		body, subject := "", "hey"
 		if len(args) == 1 {
@@ -41,7 +48,7 @@ var _ = Describe("SaturdayDisco", func() {
 		} else {
 			Expect(args).To(HaveLen(2), "bossToDisco takes either a body or a subject and a body")
 		}
-		disco.HandleIncomingEmail(mail.E().
+		return handleIncomingEmail(mail.E().
 			WithFrom(conf.BossEmail).
 			WithTo(conf.SaturdayDiscoEmail).
 			WithSubject(subject).
@@ -307,7 +314,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 		Describe("when the boss send an e-mail that includes the list", func() {
 			It("totally ignores the boss' email, even if its a valid command", func() {
-				disco.HandleIncomingEmail(mail.E().WithFrom(conf.BossEmail).WithTo(conf.SaturdayDiscoList, conf.SaturdayDiscoEmail).WithSubject("hey").WithBody("/set onsijoe@gmail.com 3"))
+				handleIncomingEmail(mail.E().WithFrom(conf.BossEmail).WithTo(conf.SaturdayDiscoList, conf.SaturdayDiscoEmail).WithSubject("hey").WithBody("/set onsijoe@gmail.com 3"))
 				Consistently(le).Should(BeZero())
 				Ω(disco.GetSnapshot()).Should(HaveCount(0))
 			})
@@ -317,7 +324,7 @@ var _ = Describe("SaturdayDisco", func() {
 			Context("and disco is unsure if its a command", func() {
 				It("does nothing", func() {
 					interpreter.SetCommand(Command{CommandType: CommandPlayerUnsure})
-					disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoList).WithSubject("hey").WithBody("I'm in!"))
+					handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoList).WithSubject("hey").WithBody("I'm in!"))
 					Consistently(le).Should(BeZero())
 				})
 			})
@@ -325,7 +332,7 @@ var _ = Describe("SaturdayDisco", func() {
 			Context("and disco is unsure if its a command", func() {
 				It("does nothing", func() {
 					interpreter.SetCommand(Command{CommandType: CommandPlayerUnsure})
-					disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.BossEmail).WithSubject("hey").WithBody("I'm in!"))
+					handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.BossEmail).WithSubject("hey").WithBody("I'm in!"))
 					Consistently(le).Should(BeZero())
 				})
 			})
@@ -334,7 +341,7 @@ var _ = Describe("SaturdayDisco", func() {
 		Describe("when a player sends an e-mail that doesn't include the boss and disco is unsure", func() {
 			It("replies and CCs the boss", func() {
 				interpreter.SetCommand(Command{CommandType: CommandPlayerUnsure})
-				disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, "someone-else@example.com").WithSubject("hey").WithBody("Make me a bagel."))
+				handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, "someone-else@example.com").WithSubject("hey").WithBody("Make me a bagel."))
 				Eventually(le).Should(HaveSubject("Re: hey"))
 				Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail))
 				Ω(le()).Should(HaveText(ContainSubstring("I'm not sure what you're asking me to do.  I'm CCing the boss to help.")))
@@ -344,7 +351,7 @@ var _ = Describe("SaturdayDisco", func() {
 		Describe("when interpreting a player e-mail and an error occurs", func() {
 			It("notifies the boss", func() {
 				interpreter.SetError(fmt.Errorf("boom"))
-				disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoList).WithSubject("hey").WithBody("I'm in!"))
+				handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoList).WithSubject("hey").WithBody("I'm in!"))
 
 				Eventually(le).Should(HaveSubject("Fwd: hey"))
 				Ω(le()).Should(BeSentTo(conf.BossEmail))
@@ -356,8 +363,29 @@ var _ = Describe("SaturdayDisco", func() {
 		Describe("when an e-mail comes from disco itself", func() {
 			It("completely ignores the e-mail", func() {
 				interpreter.SetCommand(Command{CommandType: CommandPlayerStatus})
-				disco.HandleIncomingEmail(mail.E().WithFrom(conf.SaturdayDiscoEmail).WithTo(conf.SaturdayDiscoList).WithSubject("hey").WithBody("Is the game on?"))
+				handleIncomingEmail(mail.E().WithFrom(conf.SaturdayDiscoEmail).WithTo(conf.SaturdayDiscoList).WithSubject("hey").WithBody("Is the game on?"))
 				Consistently(le).Should(BeZero())
+			})
+		})
+
+		Describe("when an e-mail is received twice (a can happen when disco gets an e-mail directly *and* via the mailing list)", func() {
+			It("only runs once", func() {
+				outbox.Clear()
+				message := bossToDisco("/set onsijoe@gmail.com 2")
+				Eventually(disco.GetSnapshot).Should(HaveCount(2))
+				bossToDisco("/set onsijoe@gmail.com 1") //some other message
+				Eventually(disco.GetSnapshot).Should(HaveCount(1))
+
+				disco.HandleIncomingEmail(message) //now the original message comes back
+				Consistently(disco.GetSnapshot).Should(HaveCount(1))
+
+				Ω(outbox.Emails()).Should(HaveLen(2)) // only two response e-mails were sent
+
+				bossToDisco("/RESET-RESET-RESET") //when a reset occurs...
+				Eventually(disco.GetSnapshot).Should(HaveCount(0))
+				disco.HandleIncomingEmail(message) //...we clear the cache
+				Eventually(disco.GetSnapshot).Should(HaveCount(2))
+
 			})
 		})
 
@@ -447,7 +475,7 @@ var _ = Describe("SaturdayDisco", func() {
 				})
 
 				It("ignores the boss when he includes the list", func() {
-					disco.HandleIncomingEmail(mail.E().
+					handleIncomingEmail(mail.E().
 						WithFrom(conf.BossEmail).
 						WithTo(conf.SaturdayDiscoList).
 						WithSubject("hey").
@@ -464,7 +492,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 				It("allows players to register themselves, forwarding the e-mail boss", func() {
 					interpreter.SetCommand(Command{CommandType: CommandPlayerSetCount, Count: 2})
-					disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("brother@example.com")).WithSubject("hey").WithBody("My brother's joining too!"))
+					handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("brother@example.com")).WithSubject("hey").WithBody("My brother's joining too!"))
 
 					Eventually(disco.GetSnapshot).Should(HaveCount(2))
 					Ω(le()).Should(HaveSubject("Fwd: hey"))
@@ -514,7 +542,7 @@ var _ = Describe("SaturdayDisco", func() {
 				sendPlayerRequest := func() {
 					interpreter.SetCommand(Command{CommandType: CommandPlayerStatus})
 
-					disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")).WithSubject("hey").WithBody("Is the game on?"))
+					handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")).WithSubject("hey").WithBody("Is the game on?"))
 					Eventually(le).Should(HaveSubject("Re: hey"))
 				}
 
@@ -610,7 +638,7 @@ var _ = Describe("SaturdayDisco", func() {
 		Describe("if a player wants to unsubscribe", func() {
 			BeforeEach(func() {
 				interpreter.SetCommand(Command{CommandType: CommandPlayerUnsubscribe})
-				disco.HandleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")).WithSubject("hey").WithBody("Please unsubscibe me."))
+				handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")).WithSubject("hey").WithBody("Please unsubscibe me."))
 			})
 
 			It("replies and includes boss", func() {
@@ -724,7 +752,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("if the boss then replies", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
 						Eventually(le).ShouldNot(BeZero())
 					})
 
@@ -744,7 +772,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("and the delay is malformed", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay"))
 					})
 
 					It("returns an error and doesn't change the timer", func() {
@@ -762,7 +790,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("and the delay is for 0 hours", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 0"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 0"))
 					})
 
 					It("returns an error and doesn't change the timer", func() {
@@ -780,7 +808,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("and the delay is for some positive number of hours", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
 					})
 
 					It("acknowledges the request and delays sending the invite by that many hours", func() {
@@ -801,7 +829,7 @@ var _ = Describe("SaturdayDisco", func() {
 			Context("if the boss replies in the affirmative", func() {
 				BeforeEach(func() {
 					outbox.Clear()
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
 					Eventually(le).ShouldNot(BeZero())
 				})
 
@@ -818,7 +846,7 @@ var _ = Describe("SaturdayDisco", func() {
 			Context("if the boss replies with /abort", func() {
 				BeforeEach(func() {
 					outbox.Clear()
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/abort"))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/abort"))
 					Eventually(le).ShouldNot(BeZero())
 				})
 
@@ -836,7 +864,7 @@ var _ = Describe("SaturdayDisco", func() {
 			Context("if the boss replies in the affirmative with an additional message", func() {
 				BeforeEach(func() {
 					outbox.Clear()
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve\n\nLets **GO!**"))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve\n\nLets **GO!**"))
 					Eventually(le).ShouldNot(BeZero())
 				})
 
@@ -854,7 +882,7 @@ var _ = Describe("SaturdayDisco", func() {
 			Context("if the boss replies in the negative", func() {
 				BeforeEach(func() {
 					outbox.Clear()
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no"))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no"))
 					Eventually(le).ShouldNot(BeZero())
 				})
 
@@ -877,7 +905,7 @@ var _ = Describe("SaturdayDisco", func() {
 			Context("if the boss replies in the negative with an additional message", func() {
 				BeforeEach(func() {
 					outbox.Clear()
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no\n\nOn account of **weather**...\n\n:("))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no\n\nOn account of **weather**...\n\n:("))
 					Eventually(le).ShouldNot(BeZero())
 				})
 
@@ -965,7 +993,7 @@ var _ = Describe("SaturdayDisco", func() {
 					Context("if the boss then replies", func() {
 						BeforeEach(func() {
 							outbox.Clear()
-							disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
+							handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
 							Eventually(le).ShouldNot(BeZero())
 						})
 
@@ -984,7 +1012,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("if the boss replies in the affirmative", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
 						Eventually(le).ShouldNot(BeZero())
 					})
 
@@ -1007,7 +1035,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("if the boss replies in the affirmative with an additional message", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve\n\nWe only have **FIVE**."))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve\n\nWe only have **FIVE**."))
 						Eventually(le).ShouldNot(BeZero())
 					})
 
@@ -1030,7 +1058,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("if the boss asks for a delay", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
 					})
 
 					It("acknowledges the request and delays sending the invite by that many hours", func() {
@@ -1050,7 +1078,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("if the boss replies in the negative", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no"))
 						Eventually(disco.GetSnapshot).Should(HaveState(StateBadgerNotSent))
 					})
 
@@ -1095,7 +1123,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("when the boss approves the badger", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
 						Eventually(le).Should(HaveSubject("Last Call! " + gameDate))
 					})
 
@@ -1116,7 +1144,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			Describe("if, after the badger is sent, there is quorum", func() {
 				BeforeEach(func() {
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
 					Eventually(le).Should(HaveSubject("Last Call! " + gameDate))
 					bossToDisco("/set onsijoe@gmail.com 1")
 					Eventually(disco.GetSnapshot).Should(HaveCount(8)) // quorum!
@@ -1133,7 +1161,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			Describe("if, after the badger is sent, there is still no quorum", func() {
 				BeforeEach(func() {
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
 					Eventually(le).Should(HaveSubject("Last Call! " + gameDate))
 				})
 
@@ -1148,7 +1176,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			Describe("if, the badger is not sent, but there comes to be quorum", func() {
 				BeforeEach(func() {
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/deny"))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/deny"))
 					Eventually(disco.GetSnapshot).Should(HaveState(StateBadgerNotSent))
 					bossToDisco("/set onsijoe@gmail.com 1")
 					Eventually(disco.GetSnapshot).Should(HaveCount(8)) // quorum!
@@ -1165,7 +1193,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			Describe("if, the badger is not sent and there is still no quorum", func() {
 				BeforeEach(func() {
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/deny"))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/deny"))
 					Eventually(disco.GetSnapshot).Should(HaveState(StateBadgerNotSent))
 				})
 
@@ -1247,7 +1275,7 @@ var _ = Describe("SaturdayDisco", func() {
 					Context("if the boss then replies", func() {
 						BeforeEach(func() {
 							outbox.Clear()
-							disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
+							handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
 							Eventually(le).ShouldNot(BeZero())
 						})
 
@@ -1267,7 +1295,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("if the boss replies in the affirmative", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve"))
 						Eventually(le).ShouldNot(BeZero())
 					})
 
@@ -1295,7 +1323,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("if the boss replies in the affirmative with an additional message", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve\n\nWe have a **solid** group this week!"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/approve\n\nWe have a **solid** group this week!"))
 						Eventually(le).ShouldNot(BeZero())
 					})
 
@@ -1323,7 +1351,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("if the boss asks for a delay", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
 					})
 
 					It("acknowledges the request and delays sending the invite by that many hours", func() {
@@ -1343,7 +1371,7 @@ var _ = Describe("SaturdayDisco", func() {
 				Context("if the boss replies in the negative", func() {
 					BeforeEach(func() {
 						outbox.Clear()
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no\nWe have the numbers but the **weather** has turned :("))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no\nWe have the numbers but the **weather** has turned :("))
 						Eventually(disco.GetSnapshot).Should(HaveState(StateNoGameSent))
 					})
 
@@ -1390,7 +1418,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 				Context("and the boss approves", func() {
 					BeforeEach(func() {
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/yes"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/yes"))
 						Eventually(disco.GetSnapshot).Should(HaveState(StateRequestedNoGameApproval))
 					})
 
@@ -1411,7 +1439,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 				Context("and the boss declines", func() {
 					BeforeEach(func() {
-						disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no"))
+						handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no"))
 						Eventually(disco.GetSnapshot).Should(HaveState(StateNoGameSent))
 					})
 
@@ -1477,7 +1505,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			Context("if the boss approves", func() {
 				BeforeEach(func() {
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/yes"))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/yes"))
 					Eventually(disco.GetSnapshot).Should(HaveState(StateNoGameSent))
 				})
 
@@ -1491,7 +1519,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			Context("if the boss approves with additional content", func() {
 				BeforeEach(func() {
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/yes\nWe did **not** manage to get to quorum."))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/yes\nWe did **not** manage to get to quorum."))
 					Eventually(disco.GetSnapshot).Should(HaveState(StateNoGameSent))
 				})
 
@@ -1506,7 +1534,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			Context("if the boss disapproves", func() {
 				BeforeEach(func() {
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no"))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/no"))
 					Eventually(disco.GetSnapshot).Should(HaveState(StateAbort))
 				})
 
@@ -1521,7 +1549,7 @@ var _ = Describe("SaturdayDisco", func() {
 			Context("if the boss asks for a delay", func() {
 				BeforeEach(func() {
 					outbox.Clear()
-					disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
+					handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, "/delay 1"))
 				})
 
 				It("acknowledges the request and delays sending the invite by that many hours", func() {
@@ -1561,7 +1589,7 @@ var _ = Describe("SaturdayDisco", func() {
 					response := response
 					Context("if the boss responds with "+response, func() {
 						BeforeEach(func() {
-							disco.HandleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, response))
+							handleIncomingEmail(approvalRequest.ReplyWithoutQuote(conf.BossEmail, response))
 							Eventually(disco.GetSnapshot).Should(HaveState(StateRequestedGameOnApproval))
 						})
 

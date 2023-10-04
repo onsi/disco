@@ -12,7 +12,7 @@ import (
 	"github.com/onsi/disco/s3db"
 )
 
-const DEFAULT_TIMEOUT = 10 * time.Second
+const DEFAULT_TIMEOUT = 20 * time.Second
 const API_ENDPOINT = "https://api.weather.gov"
 const USER_AGENT = "(www.sedenverultimate.net, admin@sedenverultimate.net)"
 const FETCH_FREQUENCY = 6 * time.Hour

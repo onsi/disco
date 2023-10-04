@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"text/template"
 	"time"
 
@@ -109,11 +108,23 @@ type Command struct {
 	Error error
 }
 
+type ProcessedEmailIDs []string
+
+func (p ProcessedEmailIDs) Contains(id string) bool {
+	for _, processedID := range p {
+		if processedID == id {
+			return true
+		}
+	}
+	return false
+}
+
 type SaturdayDiscoSnapshot struct {
-	State        SaturdayDiscoState `json:"state"`
-	Participants Participants       `json:"participants"`
-	NextEvent    time.Time          `json:"next_event"`
-	T            time.Time          `json:"reference_time"`
+	State             SaturdayDiscoState `json:"state"`
+	Participants      Participants       `json:"participants"`
+	NextEvent         time.Time          `json:"next_event"`
+	T                 time.Time          `json:"reference_time"`
+	ProcessedEmailIDs ProcessedEmailIDs  `json:"processed_email_ids"`
 }
 
 func (s SaturdayDiscoSnapshot) dup() SaturdayDiscoSnapshot {
@@ -138,7 +149,6 @@ type SaturdayDisco struct {
 	snapshotC   chan chan<- SaturdayDiscoSnapshot
 	templateC   chan chan<- TemplateData
 	config      config.Config
-	lock        *sync.Mutex
 	ctx         context.Context
 	cancel      func()
 }
@@ -201,7 +211,6 @@ func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockIn
 		w:           w,
 
 		config: config,
-		lock:   &sync.Mutex{},
 	}
 	saturdayDisco.ctx, saturdayDisco.cancel = context.WithCancel(context.Background())
 
@@ -595,6 +604,13 @@ func (s *SaturdayDisco) performNextEvent() {
 }
 
 func (s *SaturdayDisco) handleCommand(command Command) {
+	if s.ProcessedEmailIDs.Contains(command.Email.MessageID) {
+		s.logi(1, "{{coral}}I've already processed this email (id: %s).  Ignoring.{{/}}", command.Email.MessageID)
+		return
+	}
+	defer func() {
+		s.ProcessedEmailIDs = append(s.ProcessedEmailIDs, command.Email.MessageID)
+	}()
 	switch command.CommandType {
 	case CommandRequestedInviteApprovalReply, CommandRequestedBadgerApprovalReply, CommandRequestedGameOnApprovalReply, CommandRequestedNoGameApprovalReply:
 		s.handleReplyCommand(command)
@@ -822,5 +838,6 @@ func (s *SaturdayDisco) reset() {
 	s.Participants = Participants{}
 	s.T = NextSaturdayAt10(s.alarmClock.Time())
 	s.NextEvent = time.Time{}
+	s.ProcessedEmailIDs = ProcessedEmailIDs{}
 	s.transitionTo(StatePending)
 }

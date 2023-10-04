@@ -13,7 +13,7 @@ import (
 )
 
 var _ = Describe("ShortForecastEmoij", func() {
-	It("returns appropriate emoji", SpecTimeout(time.Second*5), func(ctx SpecContext) {
+	It("returns appropriate emoji", SpecTimeout(time.Second*20), func(ctx SpecContext) {
 		if os.Getenv("INCLUDE_OPENAI_SPECS") != "true" {
 			Skip("Skipping OpenAI specs - use INCLUDE_OPENAI_SPECS=true to run them")
 		}
