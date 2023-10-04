@@ -73,7 +73,7 @@ var _ = Describe("ParseIncomingEmail", func() {
 
 				email, err = mail.ParseIncomingEmail(db, loadEmailFixture("reply_from_gmail_app.json"), GinkgoWriter)
 				Ω(err).ShouldNot(HaveOccurred())
-				Ω(email.Text).Should(Equal("And this is another rely… from the *Gmail App*.\n\n"))
+				Ω(email.Text).Should(Equal("And this is another rely… from the *Gmail App*.\n"))
 				Ω(email.HTML).Should(BeZero())
 			})
 		})
@@ -88,6 +88,8 @@ var _ = Describe("ParseIncomingEmail", func() {
 			It("correctly extracts the body", func() {
 				fullBody := loadEmailFixture("real_reply.email")
 				Ω(mail.ExtractTopMostPortion(string(fullBody))).Should(Equal("I'm in\n"))
+				fullBody = loadEmailFixture("another_real_reply.email")
+				Ω(mail.ExtractTopMostPortion(string(fullBody))).Should(Equal(" I'm in - bringing REDACTED as well.\n"))
 			})
 		})
 	})

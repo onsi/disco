@@ -54,8 +54,8 @@ type forwardEmailModel struct {
 var emailRegex = `[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+`
 var replyRegexes = []*regexp.Regexp{
 	regexp.MustCompile(`(?m)^>.*`),
-	regexp.MustCompile(`(?m)^On.*(\s?).*@.*wrote:`),
-	regexp.MustCompile(`(?m)^On.*@.*(\s?).*wrote:`),
+	regexp.MustCompile(`(?m)^\s*On.*(\s?).*@.*wrote:`),
+	regexp.MustCompile(`(?m)^\s*On.*@.*(\s?).*wrote:`),
 	regexp.MustCompile(`(?im)-+\s*(original|forwarded)\s+message\s*-+\s*$`),
 	regexp.MustCompile(`(?im)From:\s*` + emailRegex),
 	regexp.MustCompile(`(?im)` + emailRegex + `\s+wrote:`),
@@ -114,10 +114,6 @@ func ParseIncomingEmail(db S3DBInt, data []byte, debug io.Writer) (Email, error)
 		}
 	}
 
-	fullBody := model.Text
-	out.Text = ExtractTopMostPortion(fullBody)
-	say.Fpln(debug, "Email Debugging: Extracted email")
-	say.Fplni(debug, 1, "%s", out)
-
+	out.Text = ExtractTopMostPortion(model.Text)
 	return out, nil
 }
