@@ -136,8 +136,9 @@ var subscribeTemplate = template.Must(template.New("subscribe").Parse(`Hey boss,
 We just got a subscription request:
 
 Email: {{.Email}}
-Wants Saturday: {{.WantsSaturday}}
-Wants Lunchtime: {{.WantsLunchtime}}
+Wants Saturday:  {{.WantsSaturday}}{{if .WantsSaturday}}  Go to: https://groups.google.com/g/saturday-sedenverultimate/members{{end}}
+Wants Lunchtime: {{.WantsLunchtime}}{{if .WantsLunchtime}}  Go to: https://groups.google.com/g/southeast-denver-lunchtime-ultimate/members{{end}}
+
 {{if .Message}}Message: {{.Message}}{{end}}
 
 Thanks,
