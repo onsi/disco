@@ -1,2 +1,1 @@
-{{define "signature"}}Disco 🪩
-[sedenverultimate.net](https://www.sedenverultimate.net){{end}}
+{{define "signature"}}Disco 🪩<br>[sedenverultimate.net](https://www.sedenverultimate.net){{end}}
