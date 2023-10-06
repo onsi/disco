@@ -12,6 +12,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/onsi/disco/clock"
 	"github.com/onsi/disco/config"
 	"github.com/onsi/disco/mail"
 	"github.com/onsi/disco/s3db"
@@ -140,7 +141,7 @@ type SaturdayDisco struct {
 	SaturdayDiscoSnapshot
 	w io.Writer
 
-	alarmClock  AlarmClockInt
+	alarmClock  clock.AlarmClockInt
 	outbox      mail.OutboxInt
 	interpreter InterpreterInt
 	forecaster  weather.ForecasterInt
@@ -170,7 +171,7 @@ type TemplateData struct {
 }
 
 func (e TemplateData) WithNextEvent(t time.Time) TemplateData {
-	e.NextEvent = t.In(Timezone).Format("Monday 1/2 3:04pm")
+	e.NextEvent = t.In(clock.Timezone).Format("Monday 1/2 3:04pm")
 	return e
 }
 
@@ -198,7 +199,7 @@ func (e TemplateData) WithEmailDebugKey(key string) TemplateData {
 	return e
 }
 
-func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockInt, outbox mail.OutboxInt, interpreter InterpreterInt, forecaster weather.ForecasterInt, db s3db.S3DBInt) (*SaturdayDisco, error) {
+func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock clock.AlarmClockInt, outbox mail.OutboxInt, interpreter InterpreterInt, forecaster weather.ForecasterInt, db s3db.S3DBInt) (*SaturdayDisco, error) {
 	saturdayDisco := &SaturdayDisco{
 		alarmClock:  alarmClock,
 		outbox:      outbox,
@@ -232,7 +233,7 @@ func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock AlarmClockIn
 			startupMessage = fmt.Sprintf("FAILED TO UNMARSHAL BACKUP: %s", err.Error())
 			saturdayDisco.logi(0, "{{red}}%s{{/}}", startupMessage)
 		} else {
-			nextSaturday := NextSaturdayAt10(alarmClock.Time())
+			nextSaturday := clock.NextSaturdayAt10(alarmClock.Time())
 			if nextSaturday.After(snapshot.T) {
 				startupMessage = "Backup is from a previous week.  Resetting."
 				saturdayDisco.logi(0, "{{red}}%s{{/}}", startupMessage)
@@ -836,7 +837,7 @@ func (s *SaturdayDisco) reset() {
 	s.alarmClock.Stop()
 	s.State = StateInvalid
 	s.Participants = Participants{}
-	s.T = NextSaturdayAt10(s.alarmClock.Time())
+	s.T = clock.NextSaturdayAt10(s.alarmClock.Time())
 	s.NextEvent = time.Time{}
 	s.ProcessedEmailIDs = ProcessedEmailIDs{}
 	s.transitionTo(StatePending)

@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 
+	clockpkg "github.com/onsi/disco/clock"
 	"github.com/onsi/disco/config"
 	"github.com/onsi/disco/mail"
 	"github.com/onsi/disco/s3db"
@@ -19,7 +20,7 @@ import (
 
 var _ = Describe("SaturdayDisco", func() {
 	var outbox *mail.FakeOutbox
-	var clock *FakeAlarmClock
+	var clock *clockpkg.FakeAlarmClock
 	var interpreter *FakeInterpreter
 	var forecaster *weather.FakeForecaster
 	var disco *SaturdayDisco
@@ -58,7 +59,7 @@ var _ = Describe("SaturdayDisco", func() {
 	BeforeEach(func() {
 		outbox = mail.NewFakeOutbox()
 		le = outbox.LastEmail
-		clock = NewFakeAlarmClock()
+		clock = clockpkg.NewFakeAlarmClock()
 		interpreter = NewFakeInterpreter()
 		forecaster = weather.NewFakeForecaster()
 		forecaster.SetForecast(weather.Forecast{
@@ -75,8 +76,8 @@ var _ = Describe("SaturdayDisco", func() {
 		conf.SaturdayDiscoList = mail.EmailAddress("Saturday-List <saturday-se-denver-ultimate@googlegroups.com>")
 		playerEmail = mail.EmailAddress("player@example.com")
 
-		now = time.Date(2023, time.September, 24, 0, 0, 0, 0, Timezone) // a Sunday
-		gameDate = "9/30/23"                                            //the following Saturday
+		now = time.Date(2023, time.September, 24, 0, 0, 0, 0, clockpkg.Timezone) // a Sunday
+		gameDate = "9/30/23"                                                     //the following Saturday
 		clock.SetTime(now)
 
 		isStartup, _ := CurrentSpecReport().MatchesLabelFilter("startup")
@@ -180,8 +181,8 @@ var _ = Describe("SaturdayDisco", func() {
 					Participants: Participants{
 						Participant{Address: playerEmail, Count: 2},
 					},
-					T:         NextSaturdayAt10(now.Add(-time.Hour * 24 * 7)),
-					NextEvent: NextSaturdayAt10(now.Add(-time.Hour * 24 * 7)).Add(-2*time.Hour*24 + 8*time.Hour),
+					T:         clockpkg.NextSaturdayAt10(now.Add(-time.Hour * 24 * 7)),
+					NextEvent: clockpkg.NextSaturdayAt10(now.Add(-time.Hour * 24 * 7)).Add(-2*time.Hour*24 + 8*time.Hour),
 				})
 			})
 
@@ -211,15 +212,15 @@ var _ = Describe("SaturdayDisco", func() {
 						Participant{Address: playerEmail, Count: 2},
 						Participant{Address: "onsijoe@gmail.com", Count: 6}, //have quorum
 					},
-					T:         NextSaturdayAt10(now),
-					NextEvent: NextSaturdayAt10(now).Add(-2*time.Hour*24 + 4*time.Hour),
+					T:         clockpkg.NextSaturdayAt10(now),
+					NextEvent: clockpkg.NextSaturdayAt10(now).Add(-2*time.Hour*24 + 4*time.Hour),
 				})
-				clock.SetTime(NextSaturdayAt10(now).Add(-2*time.Hour*24 + 3*time.Hour))
+				clock.SetTime(clockpkg.NextSaturdayAt10(now).Add(-2*time.Hour*24 + 3*time.Hour))
 			})
 
 			Context("if it's not time for NextEvent yet", func() {
 				BeforeEach(func() {
-					clock.SetTime(NextSaturdayAt10(now).Add(-2*time.Hour*24 + 3*time.Hour))
+					clock.SetTime(clockpkg.NextSaturdayAt10(now).Add(-2*time.Hour*24 + 3*time.Hour))
 				})
 
 				It("spins up and picks up where it left off (and sends an e-mail)", func() {
@@ -244,7 +245,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 			Context("if it's already past time for the next event", func() {
 				BeforeEach(func() {
-					clock.SetTime(NextSaturdayAt10(now).Add(-2*time.Hour*24 + 3*time.Hour))
+					clock.SetTime(clockpkg.NextSaturdayAt10(now).Add(-2*time.Hour*24 + 3*time.Hour))
 					go clock.Fire() //basically what happens irl
 				})
 
@@ -281,10 +282,10 @@ var _ = Describe("SaturdayDisco", func() {
 							Participant{Address: playerEmail, Count: 2},
 							Participant{Address: "onsijoe@gmail.com", Count: 6}, //have quorum
 						},
-						T:         NextSaturdayAt10(now),
-						NextEvent: NextSaturdayAt10(now).Add(-4*time.Hour*24 - 4*time.Hour),
+						T:         clockpkg.NextSaturdayAt10(now),
+						NextEvent: clockpkg.NextSaturdayAt10(now).Add(-4*time.Hour*24 - 4*time.Hour),
 					})
-					clock.SetTime(NextSaturdayAt10(now).Add(-2*time.Hour*24 + 4*time.Hour))
+					clock.SetTime(clockpkg.NextSaturdayAt10(now).Add(-2*time.Hour*24 + 4*time.Hour))
 				})
 
 				It("aborts and sends an email", func() {

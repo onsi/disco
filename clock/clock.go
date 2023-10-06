@@ -1,4 +1,4 @@
-package saturdaydisco
+package clock
 
 import (
 	"context"
