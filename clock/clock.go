@@ -24,6 +24,11 @@ func NextSaturdayAt10(now time.Time) time.Time {
 	return time.Date(now.Year(), now.Month(), now.Day()+deltaDay, 10, 0, 0, 0, Timezone)
 }
 
+func DayOfAt6am(t time.Time) time.Time {
+	t = t.In(Timezone)
+	return time.Date(t.Year(), t.Month(), t.Day(), 6, 0, 0, 0, Timezone)
+}
+
 type AlarmClockInt interface {
 	Time() time.Time
 	C() <-chan time.Time

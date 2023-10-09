@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"io"
 	"net/http"
@@ -107,7 +108,8 @@ func (s *Server) RegisterRoutes() {
 	s.e.Use(middleware.Logger())
 	s.e.Static("/img", "img")
 	s.e.GET("/", s.Index)
-	s.e.POST("/incoming/"+s.config.IncomingEmailGUID, s.IncomingEmail)
+	s.e.POST("/incoming/"+s.config.IncomingSaturdayEmailGUID, s.IncomingSaturdayEmail)
+	s.e.POST("/incoming/"+s.config.IncomingLunchtimeEmailGUID, s.IncomingLunchtimeEmail)
 	s.e.POST("/subscribe", s.Subscribe)
 }
 
@@ -117,7 +119,7 @@ func (s *Server) Index(c echo.Context) error {
 	})
 }
 
-func (s *Server) IncomingEmail(c echo.Context) error {
+func (s *Server) IncomingSaturdayEmail(c echo.Context) error {
 	data, err := io.ReadAll(c.Request().Body)
 	if err != nil {
 		return c.NoContent(http.StatusInternalServerError)
@@ -129,6 +131,21 @@ func (s *Server) IncomingEmail(c echo.Context) error {
 	}
 
 	s.saturdayDisco.HandleIncomingEmail(email)
+	return c.NoContent(http.StatusOK)
+}
+
+func (s *Server) IncomingLunchtimeEmail(c echo.Context) error {
+	data, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	email, err := mail.ParseIncomingEmail(s.db, data, s.e.Logger.Output())
+	if err != nil {
+		s.e.Logger.Errorf("failed to parse incoming email: %s", err.Error())
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	fmt.Println(email) //remove and replace with ---v
+	// s.lunchtimeDisco.HandleIncomingEmail(email)
 	return c.NoContent(http.StatusOK)
 }
 

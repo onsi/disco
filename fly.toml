@@ -19,6 +19,8 @@ kill_timeout = 120
   BOSS_EMAIL = "Onsi Fakhouri <onsijoe@gmail.com>"
   SATURDAY_DISCO_EMAIL = "Saturday Disco <saturday-disco@sedenverultimate.net>"
   SATURDAY_DISCO_LIST = "saturday-sedenverultimate@googlegroups.com"
+  LUNCHTIME_DISCO_EMAIL = "Lunchtime Disco <lunchtime-disco@sedenverultimate.net>"
+  LUNCHTIME_DISCO_LIST = "southeast-denver-lunchtime-ultimate@googlegroups.com"
 
 [http_service]
   internal_port = 8080
