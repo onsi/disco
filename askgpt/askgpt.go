@@ -21,7 +21,7 @@ func init() {
 	client = openai.NewClient(apiKey)
 }
 
-func AskGPT3(ctx context.Context, prompt string, userMessage string) (string, error) {
+func askGPT(ctx context.Context, model string, prompt string, userMessage string) (string, error) {
 	if len(userMessage) > USER_MESSAGE_CUTOFF {
 		userMessage = userMessage[:USER_MESSAGE_CUTOFF] + "..."
 	}
@@ -30,7 +30,7 @@ func AskGPT3(ctx context.Context, prompt string, userMessage string) (string, er
 		attemptCtx, cancel := context.WithTimeout(ctx, ATTEMPT_TIMEOUT)
 		defer cancel()
 		resp, err := client.CreateChatCompletion(attemptCtx, openai.ChatCompletionRequest{
-			Model:       openai.GPT3Dot5Turbo,
+			Model:       model,
 			MaxTokens:   512,
 			Temperature: 0,
 			TopP:        1,
@@ -62,4 +62,12 @@ func AskGPT3(ctx context.Context, prompt string, userMessage string) (string, er
 
 		return resp.Choices[0].Message.Content, nil
 	}
+}
+
+func AskGPT3(ctx context.Context, prompt string, userMessage string) (string, error) {
+	return askGPT(ctx, openai.GPT3Dot5Turbo, prompt, userMessage)
+}
+
+func AskGPT4(ctx context.Context, prompt string, userMessage string) (string, error) {
+	return askGPT(ctx, openai.GPT4, prompt, userMessage)
 }

@@ -59,43 +59,6 @@ var _ = Describe("LunchtimeGames", func() {
 				Ω(games.Game(key)).Should(Equal(gameLookup[key]))
 			}
 		})
-
-		Describe("leading games", func() {
-			It("returns nil when there are no games", func() {
-				Ω(lunchtimedisco.Games{}.LeadingGames()).Should(BeNil())
-			})
-
-			It("returns nil when there are no games with > 1 player", func() {
-				games := lunchtimedisco.Games{
-					{Key: "A"},
-					{Key: "B"},
-					{Key: "C"},
-				}
-				Ω(games.LeadingGames()).Should(BeNil())
-			})
-
-			It("returns a singular leading game, if there is one", func() {
-				games := lunchtimedisco.Games{
-					{Key: "A", Players: mail.EmailAddresses{address1, address2}},
-					{Key: "B", Players: mail.EmailAddresses{address1, address2, address3}},
-					{Key: "C", Players: mail.EmailAddresses{address1}},
-				}
-				Ω(games.LeadingGames()).Should(ConsistOf(lunchtimedisco.Game{Key: "B", Players: mail.EmailAddresses{address1, address2, address3}}))
-			})
-
-			It("returns all the leading games if there's a tie", func() {
-				games := lunchtimedisco.Games{
-					{Key: "A", Players: mail.EmailAddresses{address1}},
-					{Key: "B", Players: mail.EmailAddresses{address1, address2}},
-					{Key: "C", Players: mail.EmailAddresses{address2, address3}},
-				}
-				Ω(games.LeadingGames()).Should(ConsistOf(
-					lunchtimedisco.Game{Key: "B", Players: mail.EmailAddresses{address1, address2}},
-					lunchtimedisco.Game{Key: "C", Players: mail.EmailAddresses{address2, address3}},
-				))
-
-			})
-		})
 	})
 
 	Describe("building games", func() {
@@ -155,20 +118,6 @@ var _ = Describe("LunchtimeGames", func() {
 			Ω(games.N()).Should(Equal(G("N", 73)))
 			Ω(games.O()).Should(Equal(G("O", 74, address1)))
 			Ω(games.P()).Should(Equal(G("P", 75, address2)))
-		})
-
-		It("picks the correct leading games", func() {
-			Ω(games.LeadingGames()).Should(ConsistOf(
-				lunchtimedisco.Game{
-					Key:       "G",
-					Players:   mail.EmailAddresses{address1, address2, address3},
-					StartTime: tuesdayAt10.Add(24*time.Hour + 2*time.Hour),
-					Forecast: weather.Forecast{
-						Temperature: 72,
-						StartTime:   tuesdayAt10.Add(24*time.Hour + 2*time.Hour),
-						EndTime:     tuesdayAt10.Add(24*time.Hour + 3*time.Hour),
-					},
-				}))
 		})
 	})
 })

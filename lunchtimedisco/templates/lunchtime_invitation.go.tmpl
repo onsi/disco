@@ -1,0 +1,28 @@
+/* Invitation */
+
+{{define "invitation_subject"}}Lunchtime Bible Park Frisbee - Week of {{.WeekOf}}{{end}}
+
+{{define "invitation_body"}}{{- if .Message}}{{.Message}}
+
+{{end}}Here are the options for this week:
+
+{{template "public_status" .}}
+
+Please reply with the options you can make (e.g. "I can make A,B, and E", or "I can do Tuesday", or "All day Wednesday except for 1-2 works", etc.) - we'll take it from there!
+
+Reminder that we also play on Saturdays. Visit [sedenverultimate.net](https://www.sedenverultimate.net) to sign up for the Saturday mailing list.
+
+{{template "signature" .}}{{end}}
+
+
+/* No Invitation */
+
+{{define "no_invitation_subject"}}No Lunchtime Bible Park Frisbee This Week{{end}}
+
+{{define "no_invitation_body"}}{{- if .Message}}{{.Message}}
+
+{{end}}No lunchtime game this week.  We'll try again next week!
+
+Reminder that we also play on Saturdays. Visit [sedenverultimate.net](https://www.sedenverultimate.net) to sign up for the Saturday mailing list.
+
+{{template "signature" .}}{{end}}

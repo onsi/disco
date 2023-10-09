@@ -4,6 +4,12 @@ import "strings"
 
 type EmailAddresses []EmailAddress
 
+func (e EmailAddresses) dup() EmailAddresses {
+	out := make(EmailAddresses, len(e))
+	copy(out, e)
+	return out
+}
+
 func (e EmailAddresses) String() string {
 	addresses := []string{}
 	for _, address := range e {

@@ -7,6 +7,18 @@ import (
 	"github.com/onsi/disco/mail"
 )
 
+var AllGameKeys = map[string]bool{
+	"ALL": true,
+	"YES": true,
+}
+
+var ClearGameKeys = map[string]bool{
+	"CLEAR": true,
+	"NONE":  true,
+	"NO":    true,
+	"0":     true,
+}
+
 type LunchtimeParticipant struct {
 	Address  mail.EmailAddress
 	GameKeys []string
@@ -30,9 +42,18 @@ func (p LunchtimeParticipants) dup() LunchtimeParticipants {
 	return out
 }
 
+func (p LunchtimeParticipants) GamesFor(address mail.EmailAddress) string {
+	for _, participant := range p {
+		if participant.Address.Equals(address) {
+			return strings.Join(participant.GameKeys, ",")
+		}
+	}
+	return ""
+}
+
 func (p LunchtimeParticipants) parseGameKeyRange(input string) ([]string, bool) {
 	negated := false
-	input = strings.ToUpper(strings.TrimSpace(input))
+	input = strings.TrimSpace(input)
 	if AllGameKeys[input] {
 		return GameKeys, negated
 	}
@@ -72,7 +93,7 @@ func (p LunchtimeParticipants) parseGameKeyRange(input string) ([]string, bool) 
 }
 
 func (p LunchtimeParticipants) UpdateGameKeys(address mail.EmailAddress, input string) (LunchtimeParticipants, string, error) {
-	input = strings.TrimSpace(input)
+	input = strings.ToUpper(strings.TrimSpace(input))
 	if ClearGameKeys[input] {
 		for i := range p {
 			if p[i].Address.Equals(address) {

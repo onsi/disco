@@ -64,6 +64,23 @@ var _ = Describe("Email", func() {
 		Ω(email.IncludesRecipient(EmailAddress("nope@nope.com"))).Should(BeFalse())
 	})
 
+	It("can duplicate an e-mail", func() {
+		email := E().WithFrom("onsijoe@gmail.com").WithTo("player@example.com", "another@example.com").
+			AndCC("onemore@example.com", "twomore@example.com").
+			AndCC("threemore@example.com")
+		email.MessageID = "<original-id>"
+		email.InReplyTo = "<reply-id>"
+		email.Subject = "Original Subject"
+		email.DebugKey = "debug-key"
+		email = email.WithBody(Markdown("My **original** text\nIs _here_!"))
+		clone := email.Dup()
+		Ω(clone).Should(Equal(email))
+		clone.To[0] = "test"
+		Ω(email.To[0]).Should(Equal(EmailAddress("player@example.com")))
+		clone.CC[0] = "test"
+		Ω(email.CC[0]).Should(Equal(EmailAddress("onemore@example.com")))
+	})
+
 	Describe("Replying to e-mails", func() {
 		var email Email
 		BeforeEach(func() {

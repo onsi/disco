@@ -1,8 +1,9 @@
 package lunchtimedisco
 
 import (
+	"fmt"
 	"io"
-	"sort"
+	"strings"
 	"time"
 
 	"github.com/onsi/disco/mail"
@@ -10,7 +11,6 @@ import (
 	"github.com/onsi/say"
 )
 
-var hour = time.Hour
 var GameKeys = []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"}
 var ValidGameKeys = map[string]bool{}
 var DT = map[string]time.Duration{
@@ -39,18 +39,6 @@ func init() {
 	for _, key := range GameKeys {
 		ValidGameKeys[key] = true
 	}
-}
-
-var AllGameKeys = map[string]bool{
-	"ALL": true,
-	"YES": true,
-}
-
-var ClearGameKeys = map[string]bool{
-	"clear": true,
-	"none":  true,
-	"no":    true,
-	"0":     true,
 }
 
 func BuildGames(w io.Writer, T time.Time, participants LunchtimeParticipants, forecaster weather.ForecasterInt) Games {
@@ -84,8 +72,6 @@ func BuildGames(w io.Writer, T time.Time, participants LunchtimeParticipants, fo
 		})
 	}
 
-	sort.Sort(games)
-
 	return games
 }
 
@@ -100,23 +86,66 @@ func (g Game) IsZero() bool {
 	return g.Key == ""
 }
 
+func (g Game) String() string {
+	return fmt.Sprintf("%s - %d - %s - %s", g.Key, g.Count(), g.FullStartTime(), g.Forecast.String())
+}
+
 func (g Game) Count() int {
 	return len(g.Players)
 }
 
+func (g Game) FullStartTime() string {
+	return g.StartTime.Format("Monday 1/2 - 3:04pm")
+}
+
+func (g Game) GameDate() string {
+	return g.StartTime.Format("Monday 1/2")
+}
+
+func (g Game) PublicParticipants() string {
+	if g.Count() == 0 {
+		return "No one's signed up yet"
+	}
+
+	out := &strings.Builder{}
+	for i, participant := range g.Players {
+		out.WriteString(participant.Name())
+		if i < len(g.Players)-2 {
+			out.WriteString(", ")
+		} else if i == len(g.Players)-2 {
+			out.WriteString(" and ")
+		}
+	}
+	return out.String()
+}
+
+func (g Game) TableCell() string {
+	out := &strings.Builder{}
+	color := "#f5f5f5"
+	if g.Count() >= 5 {
+		color = "#c6f7c6"
+	} else if g.Count() >= 3 {
+		color = "#f0f7c6"
+	} else if g.Count() >= 1 {
+		color = "#f7c6c6"
+	}
+	out.WriteString(`<td align="center" valign="top">`)
+	fmt.Fprintf(out, `<table border="0" cellpadding="10" cellspacing="0" width="100%%" height="100%%" style="background-color:%s;">`, color)
+	out.WriteString(`<tr>`)
+	if g.Count() == 0 {
+		fmt.Fprintf(out, `<th style="font-size:1.3em;" align="center" valign="top">%s</th>`, g.Key)
+	} else {
+		fmt.Fprintf(out, `<th style="font-size:1.3em;" align="center" valign="top">%s - %d</th>`, g.Key, g.Count())
+	}
+	fmt.Fprintf(out, `<td style="font-size:0.9em;" align="left" valign="top">%s</td>`, g.Forecast.String())
+	if g.Count() > 0 {
+		fmt.Fprintf(out, `<td style="font-size:0.9em;" align="left" valign="top">%s</td>`, g.PublicParticipants())
+	}
+	out.WriteString("</tr></table></td>")
+	return out.String()
+}
+
 type Games []Game
-
-func (g Games) Len() int {
-	return len(g)
-}
-
-func (g Games) Less(i, j int) bool {
-	return g[i].Count() > g[j].Count()
-}
-
-func (g Games) Swap(i, j int) {
-	g[i], g[j] = g[j], g[i]
-}
 
 func (g Games) Game(key string) Game {
 	for _, game := range g {
@@ -125,24 +154,6 @@ func (g Games) Game(key string) Game {
 		}
 	}
 	return Game{}
-}
-
-func (g Games) LeadingGames() Games {
-	sort.Sort(g)
-	if len(g) == 0 {
-		return nil
-	}
-	if g[0].Count() == 0 {
-		return nil
-	}
-	leading := Games{}
-	for _, game := range g {
-		if game.Count() == g[0].Count() {
-			leading = append(leading, game)
-		}
-	}
-
-	return leading
 }
 
 func (g Games) A() Game { return g.Game("A") }

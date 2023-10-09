@@ -28,6 +28,23 @@ type Email struct {
 	HTML string
 }
 
+func (e Email) Dup() Email {
+	return Email{
+		MessageID: e.MessageID,
+		InReplyTo: e.InReplyTo,
+		DebugKey:  e.DebugKey,
+
+		From:    e.From,
+		To:      e.To.dup(),
+		CC:      e.CC.dup(),
+		Subject: e.Subject,
+		Date:    e.Date,
+
+		Text: e.Text,
+		HTML: e.HTML,
+	}
+}
+
 func (e Email) String() string {
 	return fmt.Sprintf("From: %s on %s\nTo: %s\nCC: %s\nSubject: %s\nDebug Key: %s\n\n%s", e.From, e.Date, e.To, e.CC, e.Subject, e.DebugKey, e.Text)
 }

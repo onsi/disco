@@ -58,6 +58,8 @@ const (
 type CommandType string
 
 const (
+	CommandCaptureThreadEmail CommandType = "capture_thread_email"
+
 	CommandAdminStatus CommandType = "admin_status"
 	CommandAdminAbort  CommandType = "admin_abort"
 	CommandAdminReset  CommandType = "admin_reset"
@@ -69,8 +71,13 @@ const (
 	CommandAdminInvite   CommandType = "admin_invite"
 	CommandAdminNoInvite CommandType = "admin_no_invite"
 	CommandAdminSetGames CommandType = "admin_set_games"
+	CommandAdminInvalid  CommandType = "admin_invalid"
 
-	CommandAdminInvalid CommandType = "admin_invalid"
+	CommandPlayerStatus      CommandType = "player_status"
+	CommandPlayerUnsubscribe CommandType = "player_unsubscribe"
+	CommandPlayerSetGames    CommandType = "player_set_games"
+	CommandPlayerUnsure      CommandType = "player_unsure"
+	CommandPlayerError       CommandType = "player_error"
 )
 
 type Command struct {
@@ -100,6 +107,7 @@ func (p ProcessedEmailIDs) Contains(id string) bool {
 }
 
 type LunchtimeDiscoSnapshot struct {
+	ThreadEmail       mail.Email            `json:"thread_email"`
 	State             LunchtimeDiscoState   `json:"state"`
 	Participants      LunchtimeParticipants `json:"participants"`
 	NextEvent         time.Time             `json:"next_event"`
@@ -110,6 +118,7 @@ type LunchtimeDiscoSnapshot struct {
 
 func (s LunchtimeDiscoSnapshot) dup() LunchtimeDiscoSnapshot {
 	return LunchtimeDiscoSnapshot{
+		ThreadEmail:   s.ThreadEmail.Dup(),
 		State:         s.State,
 		Participants:  s.Participants.dup(),
 		NextEvent:     s.NextEvent,
@@ -122,29 +131,32 @@ type LunchtimeDisco struct {
 	LunchtimeDiscoSnapshot
 	w io.Writer
 
-	alarmClock clock.AlarmClockInt
-	outbox     mail.OutboxInt
-	forecaster weather.ForecasterInt
-	db         s3db.S3DBInt
-	commandC   chan Command
-	snapshotC  chan chan<- LunchtimeDiscoSnapshot
-	templateC  chan chan<- TemplateData
-	config     config.Config
-	ctx        context.Context
-	cancel     func()
+	alarmClock  clock.AlarmClockInt
+	outbox      mail.OutboxInt
+	interpreter LunchtimeInterpreterInt
+	forecaster  weather.ForecasterInt
+	db          s3db.S3DBInt
+	commandC    chan Command
+	snapshotC   chan chan<- LunchtimeDiscoSnapshot
+	templateC   chan chan<- TemplateData
+	config      config.Config
+	ctx         context.Context
+	cancel      func()
 }
 
 type TemplateData struct {
 	NextEvent string
 	LunchtimeDiscoSnapshot
 
+	WeekOf     string
 	Games      Games
 	GameOnGame Game
 	GameOff    bool
 
-	Message    string
-	Error      error
-	Attachment any
+	Message       string
+	Error         error
+	Attachment    any
+	EmailDebugKey string
 }
 
 func (e TemplateData) WithNextEvent(t time.Time) TemplateData {
@@ -171,16 +183,22 @@ func (e TemplateData) WithAttachment(attachment any) TemplateData {
 	return e
 }
 
-func NewLunchtimeDisco(config config.Config, w io.Writer, alarmClock clock.AlarmClockInt, outbox mail.OutboxInt, forecaster weather.ForecasterInt, db s3db.S3DBInt) (*LunchtimeDisco, error) {
+func (e TemplateData) WithEmailDebugKey(key string) TemplateData {
+	e.EmailDebugKey = key
+	return e
+}
+
+func NewLunchtimeDisco(config config.Config, w io.Writer, alarmClock clock.AlarmClockInt, outbox mail.OutboxInt, interpreter LunchtimeInterpreterInt, forecaster weather.ForecasterInt, db s3db.S3DBInt) (*LunchtimeDisco, error) {
 	lunchtimeDisco := &LunchtimeDisco{
-		alarmClock: alarmClock,
-		outbox:     outbox,
-		forecaster: forecaster,
-		db:         db,
-		commandC:   make(chan Command),
-		snapshotC:  make(chan chan<- LunchtimeDiscoSnapshot),
-		templateC:  make(chan chan<- TemplateData),
-		w:          w,
+		alarmClock:  alarmClock,
+		outbox:      outbox,
+		interpreter: interpreter,
+		forecaster:  forecaster,
+		db:          db,
+		commandC:    make(chan Command),
+		snapshotC:   make(chan chan<- LunchtimeDiscoSnapshot),
+		templateC:   make(chan chan<- TemplateData),
+		w:           w,
 
 		config: config,
 	}
@@ -272,6 +290,7 @@ func (s *LunchtimeDisco) emailData() TemplateData {
 		gameOnGame = games.Game(s.GameOnGameKey)
 	}
 	return TemplateData{
+		WeekOf:                 s.T.Add(-24 * 5).Format("1/2"),
 		LunchtimeDiscoSnapshot: s.LunchtimeDiscoSnapshot,
 		Games:                  games,
 		GameOnGame:             gameOnGame,
@@ -300,11 +319,25 @@ func (s *LunchtimeDisco) emailForBoss(name string, data TemplateData) mail.Email
 }
 
 func (s *LunchtimeDisco) emailForList(name string, data TemplateData) mail.Email {
-	return mail.E().
-		WithFrom(s.config.LunchtimeDiscoEmail).
-		WithTo(s.config.LunchtimeDiscoList).
-		WithSubject(s.emailSubject(name, data)).
-		WithBody(mail.Markdown(s.emailBody(name, data)))
+	if s.ThreadEmail.MessageID == "" {
+		return mail.E().
+			WithFrom(s.config.LunchtimeDiscoEmail).
+			WithTo(s.config.LunchtimeDiscoList).
+			WithSubject(s.emailSubject(name, data)).
+			WithBody(mail.Markdown(s.emailBody(name, data)))
+	} else {
+		email := mail.E().
+			WithFrom(s.config.LunchtimeDiscoEmail).
+			WithTo(s.config.LunchtimeDiscoList).
+			WithBody(mail.Markdown(s.emailBody(name, data)))
+		if strings.HasPrefix(s.ThreadEmail.Subject, "Re: ") {
+			email.Subject = s.ThreadEmail.Subject
+		} else {
+			email.Subject = "Re: " + s.ThreadEmail.Subject
+		}
+		email.InReplyTo = s.ThreadEmail.MessageID
+		return email
+	}
 }
 
 func (s *LunchtimeDisco) dance() {
@@ -352,50 +385,62 @@ func (s *LunchtimeDisco) processEmail(email mail.Email) {
 	s.logi(0, "{{yellow}}Processing Email:{{/}}")
 	s.logi(1, "Email: %s", email.String())
 	c := Command{Email: email}
+	isFromSelf := email.From.Equals(s.config.SaturdayDiscoEmail)
+	isFromSelfToList := isFromSelf && email.IncludesRecipient(s.config.LunchtimeDiscoList)
 	isAdminCommand := email.From.Equals(s.config.BossEmail) &&
 		len(email.To) == 1 &&
 		len(email.CC) == 0 &&
 		email.To[0].Equals(s.config.LunchtimeDiscoEmail)
-	if !isAdminCommand {
-		return
-	}
+	isPlayerEmail := !email.From.Equals(s.config.BossEmail) && !isFromSelf
 
-	commandLine := strings.Split(strings.TrimSpace(email.Text), "\n")[0]
-	if match := setCommandRegex.FindAllStringSubmatch(commandLine, -1); match != nil {
-		c.CommandType = CommandAdminSetGames
-		c.EmailAddress = mail.EmailAddress(match[0][1])
-		c.GameKeyInput = match[0][2]
-	} else if strings.HasPrefix(commandLine, "/status") {
-		c.CommandType = CommandAdminStatus
-	} else if strings.HasPrefix(commandLine, "/debug") {
-		c.CommandType = CommandAdminDebug
-	} else if strings.HasPrefix(commandLine, "/abort") {
-		c.CommandType = CommandAdminAbort
-	} else if strings.HasPrefix(email.Text, "/RESET-RESET-RESET") {
-		c.CommandType = CommandAdminReset
-	} else if match := gameOnRegex.FindAllStringSubmatch(commandLine, -1); match != nil {
-		c.CommandType = CommandAdminGameOn
-		c.GameOnGameKey = match[0][1]
-	} else if strings.HasPrefix(commandLine, "/no-game") {
-		c.CommandType = CommandAdminNoGame
-	} else if strings.HasPrefix(commandLine, "/badger") {
-		c.CommandType = CommandAdminNoGame
-	} else if strings.HasPrefix(commandLine, "/invite") {
-		c.CommandType = CommandAdminInvite
-	} else if strings.HasPrefix(commandLine, "/no-invite") {
-		c.CommandType = CommandAdminNoInvite
-	} else {
-		c.Error = fmt.Errorf("invalid command: %s", commandLine)
-	}
-	switch c.CommandType {
-	case CommandAdminGameOn, CommandAdminNoGame, CommandAdminBadger, CommandAdminInvite, CommandAdminNoInvite:
-		idxFirstNewline := strings.Index(email.Text, "\n")
-		if idxFirstNewline > -1 {
-			c.AdditionalContent = strings.Trim(email.Text[idxFirstNewline:], "\n")
+	if isAdminCommand {
+		commandLine := strings.Split(strings.TrimSpace(email.Text), "\n")[0]
+		if match := setCommandRegex.FindAllStringSubmatch(commandLine, -1); match != nil {
+			c.CommandType = CommandAdminSetGames
+			c.EmailAddress = mail.EmailAddress(match[0][1])
+			c.GameKeyInput = match[0][2]
+		} else if strings.HasPrefix(commandLine, "/status") {
+			c.CommandType = CommandAdminStatus
+		} else if strings.HasPrefix(commandLine, "/debug") {
+			c.CommandType = CommandAdminDebug
+		} else if strings.HasPrefix(commandLine, "/abort") {
+			c.CommandType = CommandAdminAbort
+		} else if strings.HasPrefix(email.Text, "/RESET-RESET-RESET") {
+			c.CommandType = CommandAdminReset
+		} else if match := gameOnRegex.FindAllStringSubmatch(commandLine, -1); match != nil {
+			c.CommandType = CommandAdminGameOn
+			c.GameOnGameKey = match[0][1]
+		} else if strings.HasPrefix(commandLine, "/no-game") {
+			c.CommandType = CommandAdminNoGame
+		} else if strings.HasPrefix(commandLine, "/badger") {
+			c.CommandType = CommandAdminNoGame
+		} else if strings.HasPrefix(commandLine, "/invite") {
+			c.CommandType = CommandAdminInvite
+		} else if strings.HasPrefix(commandLine, "/no-invite") {
+			c.CommandType = CommandAdminNoInvite
+		} else {
+			c.CommandType = CommandAdminInvalid
+			c.Error = fmt.Errorf("invalid command: %s", commandLine)
 		}
-	}
-	if c.Error != nil {
-		c.CommandType = CommandAdminInvalid
+		switch c.CommandType {
+		case CommandAdminGameOn, CommandAdminNoGame, CommandAdminBadger, CommandAdminInvite, CommandAdminNoInvite:
+			idxFirstNewline := strings.Index(email.Text, "\n")
+			if idxFirstNewline > -1 {
+				c.AdditionalContent = strings.Trim(email.Text[idxFirstNewline:], "\n")
+			}
+		}
+	} else if isPlayerEmail {
+		potentialCommand, err := s.interpreter.InterpretEmail(email, s.T, s.Participants.GamesFor(email.From))
+		if err != nil {
+			c.CommandType = CommandPlayerError
+			c.Error = err
+		} else {
+			c = potentialCommand
+		}
+	} else if isFromSelfToList {
+		c.CommandType = CommandCaptureThreadEmail
+	} else {
+		return
 	}
 
 	if c.Error != nil {
@@ -452,6 +497,9 @@ func (s *LunchtimeDisco) handleCommand(command Command) {
 		s.ProcessedEmailIDs = append(s.ProcessedEmailIDs, command.Email.MessageID)
 	}()
 	switch command.CommandType {
+	case CommandCaptureThreadEmail:
+		s.logi(1, "{{green}}capturing thread email{{/}}")
+		s.ThreadEmail = command.Email
 	case CommandAdminStatus:
 		s.logi(1, "{{green}}boss is asking for status{{/}}")
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.LunchtimeDiscoEmail,
@@ -518,6 +566,36 @@ func (s *LunchtimeDisco) handleCommand(command Command) {
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.LunchtimeDiscoEmail,
 			s.emailBody("invalid_admin_email",
 				s.emailData().WithError(command.Error))))
+	case CommandPlayerStatus:
+		s.logi(1, "{{green}}player is asking for status.{{/}}")
+		s.sendEmailWithNoTransition(command.Email.ReplyAll(s.config.SaturdayDiscoEmail,
+			mail.Markdown(s.emailBody("public_status", s.emailData()))).AndCC(s.config.BossEmail))
+	case CommandPlayerUnsubscribe:
+		s.logi(1, "{{green}}player asking to unsubscribe.  Acking and looping in the boss.{{/}}")
+		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+			s.emailBody("unsubscribe_player_command", s.emailData())).AndCC(s.config.BossEmail))
+	case CommandPlayerSetGames:
+		s.logi(1, "{{green}}player has asked me to set games{{/}}")
+		p, result, err := s.Participants.UpdateGameKeys(command.EmailAddress, command.GameKeyInput)
+		if err != nil {
+			s.logi(2, "{{red}}...failed: %s{{/}}", err.Error())
+			s.sendEmailWithNoTransition(command.Email.Forward(s.config.LunchtimeDiscoEmail, s.config.BossEmail,
+				s.emailBody("error_player_command", s.emailData().WithError(err))))
+		} else {
+			s.logi(2, "{{green}}...success: %s{{/}}", result)
+			s.Participants = p
+			s.sendEmailWithNoTransition(command.Email.Forward(s.config.LunchtimeDiscoEmail, s.config.BossEmail,
+				s.emailBody("acknowledge_player_set_games",
+					s.emailData().WithMessage("%s %s", command.EmailAddress, result).WithAttachment(command.EmailAddress).WithEmailDebugKey(command.Email.DebugKey))))
+		}
+	case CommandPlayerUnsure:
+		s.logi(1, "{{red}}player sent a message that i'm unsure about.  CCing the boss and asking for help.{{/}}")
+		s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
+			s.emailBody("unsure_player_command", s.emailData())))
+	case CommandPlayerError:
+		s.logi(1, "{{red}}encountered an error while processing a player command: %s{{/}}", command.Error.Error())
+		s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
+			s.emailBody("error_player_command", s.emailData())))
 	}
 }
 
@@ -566,6 +644,7 @@ func (s *LunchtimeDisco) sendEmailWithNoTransition(email mail.Email) {
 func (s *LunchtimeDisco) reset() {
 	s.alarmClock.Stop()
 	s.State = StateInvalid
+	s.ThreadEmail = mail.Email{}
 	s.Participants = LunchtimeParticipants{}
 	s.NextEvent = time.Time{}
 	s.T = clock.NextSaturdayAt10(s.alarmClock.Time())

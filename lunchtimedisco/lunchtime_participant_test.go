@@ -46,6 +46,18 @@ var _ = Describe("LunchtimeParticipant", func() {
 			}
 		})
 
+		Describe("getting keys for a particular player", func() {
+			It("returns the keys for that player", func() {
+				Ω(lp.GamesFor("onsijoe@gmail.com")).Should(Equal("A,B,C"))
+				Ω(lp.GamesFor("Onsi <onsijoe@gmail.com>")).Should(Equal("A,B,C"))
+				Ω(lp.GamesFor("player@example.com")).Should(Equal("A,B,D"))
+			})
+
+			It("returns empty-string for non-existant players", func() {
+				Ω(lp.GamesFor("nope")).Should(Equal(""))
+			})
+		})
+
 		DescribeTable("updating game keys", func(input string, expectedError string, keys ...string) {
 			lp2, message, err := lp.UpdateGameKeys("Onsi Fakhouri <onsijoe@gmail.com>", input)
 			if expectedError == "" {
@@ -81,8 +93,8 @@ var _ = Describe("LunchtimeParticipant", func() {
 			Entry(nil, "all,!D-G, !L", "", "A", "B", "C", "H", "I", "J", "K", "M", "N", "O", "P"),
 			Entry(nil, "A-A", "", "A"),
 			Entry(nil, "A-G,f - k, ! h-i", "", "A", "B", "C", "D", "E", "F", "G", "J", "K"),
-			Entry(nil, "foo", "foo is not a valid game-key"),
-			Entry(nil, "A,foo", "foo is not a valid game-key"),
+			Entry(nil, "foo", "FOO is not a valid game-key"),
+			Entry(nil, "A,foo", "FOO is not a valid game-key"),
 			Entry(nil, "M-Q", "M-Q is not a valid game-key"),
 			Entry(nil, "A,!A", "no game-keys were left"),
 		)
