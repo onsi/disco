@@ -430,13 +430,16 @@ func (s *LunchtimeDisco) processEmail(email mail.Email) {
 			}
 		}
 	} else if isPlayerEmail {
-		potentialCommand, err := s.interpreter.InterpretEmail(email, s.T, s.Participants.GamesFor(email.From))
-		if err != nil {
-			c.CommandType = CommandPlayerError
-			c.Error = err
-		} else {
-			c = potentialCommand
-		}
+		// we aren't enabling this yet.  first want to get a feel for a more manual flow.
+
+		// potentialCommand, err := s.interpreter.InterpretEmail(email, s.T, s.Participants.GamesFor(email.From))
+		// if err != nil {
+		// 	c.CommandType = CommandPlayerError
+		// 	c.Error = err
+		// } else {
+		// 	c = potentialCommand
+		// }
+		return
 	} else if isFromSelfToList {
 		c.CommandType = CommandCaptureThreadEmail
 	} else {
@@ -566,36 +569,40 @@ func (s *LunchtimeDisco) handleCommand(command Command) {
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.LunchtimeDiscoEmail,
 			s.emailBody("invalid_admin_email",
 				s.emailData().WithError(command.Error))))
-	case CommandPlayerStatus:
-		s.logi(1, "{{green}}player is asking for status.{{/}}")
-		s.sendEmailWithNoTransition(command.Email.ReplyAll(s.config.SaturdayDiscoEmail,
-			mail.Markdown(s.emailBody("public_status", s.emailData()))).AndCC(s.config.BossEmail))
-	case CommandPlayerUnsubscribe:
-		s.logi(1, "{{green}}player asking to unsubscribe.  Acking and looping in the boss.{{/}}")
-		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
-			s.emailBody("unsubscribe_player_command", s.emailData())).AndCC(s.config.BossEmail))
-	case CommandPlayerSetGames:
-		s.logi(1, "{{green}}player has asked me to set games{{/}}")
-		p, result, err := s.Participants.UpdateGameKeys(command.EmailAddress, command.GameKeyInput)
-		if err != nil {
-			s.logi(2, "{{red}}...failed: %s{{/}}", err.Error())
-			s.sendEmailWithNoTransition(command.Email.Forward(s.config.LunchtimeDiscoEmail, s.config.BossEmail,
-				s.emailBody("error_player_command", s.emailData().WithError(err))))
-		} else {
-			s.logi(2, "{{green}}...success: %s{{/}}", result)
-			s.Participants = p
-			s.sendEmailWithNoTransition(command.Email.Forward(s.config.LunchtimeDiscoEmail, s.config.BossEmail,
-				s.emailBody("acknowledge_player_set_games",
-					s.emailData().WithMessage("%s %s", command.EmailAddress, result).WithAttachment(command.EmailAddress).WithEmailDebugKey(command.Email.DebugKey))))
-		}
-	case CommandPlayerUnsure:
-		s.logi(1, "{{red}}player sent a message that i'm unsure about.  CCing the boss and asking for help.{{/}}")
-		s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
-			s.emailBody("unsure_player_command", s.emailData())))
-	case CommandPlayerError:
-		s.logi(1, "{{red}}encountered an error while processing a player command: %s{{/}}", command.Error.Error())
-		s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
-			s.emailBody("error_player_command", s.emailData())))
+
+		// we aren't turning these on yet.  want to get a feel for a more manual flow first.
+		/*
+			case CommandPlayerStatus:
+				s.logi(1, "{{green}}player is asking for status.{{/}}")
+				s.sendEmailWithNoTransition(command.Email.ReplyAll(s.config.SaturdayDiscoEmail,
+					mail.Markdown(s.emailBody("public_status", s.emailData()))).AndCC(s.config.BossEmail))
+			case CommandPlayerUnsubscribe:
+				s.logi(1, "{{green}}player asking to unsubscribe.  Acking and looping in the boss.{{/}}")
+				s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
+					s.emailBody("unsubscribe_player_command", s.emailData())).AndCC(s.config.BossEmail))
+			case CommandPlayerSetGames:
+				s.logi(1, "{{green}}player has asked me to set games{{/}}")
+				p, result, err := s.Participants.UpdateGameKeys(command.EmailAddress, command.GameKeyInput)
+				if err != nil {
+					s.logi(2, "{{red}}...failed: %s{{/}}", err.Error())
+					s.sendEmailWithNoTransition(command.Email.Forward(s.config.LunchtimeDiscoEmail, s.config.BossEmail,
+						s.emailBody("error_player_command", s.emailData().WithError(err))))
+				} else {
+					s.logi(2, "{{green}}...success: %s{{/}}", result)
+					s.Participants = p
+					s.sendEmailWithNoTransition(command.Email.Forward(s.config.LunchtimeDiscoEmail, s.config.BossEmail,
+						s.emailBody("acknowledge_player_set_games",
+							s.emailData().WithMessage("%s %s", command.EmailAddress, result).WithAttachment(command.EmailAddress).WithEmailDebugKey(command.Email.DebugKey))))
+				}
+			case CommandPlayerUnsure:
+				s.logi(1, "{{red}}player sent a message that i'm unsure about.  CCing the boss and asking for help.{{/}}")
+				s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
+					s.emailBody("unsure_player_command", s.emailData())))
+			case CommandPlayerError:
+				s.logi(1, "{{red}}encountered an error while processing a player command: %s{{/}}", command.Error.Error())
+				s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
+					s.emailBody("error_player_command", s.emailData())))
+		*/
 	}
 }
 
