@@ -16,6 +16,7 @@ require (
 )
 
 require (
+	github.com/evanw/esbuild v0.19.4 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect

@@ -2,13 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
+	esbuild "github.com/evanw/esbuild/pkg/api"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -97,7 +100,7 @@ func (s *Server) Start() error {
 		// some fake data just so we can better inspect the web page
 		blob, _ = json.Marshal(lunchtimedisco.LunchtimeDiscoSnapshot{
 			GUID:  "dev",
-			State: lunchtimedisco.StateMonitoring,
+			State: lunchtimedisco.StatePending,
 			Participants: lunchtimedisco.LunchtimeParticipants{
 				{Address: "Onsi Fakhouri <onsijoe@gmail.com>", GameKeys: []string{"A", "E", "F", "G", "I", "L", "M", "N"}},
 				{Address: "Jane Player <jane@example.com>", GameKeys: []string{"A"}},
@@ -263,27 +266,44 @@ func (s *Server) Subscribe(c echo.Context) error {
 func (s *Server) Lunchtime(c echo.Context) error {
 	data := s.lunchtimeDisco.TemplateData()
 	guid := c.Param("guid")
-	if guid != data.GUID {
-		return c.String(http.StatusNotFound, "not found")
+	if guid == data.GUID {
+		return c.Render(http.StatusOK, "lunchtime_player", TemplateData{
+			Lunchtime: data,
+		})
+	} else if guid == data.BossGUID {
+		return c.Render(http.StatusOK, "lunchtime_boss", TemplateData{
+			Lunchtime: data,
+		})
 	}
-	return c.Render(http.StatusOK, "lunchtime", TemplateData{
-		Lunchtime: data,
-	})
+	return c.String(http.StatusNotFound, "not found - check your inbox for the latest game link")
 }
 
 func (s *Server) LunchtimeSubmit(c echo.Context) error {
-	var participant lunchtimedisco.LunchtimeParticipant
-	if err := c.Bind(&participant); err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+	data := s.lunchtimeDisco.TemplateData()
+	guid := c.Param("guid")
+	if guid == data.GUID {
+		var participant lunchtimedisco.LunchtimeParticipant
+		if err := c.Bind(&participant); err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		}
+		s.lunchtimeDisco.HandleParticipant(participant)
+		return c.NoContent(http.StatusOK)
+	} else if guid == data.BossGUID {
+		var command lunchtimedisco.Command
+		if err := c.Bind(&command); err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		}
+		s.lunchtimeDisco.HandleCommand(command)
+		return c.NoContent(http.StatusOK)
 	}
-	s.lunchtimeDisco.HandleParticipant(participant)
-	return c.NoContent(http.StatusOK)
+	return c.String(http.StatusUnauthorized, "not allowed")
 }
 
 type Template struct {
-	reload    bool
-	templates *template.Template
-	lock      *sync.Mutex
+	reload     bool
+	templates  *template.Template
+	lock       *sync.Mutex
+	buildCache map[string]string
 }
 
 type TemplateData struct {
@@ -293,17 +313,75 @@ type TemplateData struct {
 
 func NewTemplateRenderer(reload bool) *Template {
 	return &Template{
-		reload:    reload,
-		templates: template.Must(template.ParseGlob("templates/*")),
-		lock:      &sync.Mutex{},
+		reload:     reload,
+		templates:  nil,
+		lock:       &sync.Mutex{},
+		buildCache: map[string]string{},
 	}
 }
 
 func (t *Template) Render(w io.Writer, name string, data any, c echo.Context) error {
 	t.lock.Lock()
-	if t.reload {
-		t.templates = template.Must(template.ParseGlob("templates/*"))
+	if t.reload || t.templates == nil {
+		var err error
+		t.templates, err = template.New("templates").Funcs(template.FuncMap{
+			"build": t.ESBuild,
+		}).ParseGlob("templates/*")
+		if err != nil {
+			return err
+		}
 	}
 	t.lock.Unlock()
 	return t.templates.ExecuteTemplate(w, name, data)
+}
+
+func (t *Template) ESBuild(asset string, tag string) (any, error) {
+	if !t.reload && t.buildCache[asset] != "" {
+		return t.buildCache[asset], nil
+	}
+	result := esbuild.Build(esbuild.BuildOptions{
+		EntryPoints: []string{asset},
+		Outfile:     "out",
+		Bundle:      true,
+		Format:      esbuild.FormatESModule,
+		External:    []string{"*.jpg"},
+	})
+	issues := []string{}
+
+	issues = append(issues, esbuild.FormatMessages(result.Errors, esbuild.FormatMessagesOptions{
+		TerminalWidth: 120,
+		Kind:          esbuild.ErrorMessage,
+		Color:         false,
+	})...)
+
+	for _, msg := range esbuild.FormatMessages(result.Errors, esbuild.FormatMessagesOptions{
+		TerminalWidth: 120,
+		Kind:          esbuild.ErrorMessage,
+		Color:         true,
+	}) {
+		fmt.Fprintf(os.Stderr, msg+"\n")
+	}
+
+	for _, msg := range esbuild.FormatMessages(result.Warnings, esbuild.FormatMessagesOptions{
+		TerminalWidth: 120,
+		Kind:          esbuild.WarningMessage,
+		Color:         true,
+	}) {
+		fmt.Fprintf(os.Stderr, msg+"\n")
+	}
+
+	output := ""
+	if len(result.OutputFiles) == 1 {
+		output = string(result.OutputFiles[0].Contents)
+	} else {
+		issues = append(issues, "failed to compile: got empty output")
+	}
+	if len(issues) > 0 {
+		return "", fmt.Errorf(strings.Join(issues, "\n"))
+	}
+	if tag != "" {
+		output = "<" + tag + ">\n" + output + "\n</" + tag + ">"
+	}
+	t.buildCache[asset] = output
+	return template.HTML(output), nil
 }

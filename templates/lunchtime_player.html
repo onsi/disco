@@ -1,0 +1,27 @@
+{{define "lunchtime_player"}}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Southeast Denver Ultimate Frisbee</title>
+
+    {{ build "css/disco.css" "style" }}
+    <script>
+        window.DATA = JSON.parse({{ .Lunchtime.JSONForPlayer }})
+    </script>
+</head>
+
+<body>
+    <div id="content">
+        <h2>Sign up for this week's <span class="green">Lunchtime Game</span> (week of {{.Lunchtime.WeekOf}})
+        </h2>
+
+        <div id="form"></div>
+
+        {{ build "js/lunchtime_player.js" "script" }}
+</body>
+
+</html>
+{{end}}

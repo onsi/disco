@@ -1,4 +1,4 @@
-{{define "lunchtime"}}
+{{define "lunchtime_player"}}
 <!DOCTYPE html>
 <html>
 
@@ -19,7 +19,7 @@
 
         <script src="https://unpkg.com/mithril/mithril.js"></script>
         <script>
-            let data = JSON.parse({{ .Lunchtime.ForJS }})
+            let data = JSON.parse({{ .Lunchtime.JSONForBoss }})
             let name = window.localStorage.getItem("name") || ""
             let email = window.localStorage.getItem("email") || ""
 
