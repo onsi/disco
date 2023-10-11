@@ -1,0 +1,395 @@
+{{define "styles"}}
+<style>
+:root {
+    --max-width: 1400px;
+    --breakpoint: 700px;
+    --red: #c73e1d;
+    --green: #2dad6c;
+    --yellow: #f5c542;
+    box-sizing: border-box;
+}
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+}
+a {
+    color: auto;
+}
+body {
+    font-family: Sans-Serif;
+    font-size: 18px;
+    margin: 0;
+}
+.green {
+    color: var(--green);
+}
+.map {
+    border-radius: 10px;
+    box-shadow: 0 0 4px 0 var(--green);
+}
+.when-and-where {
+    display: flex;
+    flex-flow: row wrap;
+    column-gap: 20px;
+}
+.when,
+.where {
+    flex: 1 1 300px;
+}
+.map {
+    max-width: 100%;
+}
+.subscribe {
+    margin: 0 auto;
+    max-width: 80%;
+    border-radius: 8px;
+    padding: 20px;
+}
+.subscribe form {
+    display: flex;
+    flex-flow: column nowrap;
+    row-gap: 20px;
+}
+.subscribe form .form-row {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 20px;
+    align-items: center;
+}
+.subscribe span {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+input[type="text"],input[type="email"] {
+    font-size: 1em;
+    flex: 1 1 300px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+input[type="submit"], button {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background-color: var(--green);
+    cursor: pointer;
+    color: white;
+    font-size: 1em;
+}
+button:disabled {
+    background-color: #aaa;
+}
+textarea {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    resize: none;
+}
+.subscribe.form {
+    background-color: #eee;
+}
+.subscribe.fail {
+    background-color: var(--red);
+    color: white;
+}
+.subscribe.success {
+    background-color: var(--green);
+    color: white;
+}
+.status-container {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-start;
+}
+.status-container .status {
+    flex: 1 1 300px;
+    border-radius: 10px;
+    padding: 20px 0 0 0;
+    max-width: 400px;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+}
+.status-container .status.game-on {
+    background-color: var(--green);
+    color: white;
+    box-shadow: 0 0 4px 0 var(--green);
+}
+.status-container .status.game-off {
+    background-color: var(--red);
+    color: white;
+    box-shadow: 0 0 4px 0 var(--red);
+    padding-bottom: 20px;
+}
+.status-container .status.pending {
+    background-color: var(--yellow);
+    box-shadow: 0 0 4px 0 var(--yellow);
+}
+.status-container .status.coming-soon {
+    background-color: #ccc;
+    box-shadow: 0 0 4px 0 #ccc;
+    padding-bottom: 20px;
+}
+.status .heading {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.status .call {
+    margin-top: 10px;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    gap: 10px;
+    background-color: rgba(255, 255, 255, 0.3);
+    padding: 10px 20px;
+    border-radius: 10px;
+}
+.status .call .emoji {
+    font-size: 5em;
+}
+.status .call .text {
+    font-size: 2em;
+    font-weight: bold;
+}
+.status.pending .call .text {
+    font-size: 1em;
+}
+.status .count,
+.status .short-forecast {
+    margin-top: 10px;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    align-content: center;
+    gap: 10px;
+    line-height: 5em;
+}
+.status .short-forecast,
+.status .forecast-details {
+    padding-top: 10px;
+    align-self: stretch;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.3)
+}
+.status.pending .short-forecast,
+.status.pending .forecast-details {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+.status .forecast-details {
+    padding-bottom: 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+.status .count .number {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 5em;
+    font-weight: bold;
+}
+.status .count .text {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+.status .short-forecast .emoji {
+    font-size: 5em
+}
+.status .short-forecast .text {
+    font-size: 2em;
+    font-weight: bold;
+}
+.status .forecast-details,
+.status .forecast-details>div {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    gap: 10px;
+}
+.status .temperature,
+.status .precipitation,
+.status .wind {
+    padding: 2px 10px;
+    border-radius: 10px;
+}
+.temperature.🥵 {
+    background-color: var(--red);
+}
+.temperature.😎 {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+.temperature.🥶 {
+    background-color: rgba(120, 200, 255, 0.8);
+}
+.precipitation.dry {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+.precipitation.possible {
+    background-color: rgba(0, 120, 255, 0.5);
+}
+.precipitation.probable {
+    background-color: rgba(0, 120, 255, 0.8);
+}
+.precipitation.definite {
+    background-color: rgba(0, 120, 255, 1);
+}
+.wind {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.full-width {
+    width:100%;
+}
+
+table.games {
+    margin-top:10px;
+    margin-bottom:10px;
+    margin-left:auto;
+    margin-right:auto;
+    width:100%;
+    max-width:600px;
+}
+
+table.games th.date {
+    font-size:1.3em;
+    padding:10px 0;
+    background-color:#fafafa;
+    border-top:solid 5px #fff;
+}
+
+table.games td.game {
+    text-align:center;
+    border-radius:10px;
+    cursor: pointer;
+    border:solid 6px #fff;
+    padding-bottom:5px;
+}
+
+table.games td.game.selected {
+    border:solid 6px #000;
+}
+
+table.games td.zero {
+    background-color: #f5f5f5;
+}
+
+table.games td.quorum {
+    background-color: #c6f7c6;
+}
+
+table.games td.close {
+    background-color: #f0f7c6;
+}
+
+table.games td.barely {
+    background-color: #eee;
+}
+
+table.games .time {
+    font-size:1.2em;
+    font-weight:bold;
+    margin-top:5px;
+}
+
+table.games .count {
+    font-size:1.5em;
+    font-weight:bold;
+    background-color:rgba(255,255,255,0.5);
+    border-radius:5px;
+    padding:5px;
+    margin:5px auto 5px auto;
+    width:50px;
+}
+
+
+table.games .forecast {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    gap: 2px;
+    justify-content:center;
+    margin-bottom:-4px;
+}
+
+table.games .forecast .emoji {
+    font-size:2em;
+}
+table.games .forecast .text {
+    font-size:1.1em;
+}
+
+table.games .forecast-details {
+    font-size:0.7em;
+}
+
+.invalid {
+    border: 2px solid #f00 !important;
+    background-color:#fee;
+}
+
+.invalid-email, .invalid-name {
+    padding: 0 10px;
+}
+
+input#name, input#email {
+    margin:10px 0;
+}
+
+.message {
+    padding:20px;
+    margin: 10px 0;
+    border-radius:10px;
+}
+.message.failure {
+    background-color: var(--red);
+    color: white;
+}
+.message.success {
+    background-color: var(--green);
+    color: white;
+}
+
+
+/* Desktop */
+@media screen and (min-width: 701px) {
+    body {
+        display: grid;
+        grid-template-areas: "left content right";
+        grid-template-columns: 1fr minmax(var(--breakpoint), var(--max-width)) 1fr;
+        grid-template-rows: 1fr;
+        gap: 0;
+        height: 100vh;
+        background-color: var(--green);
+        background-image: url("/img/grass.jpg");
+        background-repeat: no-repeat;
+        background-size: cover;
+        overflow-y: hidden;
+    }
+    #content {
+        background-color: white;
+        grid-area: content;
+        padding: 0 20px 10px 20px;
+        box-shadow: 0 0 20px 0 rgba(0, 0, 0, 1);
+        overflow-y: scroll;
+    }
+}
+@media screen and (max-width: 700px) {
+    body {
+        display: grid;
+        grid-template-areas: "content";
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr;
+        gap: 0;
+        height: 100vh;
+    }
+    #content {
+        background-color: white;
+        grid-area: content;
+        padding: 0 10px 10px 10px;
+    }
+}
+</style>
+{{end}}

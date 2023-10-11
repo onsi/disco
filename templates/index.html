@@ -1,0 +1,149 @@
+{{define "index"}}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Southeast Denver Ultimate Frisbee</title>
+
+    {{ template "styles" . }}
+</head>
+
+<body>
+    <div id="content">
+        <h1>Southeast Denver <span class="green">Ultimate Frisbee</span>
+        </h1>
+
+        <h2>Are we playing this week?</h2>
+        <div class="status-container">
+            <div
+                class="status {{if .Saturday.GameOn}}game-on{{else if .Saturday.GameOff}}game-off{{else}}pending{{end}}">
+                <div class="heading">Saturday</div>
+                <div class="call">
+                    {{if .Saturday.GameOn}}
+                    <div class="emoji">🎉</div>
+                    <div class="text">Game On!</div>
+                    {{else if .Saturday.GameOff}}
+                    <div class="emoji">😕</div>
+                    <div class="text">No Game...</div>
+                    {{else}}
+                    <div class="emoji">⏰</div>
+                    <div class="text">Game hasn't been called yet</div>
+                    {{end}}
+                </div>
+                {{if not .Saturday.GameOff}}
+                <div class="count">
+                    <div class="number">{{.Saturday.Participants.Count}}</div>
+                    <div class="text">Player{{if not (eq .Saturday.Participants.Count 1)}}s{{end}}</div>
+                </div>
+                {{if not .Saturday.Forecast.IsZero}}
+                <div class="short-forecast">
+                    <div class="emoji">{{.Saturday.Forecast.ShortForecastEmoji}}</div>
+                    <div class="text">{{.Saturday.Forecast.ShortForecast}}</div>
+                </div>
+                <div class="forecast-details">
+                    <div class="temperature {{.Saturday.Forecast.TemperatureEmoji}}">
+                        <div class="emoji">{{.Saturday.Forecast.TemperatureEmoji}}</div>
+                        <div class="text">{{.Saturday.Forecast.Temperature}}°{{.Saturday.Forecast.TemperatureUnit}}
+                        </div>
+                    </div>
+                    <div class="precipitation {{.Saturday.Forecast.PrecipitationClassName}}">
+                        <div class="emoji">💧</div>
+                        <div class="text">{{.Saturday.Forecast.ProbabilityOfPrecipitation}}%</div>
+                    </div>
+                    <div class="wind">
+                        <div class="emoji">💨</div>
+                        <div class="text">{{.Saturday.Forecast.WindSpeed}}</div>
+                    </div>
+                </div>
+                {{end}}
+                {{end}}
+            </div>
+            <div class="status coming-soon">
+                <div class="heading">Lunchtime</div>
+                <div class="call">
+                    <div class="emoji">🚧</div>
+                    <div class="text">Coming Soon...</div>
+                </div>
+            </div>
+        </div>
+
+        <h2>All are Welcome</h2>
+        <p>
+            We're just a bunch of folks who get together to play ultimate frisbee in the Denver area.
+            <strong>All skill levels are welcome</strong> - we even have some kids who join our Saturday game. Cleats
+            are helpful but nor required - we play for fun and fitness!
+        </p>
+
+        <h2>When and Where?</h2>
+        <div class="when-and-where">
+            <div class="when">
+                <p>
+                    We try to play two games a week:
+                </p>
+                <p><strong>Saturdays</strong> at {{.Saturday.GameTime}} - <i>kids welcome</i>!</p>
+                <p>Around <strong>lunchtime</strong> during the week - we send a poll out to find the best time.</p>
+            </div>
+            <div class="where">
+                <p>
+                    We play at <a href='https://maps.google.com/?q=James+A.+Bible+Park'> James Bible Park in Southeast
+                        Denver</a>.
+                </p>
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d5498.035269725171!2d-104.90633689085327!3d39.6622728706686!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x876c87639c0b3735%3A0x70c4f0579bec5f86!2sJames%20A.%20Bible%20Park!5e0!3m2!1sen!2sus!4v1696197838172!5m2!1sen!2sus"
+                    width="400" height="320" style="border:0;" allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade" class="map"></iframe>
+            </div>
+        </div>
+        <h2>How do I join?</h2>
+        <p>Fill out this form to join our mailing lists - we have a Saturday mailing list and a lunchtime mailing list.
+            You can also just show up! Check up above to see if and when we're playing this week. Bring a red shirt and
+            a blue shirt if you have them.
+        </p>
+        <div class="subscribe form" id="subscribe">
+            <form action="/subscribe" method="post">
+                <div class="form-row">
+                    <input type="email" name="email" id="email" placeholder="E-mail Address" maxlength="100" required />
+                    <span>
+                        <input type="checkbox" id="saturday" name="saturday" checked /><label
+                            for="saturday">Saturday</label>
+                        <input type="checkbox" id="lunchtime" name="lunchtime" checked /><label
+                            for="lunchtime">Lunchtime</label>
+                    </span>
+                </div>
+                <textarea name="message" id="message" placeholder="Message (optional)" rows="3"
+                    maxlength="1000"></textarea>
+                <input type="submit" value="Subscribe" />
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('submit', (e) => {
+            const form = e.target;
+            let data = {
+                email: document.querySelector("#email").value,
+                wantsSaturday: document.querySelector("#saturday").checked,
+                wantsLunchtime: document.querySelector("#lunchtime").checked,
+                message: document.querySelector("#message").value,
+            }
+            fetch(form.action, {
+                method: form.method,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            }).then((res) => {
+                if (!res.ok) throw new Error("Error subscribing");
+                document.querySelector("#subscribe").outerHTML = "<div class='subscribe success'>Thanks for your interest!  We'll be in touch soon.</div>";
+            }).catch((err) => {
+                document.querySelector("#subscribe").outerHTML = "<div class='subscribe fail'>Sorry, there was an error getting you subscribed. Please try again later.</div>";
+            })
+            e.preventDefault();
+        });
+    </script>
+</body>
+
+</html>
+{{end}}

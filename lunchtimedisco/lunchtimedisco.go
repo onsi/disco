@@ -11,6 +11,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/onsi/disco/clock"
 	"github.com/onsi/disco/config"
 	"github.com/onsi/disco/mail"
@@ -70,14 +71,9 @@ const (
 	CommandAdminNoGame   CommandType = "admin_no_game"
 	CommandAdminInvite   CommandType = "admin_invite"
 	CommandAdminNoInvite CommandType = "admin_no_invite"
-	CommandAdminSetGames CommandType = "admin_set_games"
 	CommandAdminInvalid  CommandType = "admin_invalid"
 
-	CommandPlayerStatus      CommandType = "player_status"
-	CommandPlayerUnsubscribe CommandType = "player_unsubscribe"
-	CommandPlayerSetGames    CommandType = "player_set_games"
-	CommandPlayerUnsure      CommandType = "player_unsure"
-	CommandPlayerError       CommandType = "player_error"
+	CommandSetGames CommandType = "set_games"
 )
 
 type Command struct {
@@ -86,8 +82,7 @@ type Command struct {
 	AdditionalContent string
 
 	//for set games
-	EmailAddress mail.EmailAddress
-	GameKeyInput string
+	Participant LunchtimeParticipant
 
 	//for game-on
 	GameOnGameKey string
@@ -107,6 +102,7 @@ func (p ProcessedEmailIDs) Contains(id string) bool {
 }
 
 type LunchtimeDiscoSnapshot struct {
+	GUID              string                `json:"guid"`
 	ThreadEmail       mail.Email            `json:"thread_email"`
 	State             LunchtimeDiscoState   `json:"state"`
 	Participants      LunchtimeParticipants `json:"participants"`
@@ -118,6 +114,7 @@ type LunchtimeDiscoSnapshot struct {
 
 func (s LunchtimeDiscoSnapshot) dup() LunchtimeDiscoSnapshot {
 	return LunchtimeDiscoSnapshot{
+		GUID:          s.GUID,
 		ThreadEmail:   s.ThreadEmail.Dup(),
 		State:         s.State,
 		Participants:  s.Participants.dup(),
@@ -131,32 +128,30 @@ type LunchtimeDisco struct {
 	LunchtimeDiscoSnapshot
 	w io.Writer
 
-	alarmClock  clock.AlarmClockInt
-	outbox      mail.OutboxInt
-	interpreter LunchtimeInterpreterInt
-	forecaster  weather.ForecasterInt
-	db          s3db.S3DBInt
-	commandC    chan Command
-	snapshotC   chan chan<- LunchtimeDiscoSnapshot
-	templateC   chan chan<- TemplateData
-	config      config.Config
-	ctx         context.Context
-	cancel      func()
+	alarmClock clock.AlarmClockInt
+	outbox     mail.OutboxInt
+	forecaster weather.ForecasterInt
+	db         s3db.S3DBInt
+	commandC   chan Command
+	snapshotC  chan chan<- LunchtimeDiscoSnapshot
+	templateC  chan chan<- TemplateData
+	config     config.Config
+	ctx        context.Context
+	cancel     func()
 }
 
 type TemplateData struct {
 	NextEvent string
 	LunchtimeDiscoSnapshot
 
+	GUID       string
 	WeekOf     string
 	Games      Games
 	GameOnGame Game
 	GameOff    bool
 
-	Message       string
-	Error         error
-	Attachment    any
-	EmailDebugKey string
+	Message string
+	Error   error
 }
 
 func (e TemplateData) WithNextEvent(t time.Time) TemplateData {
@@ -178,27 +173,39 @@ func (e TemplateData) WithError(err error) TemplateData {
 	return e
 }
 
-func (e TemplateData) WithAttachment(attachment any) TemplateData {
-	e.Attachment = attachment
-	return e
+func (e TemplateData) PickerURL() string {
+	return fmt.Sprintf("https://www.sedenverultimate.net/lunchtime/%s", e.GUID)
 }
 
-func (e TemplateData) WithEmailDebugKey(key string) TemplateData {
-	e.EmailDebugKey = key
-	return e
+func (e TemplateData) ForJS() string {
+	games := map[string]map[string]any{}
+	for _, game := range e.Games {
+		games[game.Key] = map[string]any{
+			"date":     game.GameDate(),
+			"time":     game.GameTime(),
+			"forecast": game.Forecast,
+		}
+	}
+
+	out, _ := json.Marshal(map[string]any{
+		"guid":          e.GUID,
+		"participants":  e.Participants,
+		"games":         games,
+		"gameOnGameKey": e.GameOnGameKey,
+	})
+	return string(out)
 }
 
-func NewLunchtimeDisco(config config.Config, w io.Writer, alarmClock clock.AlarmClockInt, outbox mail.OutboxInt, interpreter LunchtimeInterpreterInt, forecaster weather.ForecasterInt, db s3db.S3DBInt) (*LunchtimeDisco, error) {
+func NewLunchtimeDisco(config config.Config, w io.Writer, alarmClock clock.AlarmClockInt, outbox mail.OutboxInt, forecaster weather.ForecasterInt, db s3db.S3DBInt) (*LunchtimeDisco, error) {
 	lunchtimeDisco := &LunchtimeDisco{
-		alarmClock:  alarmClock,
-		outbox:      outbox,
-		interpreter: interpreter,
-		forecaster:  forecaster,
-		db:          db,
-		commandC:    make(chan Command),
-		snapshotC:   make(chan chan<- LunchtimeDiscoSnapshot),
-		templateC:   make(chan chan<- TemplateData),
-		w:           w,
+		alarmClock: alarmClock,
+		outbox:     outbox,
+		forecaster: forecaster,
+		db:         db,
+		commandC:   make(chan Command),
+		snapshotC:  make(chan chan<- LunchtimeDiscoSnapshot),
+		templateC:  make(chan chan<- TemplateData),
+		w:          w,
 
 		config: config,
 	}
@@ -254,10 +261,18 @@ func (s *LunchtimeDisco) Stop() {
 	s.alarmClock.Stop()
 }
 
-// called asynchronously by the server
 func (s *LunchtimeDisco) HandleIncomingEmail(email mail.Email) {
 	go func() {
 		s.processEmail(email)
+	}()
+}
+
+func (s *LunchtimeDisco) HandleParticipant(participant LunchtimeParticipant) {
+	go func() {
+		s.commandC <- Command{
+			CommandType: CommandSetGames,
+			Participant: participant,
+		}
 	}()
 }
 
@@ -290,6 +305,7 @@ func (s *LunchtimeDisco) emailData() TemplateData {
 		gameOnGame = games.Game(s.GameOnGameKey)
 	}
 	return TemplateData{
+		GUID:                   s.GUID,
 		WeekOf:                 s.T.Add(-24 * 5).Format("1/2"),
 		LunchtimeDiscoSnapshot: s.LunchtimeDiscoSnapshot,
 		Games:                  games,
@@ -378,7 +394,7 @@ func (s *LunchtimeDisco) backup() {
 	s.log("{{green}}backed up{{/}}")
 }
 
-var setCommandRegex = regexp.MustCompile(`^/set\s+(.+)+\s+(.*)$`)
+// TODO: allow for custom times
 var gameOnRegex = regexp.MustCompile(`^/game-on\s+([ABCDEFGHIJKLMNOP])$`)
 
 func (s *LunchtimeDisco) processEmail(email mail.Email) {
@@ -391,15 +407,10 @@ func (s *LunchtimeDisco) processEmail(email mail.Email) {
 		len(email.To) == 1 &&
 		len(email.CC) == 0 &&
 		email.To[0].Equals(s.config.LunchtimeDiscoEmail)
-	isPlayerEmail := !email.From.Equals(s.config.BossEmail) && !isFromSelf
 
 	if isAdminCommand {
 		commandLine := strings.Split(strings.TrimSpace(email.Text), "\n")[0]
-		if match := setCommandRegex.FindAllStringSubmatch(commandLine, -1); match != nil {
-			c.CommandType = CommandAdminSetGames
-			c.EmailAddress = mail.EmailAddress(match[0][1])
-			c.GameKeyInput = match[0][2]
-		} else if strings.HasPrefix(commandLine, "/status") {
+		if strings.HasPrefix(commandLine, "/status") {
 			c.CommandType = CommandAdminStatus
 		} else if strings.HasPrefix(commandLine, "/debug") {
 			c.CommandType = CommandAdminDebug
@@ -429,17 +440,6 @@ func (s *LunchtimeDisco) processEmail(email mail.Email) {
 				c.AdditionalContent = strings.Trim(email.Text[idxFirstNewline:], "\n")
 			}
 		}
-	} else if isPlayerEmail {
-		// we aren't enabling this yet.  first want to get a feel for a more manual flow.
-
-		// potentialCommand, err := s.interpreter.InterpretEmail(email, s.T, s.Participants.GamesFor(email.From))
-		// if err != nil {
-		// 	c.CommandType = CommandPlayerError
-		// 	c.Error = err
-		// } else {
-		// 	c = potentialCommand
-		// }
-		return
 	} else if isFromSelfToList {
 		c.CommandType = CommandCaptureThreadEmail
 	} else {
@@ -492,7 +492,7 @@ func (s *LunchtimeDisco) performNextEvent() {
 }
 
 func (s *LunchtimeDisco) handleCommand(command Command) {
-	if s.ProcessedEmailIDs.Contains(command.Email.MessageID) {
+	if !command.Email.IsZero() && s.ProcessedEmailIDs.Contains(command.Email.MessageID) {
 		s.logi(1, "{{coral}}I've already processed this email (id: %s).  Ignoring.{{/}}", command.Email.MessageID)
 		return
 	}
@@ -550,59 +550,16 @@ func (s *LunchtimeDisco) handleCommand(command Command) {
 		s.sendEmail(s.emailForList("no_invite",
 			s.emailData().WithMessage(command.AdditionalContent)),
 			StateNoInviteSent, s.replyWithFailureErrorHandler)
-	case CommandAdminSetGames:
-		s.logi(1, "{{green}}boss has asked me to set games{{/}}")
-		p, result, err := s.Participants.UpdateGameKeys(command.EmailAddress, command.GameKeyInput)
-		if err != nil {
-			s.logi(2, "{{red}}...failed: %s{{/}}", err.Error())
-			s.sendEmailWithNoTransition(command.Email.Reply(s.config.LunchtimeDiscoEmail,
-				s.emailBody("invalid_admin_email", s.emailData().WithError(err))))
-		} else {
-			s.logi(2, "{{green}}...success: %s{{/}}", result)
-			s.Participants = p
-			s.sendEmailWithNoTransition(command.Email.Reply(s.config.LunchtimeDiscoEmail,
-				s.emailBody("acknowledge_admin_set_games",
-					s.emailData().WithMessage("%s %s", command.EmailAddress, result))))
-		}
 	case CommandAdminInvalid:
 		s.logi(1, "{{red}}boss sent me an invalid command{{/}}")
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.LunchtimeDiscoEmail,
 			s.emailBody("invalid_admin_email",
 				s.emailData().WithError(command.Error))))
-
-		// we aren't turning these on yet.  want to get a feel for a more manual flow first.
-		/*
-			case CommandPlayerStatus:
-				s.logi(1, "{{green}}player is asking for status.{{/}}")
-				s.sendEmailWithNoTransition(command.Email.ReplyAll(s.config.SaturdayDiscoEmail,
-					mail.Markdown(s.emailBody("public_status", s.emailData()))).AndCC(s.config.BossEmail))
-			case CommandPlayerUnsubscribe:
-				s.logi(1, "{{green}}player asking to unsubscribe.  Acking and looping in the boss.{{/}}")
-				s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
-					s.emailBody("unsubscribe_player_command", s.emailData())).AndCC(s.config.BossEmail))
-			case CommandPlayerSetGames:
-				s.logi(1, "{{green}}player has asked me to set games{{/}}")
-				p, result, err := s.Participants.UpdateGameKeys(command.EmailAddress, command.GameKeyInput)
-				if err != nil {
-					s.logi(2, "{{red}}...failed: %s{{/}}", err.Error())
-					s.sendEmailWithNoTransition(command.Email.Forward(s.config.LunchtimeDiscoEmail, s.config.BossEmail,
-						s.emailBody("error_player_command", s.emailData().WithError(err))))
-				} else {
-					s.logi(2, "{{green}}...success: %s{{/}}", result)
-					s.Participants = p
-					s.sendEmailWithNoTransition(command.Email.Forward(s.config.LunchtimeDiscoEmail, s.config.BossEmail,
-						s.emailBody("acknowledge_player_set_games",
-							s.emailData().WithMessage("%s %s", command.EmailAddress, result).WithAttachment(command.EmailAddress).WithEmailDebugKey(command.Email.DebugKey))))
-				}
-			case CommandPlayerUnsure:
-				s.logi(1, "{{red}}player sent a message that i'm unsure about.  CCing the boss and asking for help.{{/}}")
-				s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
-					s.emailBody("unsure_player_command", s.emailData())))
-			case CommandPlayerError:
-				s.logi(1, "{{red}}encountered an error while processing a player command: %s{{/}}", command.Error.Error())
-				s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
-					s.emailBody("error_player_command", s.emailData())))
-		*/
+	case CommandSetGames:
+		s.logi(1, "{{green}}I've been asked to set games{{/}}")
+		s.Participants = s.Participants.AddOrUpdate(command.Participant)
+		s.sendEmailWithNoTransition(s.emailForBoss("acknowledge_set_games", s.emailData().
+			WithMessage("%s: %s", command.Participant.Address, strings.Join(command.Participant.GameKeys, ","))))
 	}
 }
 
@@ -651,6 +608,7 @@ func (s *LunchtimeDisco) sendEmailWithNoTransition(email mail.Email) {
 func (s *LunchtimeDisco) reset() {
 	s.alarmClock.Stop()
 	s.State = StateInvalid
+	s.GUID = uuid.New().String()
 	s.ThreadEmail = mail.Email{}
 	s.Participants = LunchtimeParticipants{}
 	s.NextEvent = time.Time{}

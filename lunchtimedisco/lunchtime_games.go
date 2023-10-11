@@ -101,6 +101,9 @@ func (g Game) FullStartTime() string {
 func (g Game) GameDate() string {
 	return g.StartTime.Format("Monday 1/2")
 }
+func (g Game) GameTime() string {
+	return g.StartTime.Format("3PM")
+}
 
 func (g Game) PublicParticipants() string {
 	if g.Count() == 0 {
@@ -127,21 +130,37 @@ func (g Game) TableCell() string {
 	} else if g.Count() >= 3 {
 		color = "#f0f7c6"
 	} else if g.Count() >= 1 {
-		color = "#f7c6c6"
+		color = "#eee"
 	}
 	out.WriteString(`<td align="center" valign="top">`)
 	fmt.Fprintf(out, `<table border="0" cellpadding="10" cellspacing="0" width="100%%" height="100%%" style="background-color:%s;">`, color)
 	out.WriteString(`<tr>`)
-	if g.Count() == 0 {
-		fmt.Fprintf(out, `<th style="font-size:1.3em;" align="center" valign="top">%s</th>`, g.Key)
-	} else {
-		fmt.Fprintf(out, `<th style="font-size:1.3em;" align="center" valign="top">%s - %d</th>`, g.Key, g.Count())
-	}
-	fmt.Fprintf(out, `<td style="font-size:0.9em;" align="left" valign="top">%s</td>`, g.Forecast.String())
+	fmt.Fprintf(out, `<td style="font-size:1.2em;" align="center" valign="top">%s</td>`, g.GameTime())
+	out.WriteString(`</tr>`)
+	out.WriteString(`<tr>`)
+	fmt.Fprintf(out, `<td style="font-size:1.5em;font-weight:bold;" align="center" valign="top">%d</td>`, g.Count())
+	out.WriteString(`</tr>`)
 	if g.Count() > 0 {
-		fmt.Fprintf(out, `<td style="font-size:0.9em;" align="left" valign="top">%s</td>`, g.PublicParticipants())
+		out.WriteString(`<tr>`)
+		fmt.Fprintf(out, `<td style="font-size:0.9em;" align="center" valign="top">%s</td>`, g.PublicParticipants())
+		out.WriteString(`</tr>`)
 	}
-	out.WriteString("</tr></table></td>")
+	if !g.Forecast.IsZero() {
+		out.WriteString(`<tr>`)
+		fmt.Fprintf(out, `<td style="font-size:1.5em;" align="center" valign="top">%s</td>`, g.Forecast.ShortForecastEmoji)
+		out.WriteString(`</tr>`)
+		out.WriteString(`<tr>`)
+		fmt.Fprintf(out, `<td style="font-size:1.1em;" align="center" valign="top">%dº%s</td>`, g.Forecast.Temperature, g.Forecast.TemperatureUnit)
+		out.WriteString(`</tr>`)
+		out.WriteString(`<tr>`)
+		fmt.Fprintf(out, `<td style="font-size:0.7em;" align="center" valign="top">💧%d%%</td>`, g.Forecast.ProbabilityOfPrecipitation)
+		out.WriteString(`</tr>`)
+		out.WriteString(`<tr>`)
+		fmt.Fprintf(out, `<td style="font-size:1.1em;" align="center" valign="top">💨 %s</td>`, g.Forecast.WindSpeed)
+		out.WriteString(`</tr>`)
+	}
+
+	out.WriteString("</table></td>")
 	return out.String()
 }
 

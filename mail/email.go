@@ -45,6 +45,10 @@ func (e Email) Dup() Email {
 	}
 }
 
+func (e Email) IsZero() bool {
+	return e.MessageID == "" && e.From == ""
+}
+
 func (e Email) String() string {
 	return fmt.Sprintf("From: %s on %s\nTo: %s\nCC: %s\nSubject: %s\nDebug Key: %s\n\n%s", e.From, e.Date, e.To, e.CC, e.Subject, e.DebugKey, e.Text)
 }

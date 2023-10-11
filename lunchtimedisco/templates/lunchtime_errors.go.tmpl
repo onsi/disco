@@ -8,15 +8,3 @@ Status:
 {{template "boss_status" .}}
 
 {{template "signature" .}}{{end}}
-
-{{define "unsure_player_command_body"}}Hey Boss,
-
-I'm not sure what to do with this e-mail.
-{{end}}
-
-{{define "error_player_command_body"}}Hey Boss,
-
-I got an error while processing this email:
-{{.Error}}
-
-{{template "signature" .}}{{end}}

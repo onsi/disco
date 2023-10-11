@@ -1,20 +1,8 @@
-/* acknowledge_admin_set_games */
+{{define "acknowledge_set_games_subject"}}Set Games -{{.Message}}{{end}}
 
-{{define "acknowledge_admin_set_games_body"}}I've set {{.Message}}
+{{define "acknowledge_set_games_body"}}Hey Boss,
 
-{{template "boss_status" .}}
-
-{{template "signature" .}}{{end}}
-
-/* acknowledge_player_set_games */
-
-{{define "acknowledge_player_set_count_body"}}Hey Boss,
-
-I just got the email below.  I've set the player's count to {{.Message}}.  Send me a:
-
-/set {{.Attachment}} A,B,F-J,!H
-
-command if I got it wrong.  Email debug key: {{.EmailDebugKey}}.
+I've set games for {{.Message}}.
 
 {{template "boss_status" .}}
 
