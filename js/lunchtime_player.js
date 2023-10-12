@@ -1,21 +1,16 @@
 import m from "mithril"
 import { LunchtimeCell } from "./lunchtime_cell.js"
+import { EmailAddress } from "./email.js"
 
 let name = window.localStorage.getItem("name") || ""
 let email = window.localStorage.getItem("email") || ""
 let data = window.DATA
+data.participants.forEach(p => p.address = EmailAddress.fromEmail(p.address))
 
-function NameFromEmailAddress(email) {
-    let m = email.match(/(.*) <.*>/)
-    if (m) return m[1]
-    m = email.match(/.*\s*(.*)@.*/)
-    if (m) return m[1]
-    return email
-}
 
 class LunchtimePlayer {
     playersForGame(key) {
-        return data.participants.filter(p => p.gameKeys.includes(key)).map(p => NameFromEmailAddress(p.address))
+        return data.participants.filter(p => p.gameKeys.includes(key)).map(p => p.address.name)
     }
     get isValid() {
         return this.isValidName && this.isValidEmail
@@ -24,16 +19,16 @@ class LunchtimePlayer {
         return name.trim().length > 0
     }
     get isValidEmail() {
-        return email.includes("@") && email.includes(".")
+        return EmailAddress.isValidAddress(email)
     }
     get currentParticipant() {
         if (!this.isValid) return null
-        let p = data.participants.find(p => p.address.includes(email))
+        let p = data.participants.find(p => p.address.address == email)
         if (!p) {
             p = { gameKeys: [] }
             data.participants.push(p)
         }
-        p.address = `${name} <${email}>`
+        p.address = EmailAddress.fromNameAndAddress(name, email)
         return p
     }
     selectedByCurrentPlayer(key) {
@@ -83,6 +78,8 @@ class LunchtimePlayer {
 
     view() {
         return [
+            m("h2", "Sign up for this week's ", m("span.green", "Lunchtime Game"), " (week of ", data.weekOf, ")"),
+            m(".info", "Give us your name and e-mail address.  You'll only need to do this once per device - we'll remember it for you going forward."),
             m("input#name.full-width", {
                 placeholder: "Name",
                 type: "text",
@@ -94,7 +91,7 @@ class LunchtimePlayer {
                     window.localStorage.setItem("name", name)
                 }
             }),
-            this.isValidName ? null : m("div.invalid-name", "Please enter your name"),
+            this.isValidName ? null : m(".validation-error", "Please enter your name"),
             m("input#email.full-width", {
                 placeholder: "E-mail Address",
                 type: "email",
@@ -106,7 +103,9 @@ class LunchtimePlayer {
                     window.localStorage.setItem("email", email)
                 }
             }),
-            this.isValidEmail ? null : m("div.invalid-email", "Please enter a valid e-mail address"),
+            this.isValidEmail ? null : m(".validation-error", "Please enter a valid e-mail address"),
+            this.isValid ? m(".info", "Now, pick the games you can make then hit ", m("span.green.bold", "submit"), " down below.") : null,
+
             m("table.games",
                 m("tr", m("th.date", { colspan: 4 }, data.games["A"].date)),
                 m("tr", ["A", "B", "C", "D"].map(key => this.dayCell(key))),
@@ -117,8 +116,8 @@ class LunchtimePlayer {
                 m("tr", m("th.date", { colspan: 4 }, data.games["M"].date)),
                 m("tr", ["M", "N", "O", "P"].map(key => this.dayCell(key))),
             ),
-            this.successMessage ? m(".message.success.full-width", this.successMessage) : null,
-            this.failureMessage ? m(".message.failure.full-width", this.failureMessage) : null,
+            this.successMessage ? m(".message.set-games.success.full-width", this.successMessage) : null,
+            this.failureMessage ? m(".message.set-games.failure.full-width", this.failureMessage) : null,
             m("button.submit.full-width", {
                 disabled: !this.isValid,
                 onclick: () => this.submit(),
@@ -127,4 +126,4 @@ class LunchtimePlayer {
     }
 }
 
-m.mount(document.querySelector("#form"), LunchtimePlayer)
+m.mount(document.querySelector("#content"), LunchtimePlayer)

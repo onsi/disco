@@ -36,6 +36,7 @@ const day = 24 * time.Hour
 const RETRY_DELAY = 5 * time.Minute
 
 const KEY = "lunchtime-disco"
+const PARTICIPANTS_KEY = "lunchtime-participants"
 
 type LunchtimeDiscoState string
 
@@ -110,7 +111,8 @@ func (s LunchtimeDiscoSnapshot) dup() LunchtimeDiscoSnapshot {
 
 type LunchtimeDisco struct {
 	LunchtimeDiscoSnapshot
-	w io.Writer
+	HistoricalParticipants HistoricalParticipants
+	w                      io.Writer
 
 	alarmClock clock.AlarmClockInt
 	outbox     mail.OutboxInt
@@ -126,7 +128,8 @@ type LunchtimeDisco struct {
 
 type TemplateData struct {
 	LunchtimeDiscoSnapshot
-	NextEvent string
+	HistoricalParticipants HistoricalParticipants
+	NextEvent              string
 
 	GUID               string
 	BossGUID           string
@@ -170,7 +173,7 @@ func (e TemplateData) BossURL() string {
 func (e TemplateData) JSONForPlayer() string {
 	games := map[string]map[string]any{}
 	for _, game := range e.Games {
-		games[game.Key] = map[string]any{
+		games[game.Key] = map[string]any{ //TODO - mirror boss
 			"key":      game.Key,
 			"date":     game.GameDate(),
 			"time":     game.GameTime(),
@@ -180,6 +183,7 @@ func (e TemplateData) JSONForPlayer() string {
 
 	out, _ := json.Marshal(map[string]any{
 		"guid":          e.GUID,
+		"weekOf":        e.WeekOf,
 		"participants":  e.Participants,
 		"games":         games,
 		"gameOnGameKey": e.GameOnGameKey,
@@ -188,20 +192,26 @@ func (e TemplateData) JSONForPlayer() string {
 }
 
 func (e TemplateData) JSONForBoss() string {
-	games := map[string]map[string]any{}
+	games := []map[string]any{}
 	for _, game := range e.Games {
-		games[game.Key] = map[string]any{
+		games = append(games, map[string]any{
+			"key":      game.Key,
+			"day":      game.GameDay(),
 			"date":     game.GameDate(),
 			"time":     game.GameTime(),
 			"forecast": game.Forecast,
-		}
+		})
 	}
 
 	out, _ := json.Marshal(map[string]any{
-		"guid":          e.GUID,
-		"participants":  e.Participants,
-		"games":         games,
-		"gameOnGameKey": e.GameOnGameKey,
+		"state":                  e.State,
+		"bossGuid":               e.BossGUID,
+		"weekOf":                 e.WeekOf,
+		"historicalParticipants": e.HistoricalParticipants,
+		"participants":           e.Participants,
+		"games":                  games,
+		"gameOnGameKey":          e.GameOnGameKey,
+		"gameOnAdjustedTime":     e.GameOnAdjustedTime,
 	})
 	return string(out)
 }
@@ -253,9 +263,30 @@ func NewLunchtimeDisco(config config.Config, w io.Writer, alarmClock clock.Alarm
 		}
 	}
 
+	participantsMessage := ""
+	historicalParticipants, pErr := db.FetchObject(PARTICIPANTS_KEY)
+	if pErr == s3db.ErrObjectNotFound {
+		participantsMessage = "No historical participants found.  Starting from scratch..."
+		lunchtimeDisco.logi(0, "{{yellow}}%s{{/}}", participantsMessage)
+		pErr = nil
+	} else if pErr != nil {
+		participantsMessage = fmt.Sprintf("FAILED TO LOAD HISTORICAL PARTICIPANTS: %s", err.Error())
+		lunchtimeDisco.logi(0, "{{red}}%s{{/}}", participantsMessage)
+	} else {
+		lunchtimeDisco.logi(0, "{{green}}Loading historical participants...{{/}}")
+		pErr = json.Unmarshal(historicalParticipants, &(lunchtimeDisco.HistoricalParticipants))
+		if pErr != nil {
+			participantsMessage = fmt.Sprintf("FAILED TO UNMARSHAL HISTORICAL PARTICIPANTS: %s", err.Error())
+			lunchtimeDisco.logi(0, "{{red}}%s{{/}}", participantsMessage)
+		} else {
+			participantsMessage = "Historical participants loaded."
+			lunchtimeDisco.logi(0, "{{green}}%s{{/}}", participantsMessage)
+		}
+	}
+
 	if err != nil {
 		outbox.SendEmail(lunchtimeDisco.emailForBoss("startup_error", TemplateData{
-			Error: fmt.Errorf(startupMessage),
+			Error: fmt.Errorf(startupMessage + "\n" + participantsMessage),
 		}))
 		return nil, err
 	}
@@ -325,11 +356,12 @@ func (s *LunchtimeDisco) emailData() TemplateData {
 	return TemplateData{
 		GUID:                   s.GUID,
 		BossGUID:               s.BossGUID,
-		WeekOf:                 s.T.Add(-24 * 5).Format("1/2"),
+		WeekOf:                 s.T.Add(-day * 5).Format("1/2"),
 		LunchtimeDiscoSnapshot: s.LunchtimeDiscoSnapshot,
 		Games:                  games,
 		GameOnGame:             gameOnGame,
 		GameOnAdjustedTime:     s.GameOnAdjustedTime,
+		HistoricalParticipants: s.HistoricalParticipants,
 		GameOff:                s.State == StateNoInviteSent || s.State == StateNoGameSent,
 	}.WithNextEvent(s.NextEvent)
 }
@@ -391,6 +423,9 @@ func (s *LunchtimeDisco) dance() {
 			s.log("{{yellow}}received a command{{/}}")
 			s.handleCommand(command)
 			s.backup()
+			if command.CommandType == CommandSetGames {
+				s.storeHistoricalParticipants()
+			}
 		case c := <-s.templateC:
 			c <- s.emailData()
 		case c := <-s.snapshotC:
@@ -412,6 +447,21 @@ func (s *LunchtimeDisco) backup() {
 		return
 	}
 	s.log("{{green}}backed up{{/}}")
+}
+
+func (s *LunchtimeDisco) storeHistoricalParticipants() {
+	s.log("{{yellow}}storing historical participants...{{/}}")
+	data, err := json.Marshal(s.HistoricalParticipants)
+	if err != nil {
+		s.log("{{red}}failed to marshal historical participants: %s{{/}}", err.Error())
+		return
+	}
+	err = s.db.PutObject(PARTICIPANTS_KEY, data)
+	if err != nil {
+		s.log("{{red}}failed to store historical participants: %s{{/}}", err.Error())
+		return
+	}
+	s.log("{{green}}stored historical participants{{/}}")
 }
 
 func (s *LunchtimeDisco) processEmail(email mail.Email) {
@@ -496,6 +546,7 @@ func (s *LunchtimeDisco) handleCommand(command Command) {
 	case CommandSetGames:
 		s.logi(1, "{{green}}I've been asked to set games{{/}}")
 		s.Participants = s.Participants.AddOrUpdate(command.Participant)
+		s.HistoricalParticipants.AddOrUpdate(command.Participant.Address)
 		s.sendEmailWithNoTransition(s.emailForBoss("acknowledge_set_games", s.emailData().
 			WithMessage("%s: %s", command.Participant.Address, strings.Join(command.Participant.GameKeys, ","))))
 	}

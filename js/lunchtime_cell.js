@@ -1,25 +1,26 @@
 import m from "mithril"
 
+export function ClassForCount(count) {
+    if (count >= 5) {
+        return "quorum"
+    } else if (count >= 3) {
+        return "close"
+    } else if (count >= 1) {
+        return "barely"
+    }
+    return "zero"
+}
+
 export class LunchtimeCell {
     view(vnode) {
         let game = vnode.attrs.game
         let players = vnode.attrs.players
         let count = players.length
-
-        let klass = "zero"
-        if (count >= 5) {
-            klass = "quorum"
-        } else if (count >= 3) {
-            klass = "close"
-        } else if (count >= 1) {
-            klass = "barely"
-        }
-        klass += vnode.attrs.selected ? " selected" : ""
         let f = game.forecast
         return m("td.game",
             {
                 id: game.key,
-                class: klass,
+                class: ClassForCount(count) + (vnode.attrs.selected ? " selected" : ""),
                 onclick: vnode.attrs.onclick,
             },
             m("div.time", game.time),

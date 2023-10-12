@@ -101,6 +101,10 @@ func (g Game) FullStartTime() string {
 func (g Game) GameDate() string {
 	return g.StartTime.Format("Monday 1/2")
 }
+func (g Game) GameDay() string {
+	return g.StartTime.Format("Mon")
+}
+
 func (g Game) GameTime() string {
 	return g.StartTime.Format("3PM")
 }

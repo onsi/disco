@@ -1,0 +1,156 @@
+@import url("./disco.css");
+table.games {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 600px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+table.games th.date {
+    font-size: 1.3em;
+    padding: 10px 0;
+    background-color: #fafafa;
+    border-top: solid 5px #fff;
+}
+table.games td.game {
+    text-align: center;
+    border-radius: 10px;
+    cursor: pointer;
+    border: solid 6px #fff;
+    padding-bottom: 5px;
+    vertical-align: top;
+}
+table.games td.game.selected {
+    border: solid 6px #000;
+}
+.zero {
+    background-color: #f5f5f5;
+}
+.quorum {
+    background-color: #c6f7c6;
+}
+.close {
+    background-color: #f0f7c6;
+}
+.barely {
+    background-color: #eee;
+}
+table.games .time {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-top: 5px;
+}
+table.games .count {
+    font-size: 1.5em;
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    padding: 5px;
+    margin: 5px auto 5px auto;
+    width: 50px;
+}
+table.games .players {
+    font-size: 0.8em;
+    color: #888;
+}
+table.games .forecast {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    gap: 2px;
+    justify-content: center;
+    margin-bottom: -4px;
+}
+table.games .forecast .emoji {
+    font-size: 2em;
+}
+table.games .forecast .text {
+    font-size: 1.1em;
+}
+table.games .forecast-details {
+    font-size: 0.7em;
+}
+.invalid {
+    border: 2px solid #f00 !important;
+    background-color: #fee;
+}
+.info {
+    padding: 0 5px;
+    margin: 5px 0;
+}
+.validation-error {
+    padding: 0 10px;
+}
+input#name, input#email, input#participant-address {
+    margin: 10px 0;
+}
+.message {
+    padding: 20px;
+    margin: 10px 0;
+    border-radius: 10px;
+}
+.message.set-games {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 600px;
+}
+.message.failure {
+    background-color: var(--red);
+    color: white;
+}
+.message.success {
+    background-color: var(--green);
+    color: white;
+}
+.submit {
+    display: block;
+    margin: 5px auto;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 600px;
+}
+/*boss page*/
+.button-row {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 5px;
+    margin: 10px 0;
+}
+.game-option {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.game-option.selected {
+    border: solid 5px #000;
+}
+.game-option .day {
+    font-size: 0.9em;
+}
+.game-option .time {
+    font-size: 0.9em;
+    font-weight: bold;
+}
+.game-option .count {
+    font-size: 1.5em;
+    padding: 10px;
+}
+button.red {
+    background-color: var(--red);
+}
+button.blue {
+    background-color: var(--blue);
+}
+button.dim {
+    opacity: 0.5;
+}

@@ -99,19 +99,34 @@ func (s *Server) Start() error {
 
 		// some fake data just so we can better inspect the web page
 		blob, _ = json.Marshal(lunchtimedisco.LunchtimeDiscoSnapshot{
-			GUID:  "dev",
-			State: lunchtimedisco.StatePending,
+			BossGUID: "boss",
+			GUID:     "dev",
+			State:    lunchtimedisco.StatePending,
 			Participants: lunchtimedisco.LunchtimeParticipants{
 				{Address: "Onsi Fakhouri <onsijoe@gmail.com>", GameKeys: []string{"A", "E", "F", "G", "I", "L", "M", "N"}},
 				{Address: "Jane Player <jane@example.com>", GameKeys: []string{"A"}},
 				{Address: "Josh Player <josh@example.com>", GameKeys: []string{"A", "B", "C"}},
 				{Address: "Nope Player <nope@example.com>", GameKeys: []string{"A", "B", "D"}},
 				{Address: "Team Player <team@example.com>", GameKeys: []string{"A", "B", "C"}},
+				{Address: "Sally <sally@example.com>", GameKeys: []string{"E"}},
+				{Address: "jude@example.com", GameKeys: []string{"E"}},
 			},
 			NextEvent: time.Now().Add(24 * time.Hour * 10),
 			T:         clock.NextSaturdayAt10(time.Now()),
 		})
 		s.db.PutObject(lunchtimedisco.KEY, blob)
+
+		blob, _ = json.Marshal(lunchtimedisco.HistoricalParticipants{
+			"Alice Player <alice@example.com>",
+			"Eric Player <eric@example.com>",
+			"Onsi Fakhouri <onsijoe@gmail.com>",
+			"Jane Player <jane@example.com>",
+			"Josh Player <josh@example.com>",
+			"Nope Player <nope@example.com>",
+			"Sally <sally@example.com>",
+			"jude@example.com",
+		})
+		s.db.PutObject(lunchtimedisco.PARTICIPANTS_KEY, blob)
 
 		lunchtimeDisco, err = lunchtimedisco.NewLunchtimeDisco(
 			s.config,
