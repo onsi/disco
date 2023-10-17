@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"gopkg.in/gomail.v2"
 )
 
 const DEFAULT_TIMEOUT = 10 * time.Second
@@ -18,15 +20,29 @@ type OutboxInt interface {
 
 type Outbox struct {
 	forwardEmailKey string
+	gmailUser       string
+	gmailPassword   string
 }
 
-func NewOutbox(forwardEmailKey string) Outbox {
+func NewOutbox(forwardEmailKey, gmailUser, gmailPassword string) Outbox {
 	return Outbox{
 		forwardEmailKey: forwardEmailKey,
+		gmailUser:       gmailUser,
+		gmailPassword:   gmailPassword,
 	}
 }
 
 func (o Outbox) SendEmail(email Email) error {
+	if strings.Contains(email.From.String(), "@sedenverultimate.net") {
+		return o.sendViaForwardEmail(email)
+	} else if email.From.Equals(EmailAddress(o.gmailUser)) {
+		return o.sendViaGmail(email)
+	} else {
+		return fmt.Errorf("unknown e-mail address: %s", email.From)
+	}
+}
+
+func (o Outbox) sendViaForwardEmail(email Email) error {
 	form := url.Values{}
 	form.Add("from", email.From.String())
 	for _, to := range email.To {
@@ -68,4 +84,22 @@ func (o Outbox) SendEmail(email Email) error {
 		return fmt.Errorf("failed to send e-mail: %d - %s", resp.StatusCode, string(issue))
 	}
 	return nil
+}
+
+func (o Outbox) sendViaGmail(email Email) error {
+	d := gomail.NewDialer("smtp.gmail.com", 587, o.gmailUser, o.gmailPassword)
+	m := gomail.NewMessage()
+	m.SetHeader("From", email.From.String())
+	if (len(email.To)) > 0 {
+		m.SetHeader("To", email.To.Strings()...)
+	}
+	if (len(email.CC)) > 0 {
+		m.SetHeader("Cc", email.CC.Strings()...)
+	}
+	m.SetHeader("Subject", email.Subject)
+	m.SetBody("text/plain", email.Text)
+	if email.HTML != "" {
+		m.AddAlternative("text/html", email.HTML)
+	}
+	return d.DialAndSend(m)
 }

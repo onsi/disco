@@ -18,6 +18,14 @@ func (e EmailAddresses) String() string {
 	return strings.Join(addresses, ", ")
 }
 
+func (e EmailAddresses) Strings() []string {
+	out := []string{}
+	for _, address := range e {
+		out = append(out, address.String())
+	}
+	return out
+}
+
 type EmailAddress string
 
 func (e EmailAddress) String() string {

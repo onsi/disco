@@ -141,7 +141,7 @@ func (s *Server) Start() error {
 		if err != nil {
 			return err
 		}
-		s.outbox = mail.NewOutbox(s.config.ForwardEmailKey)
+		s.outbox = mail.NewOutbox(s.config.ForwardEmailKey, s.config.GmailUser, s.config.GmailPassword)
 		forecaster := weather.NewForecaster(s.db)
 
 		saturdayDisco, err = saturdaydisco.NewSaturdayDisco(

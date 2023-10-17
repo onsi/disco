@@ -13,9 +13,12 @@ type Config struct {
 	LunchtimeDiscoEmail mail.EmailAddress
 	LunchtimeDiscoList  mail.EmailAddress
 
-	Port                       string
-	Env                        string
-	ForwardEmailKey            string
+	Port            string
+	Env             string
+	ForwardEmailKey string
+	GmailUser       string
+	GmailPassword   string
+
 	IncomingSaturdayEmailGUID  string
 	IncomingLunchtimeEmailGUID string
 	OpenAIKey                  string
@@ -39,6 +42,8 @@ func LoadConfig() Config {
 		Port:                       os.Getenv("PORT"),
 		Env:                        os.Getenv("ENV"),
 		ForwardEmailKey:            os.Getenv("FORWARD_EMAIL_KEY"),
+		GmailUser:                  os.Getenv("GMAIL_USER"),
+		GmailPassword:              os.Getenv("GMAIL_PASSWORD"),
 		IncomingSaturdayEmailGUID:  os.Getenv("INCOMING_SATURDAY_EMAIL_GUID"),
 		IncomingLunchtimeEmailGUID: os.Getenv("INCOMING_LUNCHTIME_EMAIL_GUID"),
 		OpenAIKey:                  os.Getenv("OPEN_AI_KEY"),
