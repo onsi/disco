@@ -1,9 +1,7 @@
 /* reminder */
 
-{{define "reminder_subject"}}Reminder: GAME ON TODAY! {{.GameOnGame.FullStartTime}}{{end}}
+{{define "reminder_subject"}}Reminder: GAME ON TODAY! {{.GameOnGameFullStartTime}}{{end}}
 
 {{define "reminder_body"}}Join us, we're playing today!
 
-{{template "public_status" .}}
-
-{{template "signature" .}}{{end}}
+{{template "public_status" .}}{{end}}

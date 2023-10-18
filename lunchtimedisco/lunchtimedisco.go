@@ -58,7 +58,6 @@ type CommandType string
 const (
 	CommandCaptureThreadEmail CommandType = "capture_thread_email"
 
-	CommandAdminDebug    CommandType = "admin_debug"
 	CommandAdminBadger   CommandType = "admin_badger"
 	CommandAdminGameOn   CommandType = "admin_game_on"
 	CommandAdminNoGame   CommandType = "admin_no_game"
@@ -141,6 +140,14 @@ type TemplateData struct {
 
 	Message string
 	Error   error
+}
+
+func (e TemplateData) GameOnGameFullStartTime() string {
+	if e.GameOnAdjustedTime != "" {
+		return e.GameOnGame.FullStartTimeWithAdjustedTime(e.GameOnAdjustedTime)
+	} else {
+		return e.GameOnGame.FullStartTime()
+	}
 }
 
 func (e TemplateData) WithNextEvent(t time.Time) TemplateData {
@@ -389,13 +396,13 @@ func (s *LunchtimeDisco) emailForBoss(name string, data TemplateData) mail.Email
 func (s *LunchtimeDisco) emailForList(name string, data TemplateData) mail.Email {
 	if s.ThreadEmail.MessageID == "" {
 		return mail.E().
-			WithFrom(s.config.LunchtimeDiscoEmail).
+			WithFrom(s.config.BossEmail).
 			WithTo(s.config.LunchtimeDiscoList).
 			WithSubject(s.emailSubject(name, data)).
 			WithBody(mail.Markdown(s.emailBody(name, data)))
 	} else {
 		email := mail.E().
-			WithFrom(s.config.LunchtimeDiscoEmail).
+			WithFrom(s.config.BossEmail).
 			WithTo(s.config.LunchtimeDiscoList).
 			WithBody(mail.Markdown(s.emailBody(name, data)))
 		if strings.HasPrefix(s.ThreadEmail.Subject, "Re: ") {
@@ -510,26 +517,21 @@ func (s *LunchtimeDisco) handleCommand(command Command) {
 	case CommandCaptureThreadEmail:
 		s.logi(1, "{{green}}capturing thread email{{/}}")
 		s.ThreadEmail = command.Email
-	case CommandAdminDebug:
-		s.logi(1, "{{green}}boss is asking for debug info{{/}}")
-		s.sendEmailWithNoTransition(command.Email.Reply(s.config.LunchtimeDiscoEmail,
-			mail.Markdown(s.emailBody("boss_debug",
-				s.emailData().
-					WithMessage("Here's what a **multiline message** looks like.\n\n_Woohoo!_").
-					WithError(fmt.Errorf("And this is what an error looks like!"))),
-			)))
 	case CommandAdminBadger:
 		s.logi(1, "{{red}}boss has asked me to badger{{/}}")
 		s.sendEmailWithNoTransition((s.emailForList("badger",
 			s.emailData().WithMessage(command.AdditionalContent))))
 	case CommandAdminGameOn:
 		s.logi(1, "{{green}}boss has asked me to send game-on{{/}}")
+		s.GameOnGameKey = command.GameOnGameKey
+		s.GameOnAdjustedTime = command.GameOnAdjustedTime
 		s.sendEmail(s.emailForList("game_on",
 			s.emailData().WithMessage(command.AdditionalContent)),
 			StateGameOnSent, s.replyWithFailureErrorHandler)
-		s.GameOnGameKey = command.GameOnGameKey
 	case CommandAdminNoGame:
 		s.logi(1, "{{red}}boss has asked me to send no-game{{/}}")
+		s.GameOnGameKey = ""
+		s.GameOnAdjustedTime = ""
 		s.sendEmail(s.emailForList("no_game",
 			s.emailData().WithMessage(command.AdditionalContent)),
 			StateNoGameSent, s.replyWithFailureErrorHandler)

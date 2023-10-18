@@ -1,14 +1,12 @@
 /* Game On */
 
-{{define "game_on_subject"}}GAME ON! {{.GameOnGame.FullStartTime}}{{end}}
+{{define "game_on_subject"}}GAME ON! {{.GameOnGameFullStartTime}}{{end}}
 
 {{define "game_on_body"}}{{- if .Message}}{{.Message}}
 
-{{end}}We have quorum!  **GAME ON** for **{{.GameOnGame.FullStartTime}}**.
+{{end}}We have quorum!  **GAME ON** for **{{.GameOnGameFullStartTime}}**.
 
-{{template "public_status" .}}
-
-{{template "signature" .}}{{end}}
+{{template "public_status" .}}{{end}}
 
 /* No Game */
 
@@ -18,6 +16,4 @@
 
 {{end}}**No lunchtime game this week**.  We'll try again next week!
 
-Reminder that we also play on Saturdays. Visit [sedenverultimate.net](https://www.sedenverultimate.net) to sign up for the Saturday mailing list.
-
-{{template "signature" .}}{{end}}
+Reminder that we also play on Saturdays. Visit [sedenverultimate.net](https://www.sedenverultimate.net) to sign up for the Saturday mailing list.{{end}}

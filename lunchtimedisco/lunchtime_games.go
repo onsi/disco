@@ -98,6 +98,10 @@ func (g Game) FullStartTime() string {
 	return g.StartTime.Format("Monday 1/2 - 3:04pm")
 }
 
+func (g Game) FullStartTimeWithAdjustedTime(adjustedTime string) string {
+	return g.StartTime.Format("Monday 1/2") + " - " + adjustedTime
+}
+
 func (g Game) GameDate() string {
 	return g.StartTime.Format("Monday 1/2")
 }
@@ -126,7 +130,7 @@ func (g Game) PublicParticipants() string {
 	return out.String()
 }
 
-func (g Game) TableCell() string {
+func (g Game) TableCell(pickerURL string) string {
 	out := &strings.Builder{}
 	color := "#f5f5f5"
 	if g.Count() >= 5 {
@@ -139,10 +143,10 @@ func (g Game) TableCell() string {
 	out.WriteString(`<td align="center" valign="top">`)
 	fmt.Fprintf(out, `<table border="0" cellpadding="10" cellspacing="0" width="100%%" height="100%%" style="background-color:%s;">`, color)
 	out.WriteString(`<tr>`)
-	fmt.Fprintf(out, `<td style="font-size:1.2em;" align="center" valign="top">%s</td>`, g.GameTime())
+	fmt.Fprintf(out, `<td style="font-size:1.2em;" align="center" valign="top"><a style="text-decoration:none;" href="%s">%s</a></td>`, pickerURL, g.GameTime())
 	out.WriteString(`</tr>`)
 	out.WriteString(`<tr>`)
-	fmt.Fprintf(out, `<td style="font-size:1.5em;font-weight:bold;" align="center" valign="top">%d</td>`, g.Count())
+	fmt.Fprintf(out, `<td style="font-size:1.5em;font-weight:bold;" align="center" valign="top"><a style="text-decoration:none;" href="%s">%d</a></td>`, pickerURL, g.Count())
 	out.WriteString(`</tr>`)
 	if g.Count() > 0 {
 		out.WriteString(`<tr>`)

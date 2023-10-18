@@ -1,139 +1,68 @@
 /* boss monitor e-mail */
-{{define "boss_monitor_body"}}Hey boss,
+{{define "monitor_subject"}}Lunchtime Monitor: {{.WeekOf}}{{end}}
+
+{{define "monitor_body"}}Hey boss,
 
 Here's the latest on the lunchtime game.
 
-{{template "boss_status" .}}
+{{template "boss_status" .}}{{end}}
 
-{{template "signature" .}}{{end}}
+{{define "boss_status"}}Dashboard: {{.BossURL}}
 
-/* boss_status the email - a full report with more detail */
-{{define "boss_status_body"}}Hey boss,
-
-Here's the status report.
-
-{{template "boss_status" .}}
-
-{{template "signature" .}}{{end}}
-
-{{define "boss_status"}}Current State: {{.State}}
+Current State: {{.State}}
 Next Event on: {{.NextEvent}}
-Game On sent: {{if not .GameOnGame.IsZero}}For {{.GameOnGame.String}}{{else}}No{{end}}
+Game On sent: {{if not .GameOnGame.IsZero}}For {{.GameOnGameFullStartTime}}{{else}}No{{end}}
 Game Off sent: {{.GameOff}}
 Signup URL: {{.PickerURL}}
 
 Games:{{range $idx, $game := .Games}}
 + {{$game.String}}{{- range $idx, $player := $game.Players}}
   - {{$player.String}}{{- end}}{{- end}}
-
-
-
-Commands:
-/status sends a status e-mail
-
-/invite sends the invitation e-mail (anything below the command is included)
-/no-invite send the no-invitation this week e-mail (anything below the command is included)
-/badger sends the badger e-mail (anything below the command is included)
-/game-on <GAME> sets the winning game to <GAME> and send the game-on email (anything below the command is included)
-
-/no-game sends the no-game e-mail (anything below the command is included)
-
-/debug sends a copy of the user-facing templates
-/abort stops the scheduler but continues to track players
-/RESET-RESET-RESET resets the system to pending and drops all the data.  Beware!{{end}}
-
-
-/* public_status_body */
-{{define "public_status_body"}}Hey there,
-
-{{if not .GameOnGame.IsZero}}**GAME ON!** {{.GameOnGame.FullStartTime}}{{ else if .GameOff}}**NO GAME** {{.GameDate}}{{ else }}The game hasn't been called yet.{{end}}
-
-{{template "public_status" .}}
-
-{{template "signature" .}}{{end}}
-
-/* public_status */
+{{end}}
 
 {{define "public_status"}}{{if .GameOnGame.IsZero}}<table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%">
 <tr>
     <th colspan="4">{{.Games.A.GameDate}}</th>
 </tr>
 <tr>
-    {{.Games.A.TableCell}}
-    {{.Games.B.TableCell}}
-    {{.Games.C.TableCell}}
-    {{.Games.D.TableCell}}
+    {{.Games.A.TableCell .PickerURL}}
+    {{.Games.B.TableCell .PickerURL}}
+    {{.Games.C.TableCell .PickerURL}}
+    {{.Games.D.TableCell .PickerURL}}
 </tr>
 <tr>
     <th colspan="4">{{.Games.E.GameDate}}</th>
 </tr>
 <tr>
-    {{.Games.E.TableCell}}
-    {{.Games.F.TableCell}}
-    {{.Games.G.TableCell}}
-    {{.Games.H.TableCell}}
+    {{.Games.E.TableCell .PickerURL}}
+    {{.Games.F.TableCell .PickerURL}}
+    {{.Games.G.TableCell .PickerURL}}
+    {{.Games.H.TableCell .PickerURL}}
 </tr>
 <tr>
     <th colspan="4">{{.Games.I.GameDate}}</th>
 </tr>
 <tr>
-    {{.Games.I.TableCell}}
-    {{.Games.J.TableCell}}
-    {{.Games.K.TableCell}}
-    {{.Games.L.TableCell}}
+    {{.Games.I.TableCell .PickerURL}}
+    {{.Games.J.TableCell .PickerURL}}
+    {{.Games.K.TableCell .PickerURL}}
+    {{.Games.L.TableCell .PickerURL}}
 </tr>
     <th>{{.Games.M.GameDate}}</th>
 <tr>
-    {{.Games.M.TableCell}}
-    {{.Games.N.TableCell}}
-    {{.Games.O.TableCell}}
-    {{.Games.P.TableCell}}
+    {{.Games.M.TableCell .PickerURL}}
+    {{.Games.N.TableCell .PickerURL}}
+    {{.Games.O.TableCell .PickerURL}}
+    {{.Games.P.TableCell .PickerURL}}
 </tr>
 </table>
 
-[Click here to sign up]({{.PickerURL}}) or reply with the options you can make (e.g. "I can make A,B, and E", or "I can do Tuesday", or "All day Wednesday except for 1-2 works", etc.) - we'll take it from there!
+**[Click here to sign up]({{.PickerURL}})** or reply with the options you can make.
 
 {{- else}}**Where**: [James Bible Park](https://maps.app.goo.gl/P1vm2nkZdYLGZbxb9)<br>
-**When**: {{.GameOnGame.FullStartTime}}<br>
+**When**: {{.GameOnGameFullStartTime}}<br>
 **Who**: {{.GameOnGame.PublicParticipants}}<br>
-**Forecast**: {{.GameOnGame.Forecast}}{{end}}{{end}}
+**Forecast**: {{.GameOnGame.Forecast}}
 
-{{define "boss_debug_body"}}Hey boss,
+**[Click here to sign up]({{.PickerURL}})**{{end}}{{end}}
 
-This is an e-mail for debugging user-facing templates.
-
-# Public Status
-
-{{template "public_status_body" .}}
-
----
-
-# Public Invitation
-
-{{template "invitation_body" .}}
-
----
-
-# Public No Invitation
-
-{{template "no_invitation_body" .}}
-
----
-
-# Game On
-
-{{template "game_on_body" .}}
-
----
-
-# No Game
-
-{{template "no_game_body" .}}
-
----
-
-# Badger
-
-{{template "badger_body" .}}
-
----{{end}}

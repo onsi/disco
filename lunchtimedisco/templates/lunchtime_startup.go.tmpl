@@ -3,9 +3,7 @@
 {{define "startup_error_body"}}Hey Boss,
 
 Something went wrong.  Please take a look!
-{{.Error}}
-
-{{template "signature" .}}{{end}}
+{{.Error}}{{end}}
 
 {{define "startup_subject"}}LunchtimeDisco Joined the Dance Floor{{end}}
 
@@ -14,6 +12,4 @@ Something went wrong.  Please take a look!
 I'm up and running now:
 {{.Message}}
 
-{{template "boss_status" .}}
-
-{{template "signature" .}}{{end}}
+{{template "boss_status" .}}{{end}}

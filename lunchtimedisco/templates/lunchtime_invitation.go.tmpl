@@ -4,13 +4,11 @@
 
 {{define "invitation_body"}}{{- if .Message}}{{.Message}}
 
-{{end}}Here are the options for this week:
+{{end}}[Here are the options for this week]({{.PickerURL}}):
 
 {{template "public_status" .}}
 
-Reminder that we also play on Saturdays. Visit [sedenverultimate.net](https://www.sedenverultimate.net) to sign up for the Saturday mailing list.
-
-{{template "signature" .}}{{end}}
+Reminder that we also play on Saturdays. Visit [sedenverultimate.net](https://www.sedenverultimate.net) to sign up for the Saturday mailing list.{{end}}
 
 
 /* No Invitation */
@@ -21,6 +19,4 @@ Reminder that we also play on Saturdays. Visit [sedenverultimate.net](https://ww
 
 {{end}}No lunchtime game this week.  We'll try again next week!
 
-Reminder that we also play on Saturdays. Visit [sedenverultimate.net](https://www.sedenverultimate.net) to sign up for the Saturday mailing list.
-
-{{template "signature" .}}{{end}}
+Reminder that we also play on Saturdays. Visit [sedenverultimate.net](https://www.sedenverultimate.net) to sign up for the Saturday mailing list.{{end}}
