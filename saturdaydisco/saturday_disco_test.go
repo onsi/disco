@@ -77,7 +77,7 @@ var _ = Describe("SaturdayDisco", func() {
 		playerEmail = mail.EmailAddress("player@example.com")
 
 		now = time.Date(2023, time.September, 24, 0, 0, 0, 0, clockpkg.Timezone) // a Sunday
-		gameDate = "9/30/23"                                                     //the following Saturday
+		gameDate = "9/30"                                                        //the following Saturday
 		clock.SetTime(now)
 
 		isStartup, _ := CurrentSpecReport().MatchesLabelFilter("startup")
