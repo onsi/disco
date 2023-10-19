@@ -49,6 +49,11 @@
         grid-area: content;
         padding: 0 10px 10px 10px;
     }
+    .map {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 a {
     color: auto;

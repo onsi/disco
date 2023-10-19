@@ -33,7 +33,7 @@ class LunchtimeBoss {
     }
 
     get showNoGame() {
-        return data.state == "invite_sent" || data.state == "game_on_sent" || data.state == "no_invite_sent" || data.state == "reminer_sent"
+        return data.state == "invite_sent" || data.state == "game_on_sent" || data.state == "no_invite_sent" || data.state == "reminder_sent"
     }
 
 
