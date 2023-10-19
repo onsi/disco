@@ -79,6 +79,7 @@ class LunchtimePlayer {
     view() {
         return [
             m("h2", "Sign up for this week's ", m("span.green", "Lunchtime Game"), " (week of ", data.weekOf, ")"),
+            data.gameOnGameKey && m("h3", "Game On! ", m("span.green", data.gameOnGameFullStartTime)),
             m(".info", "Give us your name and e-mail address.  You'll only need to do this once per device - we'll remember it for you going forward."),
             m("input#name.full-width", {
                 placeholder: "Name",
@@ -116,6 +117,18 @@ class LunchtimePlayer {
                 m("tr", m("th.date", { colspan: 4 }, data.games["M"].date)),
                 m("tr", ["M", "N", "O", "P"].map(key => this.dayCell(key))),
             ),
+            m("textarea#comments", {
+                placeholder: "Comments (optional)",
+                rows: 3,
+                maxLength: 1000,
+                disabled: !this.isValid,
+                value: this.isValid ? this.currentParticipant.comments : "",
+                onchange: (e) => {
+                    if (this.isValid) {
+                        this.currentParticipant.comments = e.target.value
+                    }
+                }
+            }),
             this.successMessage ? m(".message.set-games.success.full-width", this.successMessage) : null,
             this.failureMessage ? m(".message.set-games.failure.full-width", this.failureMessage) : null,
             m("button.submit.full-width", {

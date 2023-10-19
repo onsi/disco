@@ -89,6 +89,9 @@
     font-weight: bold;
     margin-bottom: 10px;
 }
+.status.lunchtime .call {
+    margin-bottom: 20px;
+}
 .status .call {
     margin-top: 10px;
     display: flex;
@@ -104,6 +107,14 @@
 }
 .status .call .text {
     font-size: 2em;
+    font-weight: bold;
+}
+.status .call .game-day {
+    font-size: 1.6em;
+    font-weight: bold;
+}
+.status .call .game-time {
+    font-size: 3em;
     font-weight: bold;
 }
 .status.pending .call .text {

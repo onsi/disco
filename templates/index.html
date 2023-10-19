@@ -18,8 +18,8 @@
         <h2>Are we playing this week?</h2>
         <div class="status-container">
             <div
-                class="status {{if .Saturday.GameOn}}game-on{{else if .Saturday.GameOff}}game-off{{else}}pending{{end}}">
-                <div class="heading">Saturday</div>
+                class="status saturday {{if .Saturday.GameOn}}game-on{{else if .Saturday.GameOff}}game-off{{else}}pending{{end}}">
+                <div class="heading">Saturday {{.Saturday.GameDate}}</div>
                 <div class="call">
                     {{if .Saturday.GameOn}}
                     <div class="emoji">🎉</div>
@@ -27,6 +27,7 @@
                     {{else if .Saturday.GameOff}}
                     <div class="emoji">😕</div>
                     <div class="text">No Game...</div>
+                    <div class="subtext">We'll try again next week</div>
                     {{else}}
                     <div class="emoji">⏰</div>
                     <div class="text">Game hasn't been called yet</div>
@@ -60,19 +61,59 @@
                 {{end}}
                 {{end}}
             </div>
-            <div class="status coming-soon">
+            <div
+                class="status lunchtime {{if not .Lunchtime.GameOnGame.IsZero}}game-on{{else if .Lunchtime.GameOff}}game-off{{else}}pending{{end}}">
                 <div class="heading">Lunchtime</div>
                 <div class="call">
-                    <div class="emoji">🚧</div>
-                    <div class="text">Coming Soon...</div>
+                    {{if not .Lunchtime.GameOnGame.IsZero}}
+                    <div class="emoji">🎉</div>
+                    <div class="text">Game On!</div>
+                    <div class="game-day">{{.Lunchtime.GameOnGame.GameDate}}</div>
+                    <div class="game-time">{{.Lunchtime.GameOnGameStartTime}}</div>
+                    {{else if .Lunchtime.GameOff}}
+                    <div class="emoji">😕</div>
+                    <div class="text">No Game...</div>
+                    <div class="subtext">We'll try again next week</div>
+                    {{else}}
+                    <div class="emoji">⏰</div>
+                    <div class="text">Game hasn't been called yet</div>
+                    {{end}}
                 </div>
+                {{if not .Lunchtime.GameOnGame.IsZero}}
+                <div class="count">
+                    <div class="number">{{.Lunchtime.GameOnGame.Count}}</div>
+                    <div class="text">Player{{if not (eq .Lunchtime.GameOnGame.Count 1)}}s{{end}}</div>
+                </div>
+                {{if not .Lunchtime.GameOnGame.Forecast.IsZero}}
+                <div class="short-forecast">
+                    <div class="emoji">{{.Lunchtime.GameOnGame.Forecast.ShortForecastEmoji}}</div>
+                    <div class="text">{{.Lunchtime.GameOnGame.Forecast.ShortForecast}}</div>
+                </div>
+                <div class="forecast-details">
+                    <div class="temperature {{.Lunchtime.GameOnGame.Forecast.TemperatureEmoji}}">
+                        <div class="emoji">{{.Lunchtime.GameOnGame.Forecast.TemperatureEmoji}}</div>
+                        <div class="text">
+                            {{.Lunchtime.GameOnGame.Forecast.Temperature}}°{{.Lunchtime.GameOnGame.Forecast.TemperatureUnit}}
+                        </div>
+                    </div>
+                    <div class="precipitation {{.Lunchtime.GameOnGame.Forecast.PrecipitationClassName}}">
+                        <div class="emoji">💧</div>
+                        <div class="text">{{.Lunchtime.GameOnGame.Forecast.ProbabilityOfPrecipitation}}%</div>
+                    </div>
+                    <div class="wind">
+                        <div class="emoji">💨</div>
+                        <div class="text">{{.Lunchtime.GameOnGame.Forecast.WindSpeed}}</div>
+                    </div>
+                </div>
+                {{end}}
+                {{end}}
             </div>
         </div>
-
         <h2>All are Welcome</h2>
         <p>
             We're just a bunch of folks who get together to play ultimate frisbee in the Denver area.
-            <strong>All skill levels are welcome</strong> - we even have some kids who join our Saturday game. Cleats
+            <strong>All skill levels are welcome</strong> - we even have some kids who join our Saturday game.
+            Cleats
             are helpful but nor required - we play for fun and fitness!
         </p>
 
@@ -87,7 +128,8 @@
             </div>
             <div class="where">
                 <p>
-                    We play at <a href='https://maps.google.com/?q=James+A.+Bible+Park'> James Bible Park in Southeast
+                    We play at <a href='https://maps.google.com/?q=James+A.+Bible+Park'> James Bible Park in
+                        Southeast
                         Denver</a>.
                 </p>
                 <iframe
@@ -97,8 +139,10 @@
             </div>
         </div>
         <h2>How do I join?</h2>
-        <p>Fill out this form to join our mailing lists - we have a Saturday mailing list and a lunchtime mailing list.
-            You can also just show up! Check up above to see if and when we're playing this week. Bring a red shirt and
+        <p>Fill out this form to join our mailing lists - we have a Saturday mailing list and a lunchtime mailing
+            list.
+            You can also just show up! Check up above to see if and when we're playing this week. Bring a red shirt
+            and
             a blue shirt if you have them.
         </p>
         <div class="subscribe form" id="subscribe">

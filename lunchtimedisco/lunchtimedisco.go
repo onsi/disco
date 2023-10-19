@@ -150,6 +150,14 @@ func (e TemplateData) GameOnGameFullStartTime() string {
 	}
 }
 
+func (e TemplateData) GameOnGameStartTime() string {
+	if e.GameOnAdjustedTime != "" {
+		return e.GameOnAdjustedTime
+	} else {
+		return e.GameOnGame.GameTime()
+	}
+}
+
 func (e TemplateData) WithNextEvent(t time.Time) TemplateData {
 	e.NextEvent = t.In(clock.Timezone).Format("Monday 1/2 3:04pm")
 	return e
@@ -189,11 +197,12 @@ func (e TemplateData) JSONForPlayer() string {
 	}
 
 	out, _ := json.Marshal(map[string]any{
-		"guid":          e.GUID,
-		"weekOf":        e.WeekOf,
-		"participants":  e.Participants,
-		"games":         games,
-		"gameOnGameKey": e.GameOnGameKey,
+		"guid":                    e.GUID,
+		"weekOf":                  e.WeekOf,
+		"participants":            e.Participants,
+		"games":                   games,
+		"gameOnGameKey":           e.GameOnGameKey,
+		"gameOnGameFullStartTime": e.GameOnGameFullStartTime(),
 	})
 	return string(out)
 }
@@ -211,14 +220,15 @@ func (e TemplateData) JSONForBoss() string {
 	}
 
 	out, _ := json.Marshal(map[string]any{
-		"state":                  e.State,
-		"bossGuid":               e.BossGUID,
-		"weekOf":                 e.WeekOf,
-		"historicalParticipants": e.HistoricalParticipants,
-		"participants":           e.Participants,
-		"games":                  games,
-		"gameOnGameKey":          e.GameOnGameKey,
-		"gameOnAdjustedTime":     e.GameOnAdjustedTime,
+		"state":                   e.State,
+		"bossGuid":                e.BossGUID,
+		"weekOf":                  e.WeekOf,
+		"historicalParticipants":  e.HistoricalParticipants,
+		"participants":            e.Participants,
+		"games":                   games,
+		"gameOnGameKey":           e.GameOnGameKey,
+		"gameOnAdjustedTime":      e.GameOnAdjustedTime,
+		"gameOnGameFullStartTime": e.GameOnGameFullStartTime(),
 	})
 	return string(out)
 }
@@ -473,7 +483,7 @@ func (s *LunchtimeDisco) storeHistoricalParticipants() {
 
 func (s *LunchtimeDisco) processEmail(email mail.Email) {
 	s.logi(0, "{{yellow}}Processing Email:{{/}}")
-	if email.From.Equals(s.config.SaturdayDiscoEmail) && email.IncludesRecipient(s.config.LunchtimeDiscoList) {
+	if email.From.Equals(s.config.BossEmail) && email.IncludesRecipient(s.config.LunchtimeDiscoList) {
 		s.logi(1, "{{green}}This is a list email - harvesting the thread id{{/}}")
 		s.commandC <- Command{
 			CommandType: CommandCaptureThreadEmail,
@@ -548,7 +558,7 @@ func (s *LunchtimeDisco) handleCommand(command Command) {
 	case CommandSetGames:
 		s.logi(1, "{{green}}I've been asked to set games{{/}}")
 		s.Participants = s.Participants.AddOrUpdate(command.Participant)
-		s.HistoricalParticipants.AddOrUpdate(command.Participant.Address)
+		s.HistoricalParticipants = s.HistoricalParticipants.AddOrUpdate(command.Participant.Address)
 		s.sendEmailWithNoTransition(s.emailForBoss("acknowledge_set_games", s.emailData().
 			WithMessage("%s: %s", command.Participant.Address, strings.Join(command.Participant.GameKeys, ","))))
 	}

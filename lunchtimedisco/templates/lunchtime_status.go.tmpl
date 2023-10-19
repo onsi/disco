@@ -20,7 +20,7 @@ Games:{{range $idx, $game := .Games}}
   - {{$player.String}}{{- end}}{{- end}}
 {{end}}
 
-{{define "public_status"}}{{if .GameOnGame.IsZero}}<table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%">
+{{define "public_status"}}{{if .GameOnGame.IsZero}}<table border="0" cellpadding="0" cellspacing="5px" height="100%" width="100%">
 <tr>
     <th colspan="4">{{.Games.A.GameDate}}</th>
 </tr>

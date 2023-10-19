@@ -95,11 +95,11 @@ func (g Game) Count() int {
 }
 
 func (g Game) FullStartTime() string {
-	return g.StartTime.Format("Monday 1/2 - 3:04pm")
+	return g.StartTime.Format("Monday 1/2 at 3:04pm")
 }
 
 func (g Game) FullStartTimeWithAdjustedTime(adjustedTime string) string {
-	return g.StartTime.Format("Monday 1/2") + " - " + adjustedTime
+	return g.StartTime.Format("Monday 1/2") + " at " + adjustedTime
 }
 
 func (g Game) GameDate() string {
@@ -148,26 +148,6 @@ func (g Game) TableCell(pickerURL string) string {
 	out.WriteString(`<tr>`)
 	fmt.Fprintf(out, `<td style="font-size:1.5em;font-weight:bold;" align="center" valign="top"><a style="text-decoration:none;" href="%s">%d</a></td>`, pickerURL, g.Count())
 	out.WriteString(`</tr>`)
-	if g.Count() > 0 {
-		out.WriteString(`<tr>`)
-		fmt.Fprintf(out, `<td style="font-size:0.9em;" align="center" valign="top">%s</td>`, g.PublicParticipants())
-		out.WriteString(`</tr>`)
-	}
-	if !g.Forecast.IsZero() {
-		out.WriteString(`<tr>`)
-		fmt.Fprintf(out, `<td style="font-size:1.5em;" align="center" valign="top">%s</td>`, g.Forecast.ShortForecastEmoji)
-		out.WriteString(`</tr>`)
-		out.WriteString(`<tr>`)
-		fmt.Fprintf(out, `<td style="font-size:1.1em;" align="center" valign="top">%dº%s</td>`, g.Forecast.Temperature, g.Forecast.TemperatureUnit)
-		out.WriteString(`</tr>`)
-		out.WriteString(`<tr>`)
-		fmt.Fprintf(out, `<td style="font-size:0.7em;" align="center" valign="top">💧%d%%</td>`, g.Forecast.ProbabilityOfPrecipitation)
-		out.WriteString(`</tr>`)
-		out.WriteString(`<tr>`)
-		fmt.Fprintf(out, `<td style="font-size:1.1em;" align="center" valign="top">💨 %s</td>`, g.Forecast.WindSpeed)
-		out.WriteString(`</tr>`)
-	}
-
 	out.WriteString("</table></td>")
 	return out.String()
 }

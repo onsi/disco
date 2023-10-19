@@ -9,6 +9,7 @@ import (
 type LunchtimeParticipant struct {
 	Address  mail.EmailAddress `json:"address"`
 	GameKeys []string          `json:"gameKeys"`
+	Comments string            `json:"comments"`
 }
 
 func (p LunchtimeParticipant) dup() LunchtimeParticipant {
@@ -16,6 +17,7 @@ func (p LunchtimeParticipant) dup() LunchtimeParticipant {
 	return LunchtimeParticipant{
 		Address:  p.Address,
 		GameKeys: append(gameKeys, p.GameKeys...),
+		Comments: p.Comments,
 	}
 }
 
@@ -40,7 +42,7 @@ func (p LunchtimeParticipants) GamesFor(address mail.EmailAddress) string {
 
 func (ps LunchtimeParticipants) AddOrUpdate(participant LunchtimeParticipant) LunchtimeParticipants {
 	// remove if need be
-	if participant.GameKeys == nil || len(participant.GameKeys) == 0 {
+	if (participant.GameKeys == nil || len(participant.GameKeys) == 0) && participant.Comments == "" {
 		out := LunchtimeParticipants{}
 		for i := range ps {
 			if !ps[i].Address.Equals(participant.Address) {

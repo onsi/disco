@@ -319,7 +319,7 @@ func (s *SaturdayDisco) emailData() TemplateData {
 		forecast = weather.Forecast{}
 	}
 	return TemplateData{
-		GameDate:              s.T.Format("1/2/06"),
+		GameDate:              s.T.Format("1/2"),
 		GameTime:              s.T.Format("3:04pm"),
 		SaturdayDiscoSnapshot: s.SaturdayDiscoSnapshot,
 		HasQuorum:             s.hasQuorum(),

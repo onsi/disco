@@ -2,6 +2,7 @@ import m from "mithril"
 import { LunchtimeCell, ClassForCount } from "./lunchtime_cell.js"
 import { EmailAddress } from "./email.js"
 
+const allGames = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"]
 let data = window.DATA
 data.historicalParticipants = data.historicalParticipants.map(e => EmailAddress.fromEmail(e))
 data.participants.forEach(p => {
@@ -44,7 +45,7 @@ class LunchtimeBoss {
     }
 
     playersForGame(key) {
-        return data.participants.filter(p => p.gameKeys.includes(key)).map(p => p.address.name)
+        return data.participants.filter(p => p.gameKeys.includes(key)).map(p => p.address.fullName)
     }
 
     countForGame(key) {
@@ -52,7 +53,7 @@ class LunchtimeBoss {
     }
 
     get currentParticipant() {
-        if (!this.currentParticipantEmail) return null
+        if (!this.currentParticipantEmailIsValid) return null
         let p = data.participants.find(p => p.address.equals(this.currentParticipantEmail))
         if (!p) {
             p = { gameKeys: [] }
@@ -104,14 +105,13 @@ class LunchtimeBoss {
     }
 
     get currentParticipantEmailIsValid() {
-        if (!this.currentParticipantEmail) return null
-        if (this.historicalParticipants.some(e => e.equals(this.currentParticipantEmail))) return true
+        if (!this.currentParticipantEmail) return false
         return this.currentParticipantEmail.hasExplicitName && this.currentParticipantEmail.isValid
     }
 
     get currentParticipantEmailIsNew() {
         if (!this.currentParticipantEmail) return false
-        if (this.historicalParticipants.some(e => e.equals(this.currentParticipantEmail))) return true
+        if (this.historicalParticipants.some(e => e.equals(this.currentParticipantEmail))) return false
         return this.currentParticipantEmailIsValid
     }
 
@@ -194,6 +194,7 @@ class LunchtimeBoss {
         return [
             m("h2", "🅱️ ", m("span.green", "Lunchtime"), " (week of ", data.weekOf, ")"),
             m("h3", "Current State: ", m("span.bold.green", data.state.toUpperCase()), m("span.bold", ` `)),
+            data.gameOnGameKey && m("h3", `Game On: ${data.gameOnGameFullStartTime}`),
             m("h3", "Send a Message"),
             // a row of buttons to select the kind of message to send
             m(".info", "I want to..."),
@@ -261,7 +262,27 @@ class LunchtimeBoss {
                 }, "Send " + this.selectedMessage),
             ),
             m("h3", "Manage Players"),
-            m(".info", "Select a player to adjust their selection.  This list includes all players we've ever seen.  To add a new player, type them in using the 'First Last <email@example.com>' format.  If the format is valid and they are a new player you will be told so."),
+            m(".pcs",
+                data.participants.map(p => m(".pc",
+                    {
+                        class: this.currentParticipantEmail && this.currentParticipantEmail.equals(p.address) ? "selected" : "",
+                        onclick: () => {
+                            if (this.currentParticipantEmail && this.currentParticipantEmail.equals(p.address)) {
+                                this.currentParticipantEmail = null
+                            } else {
+                                this.currentParticipantEmail = p.address
+                            }
+                        }
+                    },
+                    m(".pc-name", p.address.fullName),
+                    m(".pc-email", p.address.address),
+                    m(".pc-games",
+                        allGames.map(key => m(".pc-game", { class: p.gameKeys.includes(key) && "active" })),
+                    ),
+                    !!p.comments && m(".pc-comment", p.comments),
+                )),
+            ),
+
             m("input#participant-address.full-width", {
                 type: "text",
                 list: "historical-participants",
@@ -288,6 +309,18 @@ class LunchtimeBoss {
                 m("tr", ["M", "N", "O", "P"].map(key => this.dayCell(key))),
             ),
 
+            m("textarea#comments", {
+                placeholder: "Comments (optional)",
+                rows: 3,
+                maxLength: 1000,
+                disabled: !this.currentParticipantEmailIsValid,
+                value: this.currentParticipantEmailIsValid ? this.currentParticipant.comments : "",
+                onchange: (e) => {
+                    if (this.currentParticipantEmailIsValid) {
+                        this.currentParticipant.comments = e.target.value
+                    }
+                }
+            }),
             this.successSetGamesMessage ? m(".message.set-games.success.full-width", this.successSetGamesMessage) : null,
             this.failureSetGamesMessage ? m(".message.set-games.failure.full-width", this.failureSetGamesMessage) : null,
             m("button.submit.full-width", {

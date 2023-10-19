@@ -39,6 +39,14 @@ export class EmailAddress {
         return tidy.split(" ")[0].trim()
     }
 
+    get fullName() {
+        let tidy = this.string
+        if (tidy.lastIndexOf(" ") == -1) {
+            return this.address.split("@")[0]
+        }
+        return tidy.split(" ").slice(0, -1).join(" ").trim()
+    }
+
     get address() {
         let tidy = this.string
         if (tidy.lastIndexOf(" ") == -1) {

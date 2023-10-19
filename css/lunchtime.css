@@ -108,6 +108,14 @@ input#name, input#email, input#participant-address {
 }
 .submit {
     display: block;
+    margin: 10px auto;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 600px;
+}
+#comments {
+    display: block;
     margin: 5px auto;
     width: 100%;
     margin-left: auto;
@@ -143,7 +151,6 @@ input#name, input#email, input#participant-address {
 }
 .game-option .count {
     font-size: 1.5em;
-    padding: 10px;
 }
 button.red {
     background-color: var(--red);
@@ -153,4 +160,59 @@ button.blue {
 }
 button.dim {
     opacity: 0.5;
+}
+.pcs {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 10px;
+    margin: 10px 0;
+}
+.pc {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    background-color: #fafafa;
+    padding: 5px;
+}
+.pc.selected {
+    background-color: #ddd;
+}
+.pc-name {
+    font-size: 0.9em;
+    font-weight: bold;
+}
+.pc-email {
+    font-size: 0.7em;
+}
+.pc-comment {
+    font-size: 0.9em;
+    font-style: italic;
+}
+.pc-games {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 2px;
+    width: calc(5px * 2 + 4 * 10px);
+    height: calc(5px * 2 + 4 * 10px);
+    padding: 2px;
+    border-radius: 2px;
+    background-color: #eee;
+}
+.pc-game {
+    background-color: #ddd;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+.pc-game.active {
+    background-color: var(--green);
+}
+.pc-day {
+    font-size: 0.8em;
+    font-weight: bold;
+}
+.pc-time {
+    font-size: 0.9em;
 }
