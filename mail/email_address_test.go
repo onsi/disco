@@ -21,14 +21,16 @@ var _ = Describe("EmailAddress", func() {
 		Entry(nil, "Onsi Fakhouri <onsijoe+foo@gmail.com>", "Onsi", "onsijoe+foo@gmail.com", "Onsi Fakhouri <onsijoe+foo@gmail.com>", true),
 		Entry(nil, "Onsi Joe Salah Fakhouri <onsijoe@gmail.com>", "Onsi", "onsijoe@gmail.com", "Onsi Joe Salah Fakhouri <onsijoe@gmail.com>", true),
 		Entry(nil, "  Onsi Joe Salah  Fakhouri   <onsijoe@gmail.com>   ", "Onsi", "onsijoe@gmail.com", "Onsi Joe Salah  Fakhouri   <onsijoe@gmail.com>", true),
+		Entry(nil, "  onsi fakhouri   <onsijoe@gmail.com>   ", "Onsi", "onsijoe@gmail.com", "onsi fakhouri   <onsijoe@gmail.com>", true),
 		Entry(nil, "foo@example.com", "foo", "foo@example.com", "foo@example.com", false),
 		Entry(nil, "welp ", "welp", "welp", "welp", false),
-		Entry(nil, " wat@example.com <wat@who.com>", "wat@example.com", "wat@who.com", "wat@example.com <wat@who.com>", true),
+		Entry(nil, " wat@example.com <wat@who.com>", "Wat@Example.Com", "wat@who.com", "wat@example.com <wat@who.com>", true),
 	)
 
 	Describe("Comparing e-mail addresses", func() {
 		It("considers e-mail addresses equal if the address portion is the same", func() {
 			Ω(mail.EmailAddress("onsijoe@gmail.com").Equals("onsijoe@gmail.com")).To(BeTrue())
+			Ω(mail.EmailAddress("onsijoe@gmail.com").Equals("OnsiJoe@gmail.com")).To(BeTrue())
 			Ω(mail.EmailAddress("Onsi Fakhouri <onsijoe@gmail.com>").Equals("onsijoe@gmail.com")).To(BeTrue())
 			Ω(mail.EmailAddress("onsijoe@gmail.com").Equals("Onsi Fakhouri <onsijoe@gmail.com>")).To(BeTrue())
 			Ω(mail.EmailAddress("Onsi Fakhouri <onsijoe@gmail.com>").Equals("Onesie Fakhouri <onsijoe@gmail.com>")).To(BeTrue())

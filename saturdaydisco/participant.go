@@ -39,7 +39,7 @@ type Participants []Participant
 func (p Participants) UpdateCount(address mail.EmailAddress, count int, relevantEmail mail.Email) Participants {
 	for i := range p {
 		if p[i].Address.Equals(address) {
-			if !p[i].Address.HasExplicitName() {
+			if address.HasExplicitName() {
 				p[i].Address = address
 			}
 			p[i].Count = count

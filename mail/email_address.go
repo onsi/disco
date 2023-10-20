@@ -28,7 +28,8 @@ func (e EmailAddress) Name() string {
 	if strings.LastIndex(tidy, " ") == -1 {
 		return strings.Split(e.Address(), "@")[0]
 	}
-	return strings.Trim(strings.Split(tidy, " ")[0], "<>")
+
+	return strings.Title(strings.Trim(strings.Split(tidy, " ")[0], " "))
 }
 
 func (e EmailAddress) Address() string {
@@ -38,5 +39,5 @@ func (e EmailAddress) Address() string {
 }
 
 func (e EmailAddress) Equals(other EmailAddress) bool {
-	return e.Address() == other.Address()
+	return strings.ToLower(e.Address()) == strings.ToLower(other.Address())
 }

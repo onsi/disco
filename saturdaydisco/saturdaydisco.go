@@ -653,6 +653,7 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 			StateNoGameSent, s.replyWithFailureErrorHandler)
 	case CommandAdminSetCount:
 		s.logi(1, "{{green}}boss has asked me to adjust a participant count{{/}}")
+		s.logi(2, "{{gray}}Setting %s to %d{{/}}", command.EmailAddress, command.Count)
 		s.Participants = s.Participants.UpdateCount(command.EmailAddress, command.Count, command.Email)
 		s.sendEmailWithNoTransition(command.Email.Reply(s.config.SaturdayDiscoEmail,
 			s.emailBody("acknowledge_admin_set_count",
@@ -672,6 +673,7 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 			s.emailBody("unsubscribe_player_command", s.emailData())).AndCC(s.config.BossEmail))
 	case CommandPlayerSetCount:
 		s.logi(1, "{{green}}player sent a message signing up.{{/}}")
+		s.logi(2, "{{gray}}Setting %s to %d{{/}}", command.EmailAddress, command.Count)
 		s.Participants = s.Participants.UpdateCount(command.EmailAddress, command.Count, command.Email)
 		s.sendEmailWithNoTransition(command.Email.Forward(s.config.SaturdayDiscoEmail, s.config.BossEmail,
 			s.emailBody("acknowledge_player_set_count", s.emailData().WithMessage("%d", command.Count).WithAttachment(command.EmailAddress).WithEmailDebugKey(command.Email.DebugKey))))

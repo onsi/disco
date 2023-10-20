@@ -428,7 +428,7 @@ var _ = Describe("SaturdayDisco", func() {
 				})
 
 				It("allows the admin to change a players' count", func() {
-					bossToDisco("/set onsijoe@gmail.com 2")
+					bossToDisco("/set Onsi onsijoe@gmail.com 2")
 					Eventually(disco.GetSnapshot).Should(HaveCount(2))
 					bossToDisco("/set player@example.com 4")
 					Eventually(disco.GetSnapshot).Should(HaveCount(6))
@@ -441,7 +441,7 @@ var _ = Describe("SaturdayDisco", func() {
 					Ω(disco.GetSnapshot()).Should(HaveParticipantWithCount("player@example.com", 4))
 
 					Ω(le()).Should(HaveSubject("Re: hey"))
-					Ω(le()).Should(HaveText(ContainSubstring("Onsi Fakhouri <onsijoe@gmail.com>: 6"))) // we got the name!
+					Ω(le()).Should(HaveText(ContainSubstring("Onsi Fakhouri <onsijoe@gmail.com>: 6"))) // we updated the name!
 				})
 
 				It("send back an error if the admin messes up", func() {
