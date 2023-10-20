@@ -497,7 +497,11 @@ func (s *LunchtimeDisco) processEmail(email mail.Email) {
 func (s *LunchtimeDisco) transitionTo(state LunchtimeDiscoState) {
 	switch state {
 	case StatePending, StateInviteSent:
-		s.NextEvent = clock.DayOfAt6am(s.alarmClock.Time().Add(day)) //ping again the next morning
+		if s.NextEvent.IsZero() {
+			s.NextEvent = clock.DayOfAt6am(s.T.Add(day * -6)) //start pinging on Sunday morning
+		} else {
+			s.NextEvent = clock.DayOfAt6am(s.alarmClock.Time().Add(day)) //ping again the next morning
+		}
 	case StateGameOnSent:
 		s.NextEvent = clock.DayOfAt6am(s.T.Add(DT[s.GameOnGameKey])) //schedule reminder for morning of winning game
 	case StateNoInviteSent, StateNoGameSent, StateReminderSent:
@@ -547,12 +551,12 @@ func (s *LunchtimeDisco) handleCommand(command Command) {
 			StateNoGameSent, s.replyWithFailureErrorHandler)
 	case CommandAdminInvite:
 		s.logi(1, "{{green}}boss has asked me to send the invite out{{/}}")
-		s.sendEmail(s.emailForList("invite",
+		s.sendEmail(s.emailForList("invitation",
 			s.emailData().WithMessage(command.AdditionalContent)),
 			StateInviteSent, s.replyWithFailureErrorHandler)
 	case CommandAdminNoInvite:
 		s.logi(1, "{{red}}boss has asked me to send the no-invite email{{/}}")
-		s.sendEmail(s.emailForList("no_invite",
+		s.sendEmail(s.emailForList("no_invitation",
 			s.emailData().WithMessage(command.AdditionalContent)),
 			StateNoInviteSent, s.replyWithFailureErrorHandler)
 	case CommandSetGames:

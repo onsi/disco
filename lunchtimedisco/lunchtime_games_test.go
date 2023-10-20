@@ -37,6 +37,17 @@ var _ = Describe("LunchtimeGames", func() {
 				},
 			}.Count()).Should(Equal(3))
 		})
+
+		It("can return a public list of players", func() {
+			Ω(lunchtimedisco.Game{}.PublicParticipants()).Should(Equal("No one's signed up yet"))
+			Ω(lunchtimedisco.Game{
+				Players: mail.EmailAddresses{
+					"Onsi Fakhouri <onsijoe@gmail.com>",
+					"yoyoma@cello.com",
+					"player@example.com",
+				},
+			}.PublicParticipants()).Should(Equal("Onsi, yoyoma and player"))
+		})
 	})
 
 	Describe("Games", func() {

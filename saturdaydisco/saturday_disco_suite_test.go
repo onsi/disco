@@ -24,12 +24,6 @@ var _ = BeforeSuite(func() {
 	gleak.IgnoreGinkgoParallelClient()
 })
 
-var _ = BeforeEach(func() {
-	// DeferCleanup(func() {
-	// 	Eventually(gleak.Goroutines).ShouldNot(gleak.HaveLeaked())
-	// })
-})
-
 func BeFrom(sender mail.EmailAddress) OmegaMatcher {
 	return WithTransform(func(e mail.Email) string {
 		return e.From.Address()

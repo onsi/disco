@@ -110,5 +110,5 @@ func main() {
 	)
 	say.ExitIfError("could not build Lunchtime Disco", err)
 
-	log.Fatal(server.NewServer(e, conf, outbox, db, saturdayDisco, lunchtimeDisco).Start())
+	log.Fatal(server.NewServer(e, "./", conf, outbox, db, saturdayDisco, lunchtimeDisco).Start())
 }

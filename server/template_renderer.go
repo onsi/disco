@@ -14,14 +14,16 @@ import (
 
 type Template struct {
 	reload     bool
+	rootPath   string
 	templates  *template.Template
 	lock       *sync.Mutex
 	buildCache map[string]string
 }
 
-func NewTemplateRenderer(reload bool) *Template {
+func NewTemplateRenderer(rootPath string, reload bool) *Template {
 	return &Template{
 		reload:     reload,
+		rootPath:   rootPath,
 		templates:  nil,
 		lock:       &sync.Mutex{},
 		buildCache: map[string]string{},
@@ -34,7 +36,7 @@ func (t *Template) Render(w io.Writer, name string, data any, c echo.Context) er
 		var err error
 		t.templates, err = template.New("templates").Funcs(template.FuncMap{
 			"build": t.ESBuild,
-		}).ParseGlob("templates/*")
+		}).ParseGlob(t.rootPath + "templates/*")
 		if err != nil {
 			return err
 		}
@@ -48,7 +50,7 @@ func (t *Template) ESBuild(asset string, tag string) (any, error) {
 		return t.buildCache[asset], nil
 	}
 	result := esbuild.Build(esbuild.BuildOptions{
-		EntryPoints: []string{asset},
+		EntryPoints: []string{t.rootPath + asset},
 		Outfile:     "out",
 		Bundle:      true,
 		Format:      esbuild.FormatESModule,

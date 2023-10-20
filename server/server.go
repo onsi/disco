@@ -21,6 +21,7 @@ type TemplateData struct {
 
 type Server struct {
 	e              *echo.Echo
+	rootPath       string
 	config         config.Config
 	outbox         mail.OutboxInt
 	db             s3db.S3DBInt
@@ -28,9 +29,10 @@ type Server struct {
 	lunchtimeDisco *lunchtimedisco.LunchtimeDisco
 }
 
-func NewServer(e *echo.Echo, conf config.Config, outbox mail.OutboxInt, db s3db.S3DBInt, saturdayDisco *saturdaydisco.SaturdayDisco, lunchtimeDisco *lunchtimedisco.LunchtimeDisco) *Server {
+func NewServer(e *echo.Echo, rootPath string, conf config.Config, outbox mail.OutboxInt, db s3db.S3DBInt, saturdayDisco *saturdaydisco.SaturdayDisco, lunchtimeDisco *lunchtimedisco.LunchtimeDisco) *Server {
 	return &Server{
 		e:              e,
+		rootPath:       rootPath,
 		config:         conf,
 		outbox:         outbox,
 		db:             db,
@@ -40,7 +42,7 @@ func NewServer(e *echo.Echo, conf config.Config, outbox mail.OutboxInt, db s3db.
 }
 
 func (s *Server) Start() error {
-	t := NewTemplateRenderer(s.config.IsDev())
+	t := NewTemplateRenderer(s.rootPath, s.config.IsDev())
 	s.e.Renderer = t
 	s.e.Logger.SetLevel(log.INFO)
 	if s.config.IsDev() {
@@ -62,10 +64,14 @@ func (s *Server) RegisterRoutes() {
 }
 
 func (s *Server) Index(c echo.Context) error {
-	return c.Render(http.StatusOK, "index", TemplateData{
-		Saturday:  s.saturdayDisco.TemplateData(),
-		Lunchtime: s.lunchtimeDisco.TemplateData(),
-	})
+	t := TemplateData{}
+	if s.saturdayDisco != nil {
+		t.Saturday = s.saturdayDisco.TemplateData()
+	}
+	if s.lunchtimeDisco != nil {
+		t.Lunchtime = s.lunchtimeDisco.TemplateData()
+	}
+	return c.Render(http.StatusOK, "index", t)
 }
 
 func (s *Server) IncomingSaturdayEmail(c echo.Context) error {

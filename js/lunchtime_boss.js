@@ -4,7 +4,7 @@ import { EmailAddress } from "./email.js"
 
 const allGames = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"]
 let data = window.DATA
-data.historicalParticipants = data.historicalParticipants.map(e => EmailAddress.fromEmail(e))
+data.historicalParticipants = data.historicalParticipants ? data.historicalParticipants.map(e => EmailAddress.fromEmail(e)) : []
 data.participants.forEach(p => {
     p.address = EmailAddress.fromEmail(p.address)
     let i = data.historicalParticipants.findIndex(e => e.equals(p.address))
@@ -199,23 +199,23 @@ class LunchtimeBoss {
             // a row of buttons to select the kind of message to send
             m(".info", "I want to..."),
             m(".button-row",
-                this.showInvite && m("button", {
+                this.showInvite && m("button#invite", {
                     class: this.selectedMessage && this.selectedMessage != "Invite" ? "dim" : "",
                     onclick: () => this.toggleSelectedMessage("Invite")
                 }, "Send the Invite"),
-                this.showNoInvite && m("button.red", {
+                this.showNoInvite && m("button.red#no-invite", {
                     class: this.selectedMessage && this.selectedMessage != "No Invite" ? "dim" : "",
                     onclick: () => this.toggleSelectedMessage("No Invite")
                 }, "Send the NO Invite"),
-                this.showBadger && m("button.blue", {
+                this.showBadger && m("button.blue#badger", {
                     class: this.selectedMessage && this.selectedMessage != "Badger" ? "dim" : "",
                     onclick: () => this.toggleSelectedMessage("Badger")
                 }, "Send a Badger"),
-                this.showGameOn && m("button", {
+                this.showGameOn && m("button#game-on", {
                     class: this.selectedMessage && this.selectedMessage != "Game On" ? "dim" : "",
                     onclick: () => this.toggleSelectedMessage("Game On")
                 }, "Send Game On"),
-                this.showNoGame && m("button.red", {
+                this.showNoGame && m("button.red#no-game", {
                     class: this.selectedMessage && this.selectedMessage != "No Game" ? "dim" : "",
                     onclick: () => this.toggleSelectedMessage("No Game")
                 }, "Send No Game"),

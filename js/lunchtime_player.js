@@ -2,6 +2,9 @@ import m from "mithril"
 import { LunchtimeCell } from "./lunchtime_cell.js"
 import { EmailAddress } from "./email.js"
 
+const reset = (window.location.search == "?reset")
+if (reset) window.localStorage.clear()
+
 let name = window.localStorage.getItem("name") || ""
 let email = window.localStorage.getItem("email") || ""
 let data = window.DATA
@@ -89,7 +92,7 @@ class LunchtimePlayer {
                 class: this.isValidName ? "" : "invalid",
                 required: true, onchange: (e) => {
                     name = e.target.value
-                    window.localStorage.setItem("name", name)
+                    !reset && window.localStorage.setItem("name", name)
                 }
             }),
             this.isValidName ? null : m(".validation-error", "Please enter your name"),
@@ -101,7 +104,7 @@ class LunchtimePlayer {
                 class: this.isValidEmail ? "" : "invalid",
                 required: true, onchange: (e) => {
                     email = e.target.value
-                    window.localStorage.setItem("email", email)
+                    !reset && window.localStorage.setItem("email", email)
                 }
             }),
             this.isValidEmail ? null : m(".validation-error", "Please enter a valid e-mail address"),
