@@ -21,6 +21,7 @@ var _ = Describe("EmailAddress", func() {
 		Entry(nil, "Onsi Fakhouri <onsijoe+foo@gmail.com>", "Onsi", "onsijoe+foo@gmail.com", "Onsi Fakhouri <onsijoe+foo@gmail.com>", true),
 		Entry(nil, "Onsi Joe Salah Fakhouri <onsijoe@gmail.com>", "Onsi", "onsijoe@gmail.com", "Onsi Joe Salah Fakhouri <onsijoe@gmail.com>", true),
 		Entry(nil, "  Onsi Joe Salah  Fakhouri   <onsijoe@gmail.com>   ", "Onsi", "onsijoe@gmail.com", "Onsi Joe Salah  Fakhouri   <onsijoe@gmail.com>", true),
+		Entry(nil, "Walker, texas (Ranger) <tex@ranger.com>   ", "Texas", "tex@ranger.com", "Walker, texas (Ranger) <tex@ranger.com>", true),
 		Entry(nil, "  onsi fakhouri   <onsijoe@gmail.com>   ", "Onsi", "onsijoe@gmail.com", "onsi fakhouri   <onsijoe@gmail.com>", true),
 		Entry(nil, "foo@example.com", "foo", "foo@example.com", "foo@example.com", false),
 		Entry(nil, "welp ", "welp", "welp", "welp", false),

@@ -29,6 +29,10 @@ func (e EmailAddress) Name() string {
 		return strings.Split(e.Address(), "@")[0]
 	}
 
+	commaIdx := strings.Index(tidy, ",")
+	if commaIdx != -1 {
+		tidy = strings.Trim(tidy[commaIdx:], ", ")
+	}
 	return strings.Title(strings.Trim(strings.Split(tidy, " ")[0], " "))
 }
 
