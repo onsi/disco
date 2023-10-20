@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"github.com/onsi/disco/clock"
 	"github.com/onsi/disco/config"
 	"github.com/onsi/disco/mail"
 	"github.com/onsi/disco/s3db"
@@ -57,7 +58,7 @@ func (s *Server) Start() error {
 		saturdayDisco, err = saturdaydisco.NewSaturdayDisco(
 			s.config,
 			s.e.Logger.Output(),
-			saturdaydisco.NewAlarmClock(),
+			clock.NewAlarmClock(),
 			s.outbox,
 			saturdaydisco.NewInterpreter(),
 			weather.NewForecaster(s.db),
@@ -87,7 +88,7 @@ func (s *Server) Start() error {
 		saturdayDisco, err = saturdaydisco.NewSaturdayDisco(
 			s.config,
 			s.e.Logger.Output(),
-			saturdaydisco.NewAlarmClock(),
+			clock.NewAlarmClock(),
 			s.outbox,
 			saturdaydisco.NewInterpreter(),
 			weather.NewForecaster(s.db),
