@@ -89,7 +89,8 @@
     font-weight: bold;
     margin-bottom: 10px;
 }
-.status.lunchtime .call {
+.status.lunchtime.pending .call,
+.status.lunchtime.game-off .call {
     margin-bottom: 20px;
 }
 .status .call {
@@ -120,11 +121,19 @@
 .status.pending .call .text {
     font-size: 1em;
 }
-.status .count,
-.status .short-forecast {
+.status .count {
     margin-top: 10px;
     display: flex;
     flex-flow: row nowrap;
+    align-items: center;
+    align-content: center;
+    gap: 10px;
+    line-height: 5em;
+}
+.status .short-forecast {
+    margin-top: 10px;
+    display: flex;
+    flex-flow: column nowrap;
     align-items: center;
     align-content: center;
     gap: 10px;
@@ -159,8 +168,12 @@
     font-size: 5em
 }
 .status .short-forecast .text {
-    font-size: 2em;
+    font-size: 1.5em;
+    line-height: 1.2em;
     font-weight: bold;
+    text-align: center;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 .status .forecast-details,
 .status .forecast-details>div {
