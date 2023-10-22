@@ -61,7 +61,7 @@ func stripMarkdown(md Markdown) string {
 func renderMarkdown(md Markdown) string {
 	var mdParser = parser.NewWithExtensions(parser.CommonExtensions)
 	var htmlRenderer = html.NewRenderer(html.RendererOptions{
-		Flags: html.CommonFlags | html.HrefTargetBlank,
+		Flags: html.CommonFlags | html.HrefTargetBlank ^ html.SmartypantsFractions,
 	})
 	return string(markdown.Render(mdParser.Parse([]byte(md)), htmlRenderer))
 }

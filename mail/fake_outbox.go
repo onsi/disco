@@ -4,6 +4,7 @@ import (
 	"io"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/onsi/say"
 )
 
@@ -32,6 +33,7 @@ func (o *FakeOutbox) SendEmail(email Email) error {
 	defer o.lock.Unlock()
 	say.Fpln(o.w, "Sending email:")
 	say.Fplni(o.w, 1, "%s", email)
+	email.MessageID = uuid.New().String()
 	o.emails = append(o.emails, email)
 	return o.err
 }

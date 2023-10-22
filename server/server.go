@@ -136,5 +136,5 @@ func (s *Server) LunchtimeSubmit(c echo.Context) error {
 		s.lunchtimeDisco.HandleCommand(command)
 		return c.NoContent(http.StatusOK)
 	}
-	return c.String(http.StatusUnauthorized, "not allowed")
+	return c.String(http.StatusNotFound, "not found - check your inbox for the latest game link")
 }

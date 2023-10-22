@@ -139,6 +139,7 @@ type TemplateData struct {
 	GameOff            bool
 
 	Message string
+	Comment string
 	Error   error
 }
 
@@ -169,6 +170,11 @@ func (e TemplateData) WithMessage(format string, args ...any) TemplateData {
 	} else {
 		e.Message = fmt.Sprintf(format, args...)
 	}
+	return e
+}
+
+func (e TemplateData) WithComment(comment string) TemplateData {
+	e.Comment = comment
 	return e
 }
 
@@ -529,8 +535,10 @@ func (s *LunchtimeDisco) performNextEvent() {
 func (s *LunchtimeDisco) handleCommand(command Command) {
 	switch command.CommandType {
 	case CommandCaptureThreadEmail:
-		s.logi(1, "{{green}}capturing thread email{{/}}")
-		s.ThreadEmail = command.Email
+		if s.ThreadEmail.IsZero() {
+			s.logi(1, "{{green}}capturing thread email{{/}}")
+			s.ThreadEmail = command.Email
+		}
 	case CommandAdminBadger:
 		s.logi(1, "{{red}}boss has asked me to badger{{/}}")
 		s.sendEmailWithNoTransition((s.emailForList("badger",
@@ -564,7 +572,8 @@ func (s *LunchtimeDisco) handleCommand(command Command) {
 		s.Participants = s.Participants.AddOrUpdate(command.Participant)
 		s.HistoricalParticipants = s.HistoricalParticipants.AddOrUpdate(command.Participant.Address)
 		s.sendEmailWithNoTransition(s.emailForBoss("acknowledge_set_games", s.emailData().
-			WithMessage("%s: %s", command.Participant.Address, strings.Join(command.Participant.GameKeys, ","))))
+			WithMessage(command.Participant.GamesAckMessage()).
+			WithComment(command.Participant.Comments)))
 	}
 }
 

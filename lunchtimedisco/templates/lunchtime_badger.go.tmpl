@@ -1,7 +1,7 @@
 /* Badger Email */
 
-{{define "badger_subject"}}Need more player for Lunchtime game - week of {{.WeekOf}}{{end}}
+{{define "badger_subject"}}Need more players for Lunchtime game - week of {{.WeekOf}}{{end}}
 
-{{define "badger_body"}}{{- if .Message}}{{.Message}}{{else}}**We're still looking for players**.{{- end}}
+{{define "badger_body"}}{{- if .Message}}{{.Message}}{{else}}**We're still looking for players**.  Can anyone else join?{{- end}}
 
 {{template "public_status" .}}{{end}}

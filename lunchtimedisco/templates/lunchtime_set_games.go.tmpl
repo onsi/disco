@@ -1,7 +1,8 @@
-{{define "acknowledge_set_games_subject"}}Set Games -{{.Message}}{{end}}
+{{define "acknowledge_set_games_subject"}}Set Games - {{.Message}}{{end}}
 
 {{define "acknowledge_set_games_body"}}Hey Boss,
 
 I've set games for {{.Message}}.
+{{if .Comment}}Comment: {{.Comment}}{{- end}}
 
 {{template "boss_status" .}}{{end}}

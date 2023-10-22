@@ -12,6 +12,13 @@ type LunchtimeParticipant struct {
 	Comments string            `json:"comments"`
 }
 
+func (p LunchtimeParticipant) GamesAckMessage() string {
+	if len(p.GameKeys) == 0 {
+		return p.Address.String() + ": No Games"
+	}
+	return p.Address.String() + ": " + strings.Join(p.GameKeys, ",")
+}
+
 func (p LunchtimeParticipant) dup() LunchtimeParticipant {
 	gameKeys := []string{}
 	return LunchtimeParticipant{

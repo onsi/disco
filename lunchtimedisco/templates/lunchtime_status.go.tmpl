@@ -20,9 +20,9 @@ Games:{{range $idx, $game := .Games}}
   - {{$player.String}}{{- end}}{{- end}}
 {{end}}
 
-{{define "public_status"}}{{if .GameOnGame.IsZero}}<table border="0" cellpadding="0" cellspacing="5px" height="100%" width="100%">
+{{define "public_status"}}{{if .GameOnGame.IsZero}}<table border="0" cellpadding="0" cellspacing="5px" width="100%" style="max-width:600px;cursor:pointer;">
 <tr>
-    <th colspan="4">{{.Games.A.GameDate}}</th>
+    <th colspan="4" style="font-size:1.3em;">{{.Games.A.GameDate}}</th>
 </tr>
 <tr>
     {{.Games.A.TableCell .PickerURL}}
@@ -31,7 +31,7 @@ Games:{{range $idx, $game := .Games}}
     {{.Games.D.TableCell .PickerURL}}
 </tr>
 <tr>
-    <th colspan="4">{{.Games.E.GameDate}}</th>
+    <th colspan="4" style="font-size:1.3em;">{{.Games.E.GameDate}}</th>
 </tr>
 <tr>
     {{.Games.E.TableCell .PickerURL}}
@@ -40,7 +40,7 @@ Games:{{range $idx, $game := .Games}}
     {{.Games.H.TableCell .PickerURL}}
 </tr>
 <tr>
-    <th colspan="4">{{.Games.I.GameDate}}</th>
+    <th colspan="4" style="font-size:1.3em;">{{.Games.I.GameDate}}</th>
 </tr>
 <tr>
     {{.Games.I.TableCell .PickerURL}}
@@ -48,14 +48,14 @@ Games:{{range $idx, $game := .Games}}
     {{.Games.K.TableCell .PickerURL}}
     {{.Games.L.TableCell .PickerURL}}
 </tr>
-    <th>{{.Games.M.GameDate}}</th>
+    <th colspan="4" style="font-size:1.3em;">{{.Games.M.GameDate}}</th>
 <tr>
     {{.Games.M.TableCell .PickerURL}}
     {{.Games.N.TableCell .PickerURL}}
     {{.Games.O.TableCell .PickerURL}}
     {{.Games.P.TableCell .PickerURL}}
 </tr>
-</table>
+</table></a>
 
 **[Click here to sign up]({{.PickerURL}})** or reply with the options you can make.
 

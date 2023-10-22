@@ -235,7 +235,7 @@ class LunchtimeBoss {
                 data.games.map(game => {
                     let count = this.countForGame(game.key)
                     return m(".game-option", {
-                        id: game.key,
+                        id: "game-option-" + game.key,
                         onclick: () => this.gameOnGameKey = game.key,
                         class: ClassForCount(count) + (this.gameOnGameKey == game.key ? " selected" : ""),
                     },
@@ -256,7 +256,7 @@ class LunchtimeBoss {
             this.successSendMessage ? m(".message.success.full-width", this.successSendMessage) : null,
             this.failureSendMessage ? m(".message.failure.full-width", this.failureSendMessage) : null,
             this.showMessageSendForm && m(".button-row",
-                m("button", {
+                m("button.confirm-message", {
                     disabled: !this.enableMessageSendButton,
                     onclick: () => this.sendMessage(),
                 }, "Send " + this.selectedMessage),

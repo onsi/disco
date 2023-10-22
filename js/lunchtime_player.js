@@ -7,6 +7,7 @@ if (reset) window.localStorage.clear()
 
 let name = window.localStorage.getItem("name") || ""
 let email = window.localStorage.getItem("email") || ""
+console.log(reset, name, email)
 let data = window.DATA
 data.participants.forEach(p => p.address = EmailAddress.fromEmail(p.address))
 
@@ -95,7 +96,7 @@ class LunchtimePlayer {
                     !reset && window.localStorage.setItem("name", name)
                 }
             }),
-            this.isValidName ? null : m(".validation-error", "Please enter your name"),
+            this.isValidName ? null : m(".validation-error#invalid-name", "Please enter your name"),
             m("input#email.full-width", {
                 placeholder: "E-mail Address",
                 type: "email",
@@ -107,7 +108,7 @@ class LunchtimePlayer {
                     !reset && window.localStorage.setItem("email", email)
                 }
             }),
-            this.isValidEmail ? null : m(".validation-error", "Please enter a valid e-mail address"),
+            this.isValidEmail ? null : m(".validation-error#invalid-email", "Please enter a valid e-mail address"),
             this.isValid ? m(".info", "Now, pick the games you can make then hit ", m("span.green.bold", "submit"), " down below.") : null,
 
             m("table.games",

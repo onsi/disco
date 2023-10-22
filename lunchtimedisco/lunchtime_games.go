@@ -131,6 +131,7 @@ func (g Game) PublicParticipants() string {
 }
 
 func (g Game) TableCell(pickerURL string) string {
+	anchor := fmt.Sprintf(`<a href="%s" target="_blank" style="text-decoration:none;color:inherit;">`, pickerURL)
 	out := &strings.Builder{}
 	color := "#f5f5f5"
 	if g.Count() >= 5 {
@@ -141,13 +142,22 @@ func (g Game) TableCell(pickerURL string) string {
 		color = "#eee"
 	}
 	out.WriteString(`<td align="center" valign="top">`)
-	fmt.Fprintf(out, `<table border="0" cellpadding="10" cellspacing="0" width="100%%" height="100%%" style="background-color:%s;">`, color)
+	fmt.Fprintf(out, `<table border="0" cellpadding="2px" cellspacing="0" width="100%%" style="background-color:%s;border-radius:10px;">`, color)
 	out.WriteString(`<tr>`)
-	fmt.Fprintf(out, `<td style="font-size:1.2em;" align="center" valign="top"><a style="text-decoration:none;" href="%s">%s</a></td>`, pickerURL, g.GameTime())
+	fmt.Fprintf(out, `<td style="font-size:1.3em;padding-top:5px;" align="center" valign="top">%s%s</a></td>`, anchor, g.GameTime())
 	out.WriteString(`</tr>`)
 	out.WriteString(`<tr>`)
-	fmt.Fprintf(out, `<td style="font-size:1.5em;font-weight:bold;" align="center" valign="top"><a style="text-decoration:none;" href="%s">%d</a></td>`, pickerURL, g.Count())
+	fmt.Fprintf(out, `<td style="font-size:2.0em;font-weight:bold;" align="center" valign="top">%s%d</a></td>`, anchor, g.Count())
 	out.WriteString(`</tr>`)
+	if !g.Forecast.IsZero() {
+		out.WriteString(`<tr>`)
+		fmt.Fprintf(out, `<td align="center" valign="top">%s<span style="font-size:1.5em;">%s</span> <span style="font-size:1.0em;">%dº%s</span></a></td>`, anchor, g.Forecast.ShortForecastEmoji, g.Forecast.Temperature, g.Forecast.TemperatureUnit)
+		out.WriteString(`</tr>`)
+		out.WriteString(`<tr>`)
+		fmt.Fprintf(out, `<td style="font-size:0.8em;padding-bottom:5px;" align="center" valign="top">%s💧%d%% 💨%s</a></td>`, anchor, g.Forecast.ProbabilityOfPrecipitation, g.Forecast.WindSpeed)
+		out.WriteString(`</tr>`)
+	}
+
 	out.WriteString("</table></td>")
 	return out.String()
 }
