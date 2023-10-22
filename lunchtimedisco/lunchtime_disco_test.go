@@ -119,10 +119,6 @@ var _ = Describe("LunchtimeDisco", func() {
 		Eventually(http.Get).WithArguments(indexURL).Should(HaveField("StatusCode", http.StatusOK))
 	})
 
-	Describe("startup stuff", func() {
-
-	})
-
 	Describe("the scheduler", func() {
 		It("sends the boss a daily ping", func() {
 			clock.Fire()
@@ -455,6 +451,18 @@ var _ = Describe("LunchtimeDisco", func() {
 			}))
 			Ω(disco.HistoricalParticipants).Should(ConsistOf(mail.EmailAddress("John Player Jr. <john@example.com>")))
 
+			By("finally, we validate that we've been backing things up along the way")
+			rawSnapshot, err := db.FetchObject(KEY)
+			Ω(err).ShouldNot(HaveOccurred())
+			var backupSnapshot lunchtimedisco.LunchtimeDiscoSnapshot
+			Ω(json.Unmarshal(rawSnapshot, &backupSnapshot)).Should(Succeed())
+			Ω(backupSnapshot.Participants).Should(Equal(disco.GetSnapshot().Participants))
+
+			rawHistoricalParticipants, err := db.FetchObject(PARTICIPANTS_KEY)
+			Ω(err).ShouldNot(HaveOccurred())
+			var backupHistoricalParticipants []mail.EmailAddress
+			Ω(json.Unmarshal(rawHistoricalParticipants, &backupHistoricalParticipants)).Should(Succeed())
+			Ω(backupHistoricalParticipants).Should(ConsistOf(mail.EmailAddress("John Player Jr. <john@example.com>")))
 		})
 	})
 
