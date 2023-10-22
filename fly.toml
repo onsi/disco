@@ -11,7 +11,7 @@ kill_timeout = 120
   builder = "paketobuildpacks/builder:tiny"
   buildpacks = ["gcr.io/paketo-buildpacks/go"]
   [build.args]
-    BP_KEEP_FILES = "css/*:js/*:html/*:node_modules/*:img/*"
+    BP_KEEP_FILES = "css/*:js/*:html/*:node_modules/*:img/*:templates/*"
 
 [env]
   ENV = "PROD"
