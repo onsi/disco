@@ -47,7 +47,7 @@ func (t *Template) Render(w io.Writer, name string, data any, c echo.Context) er
 
 func (t *Template) ESBuild(asset string, tag string) (any, error) {
 	if !t.reload && t.buildCache[asset] != "" {
-		return t.buildCache[asset], nil
+		return template.HTML(t.buildCache[asset]), nil
 	}
 	result := esbuild.Build(esbuild.BuildOptions{
 		EntryPoints: []string{t.rootPath + asset},
