@@ -19,11 +19,13 @@
         <div class="status-container">
             <div
                 class="status saturday {{if .Saturday.GameOn}}game-on{{else if .Saturday.GameOff}}game-off{{else}}pending{{end}}">
-                <div class="heading">Saturday {{.Saturday.GameDate}}</div>
+                <div class="heading">Saturday</div>
                 <div class="call">
                     {{if .Saturday.GameOn}}
                     <div class="emoji">🎉</div>
                     <div class="text">Game On!</div>
+                    <div class="game-day">Saturday {{.Saturday.GameDate}}</div>
+                    <div class="game-time">{{.Saturday.GameTime}}</div>
                     {{else if .Saturday.GameOff}}
                     <div class="emoji">😕</div>
                     <div class="text">No Game...</div>
