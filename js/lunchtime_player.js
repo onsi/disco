@@ -13,6 +13,11 @@ data.participants.forEach(p => p.address = EmailAddress.fromEmail(p.address))
 
 
 class LunchtimePlayer {
+    constructor() {
+        this.successMessage = ""
+        this.failureMessage = ""
+        this.submitCount = 0
+    }
     playersForGame(key) {
         return data.participants.filter(p => p.gameKeys.includes(key)).map(p => p.address.name)
     }
@@ -69,6 +74,7 @@ class LunchtimePlayer {
     submit() {
         this.successMessage = ""
         this.failureMessage = ""
+        this.submitting = true
         m.request({
             method: "POST",
             url: "/lunchtime/" + data.guid,
@@ -77,6 +83,14 @@ class LunchtimePlayer {
             this.successMessage = "Got it, thanks!"
         }).catch((err) => {
             this.failureMessage = "Whoops, something went wrong. Please try again later."
+        }).finally(() => {
+            setTimeout(() => {
+                this.submitting = false
+                this.successMessage = ""
+                this.failureMessage = ""
+                this.submitCount++
+                m.redraw()
+            }, 3000)
         })
     }
 
@@ -135,10 +149,10 @@ class LunchtimePlayer {
             }),
             this.successMessage ? m(".message.set-games.success.full-width", this.successMessage) : null,
             this.failureMessage ? m(".message.set-games.failure.full-width", this.failureMessage) : null,
-            m("button.submit.full-width", {
-                disabled: !this.isValid,
+            !this.successMessage && !this.failureMessage && m("button.submit.full-width", {
+                disabled: !this.isValid || this.submitting,
                 onclick: () => this.submit(),
-            }, "Submit"),
+            }, this.submitting ? "Submitting, please wait..." : (this.submitCount > 0 ? "Resubmit" : "Submit")),
         ]
     }
 }
