@@ -253,7 +253,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send Invite")).Should(b.Click())
 			Eventually(le).Should(HaveSubject("Lunchtime Bible Park Frisbee - Week of " + weekOf))
 			Ω(le()).Should(BeFrom(conf.BossEmail))
-			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 			threadId := le().MessageID
 			Ω(threadId).ShouldNot(BeZero())
 
@@ -281,7 +282,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send Game On")).Should(b.Click())
 			Eventually(le).Should(HaveSubject("Re: Lunchtime Bible Park Frisbee - Week of " + weekOf))
 			Ω(le()).Should(BeFrom(conf.BossEmail))
-			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 			Ω(le().InReplyTo).Should(Equal(threadId))
 			Ω(le()).Should(HaveText(ContainSubstring("GAME ON for Wednesday 9/27 at 10:00am")))
 		})
@@ -643,7 +645,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("Lunchtime Bible Park Frisbee - Week of " + weekOf))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
-			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 			Ω(le()).Should(HaveHTML(ContainSubstring(`<a href="https://www.sedenverultimate.net/lunchtime/%s" target="_blank">Here are the options for this week</a>`, s.GUID)))
 
 			Ω(s).Should(HaveState(StateInviteSent))
@@ -657,7 +660,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("Lunchtime Bible Park Frisbee - Week of " + weekOf))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
-			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 			Ω(le()).Should(HaveHTML(ContainSubstring(`Lets do it <strong>again</strong>.`)))
 			Ω(le()).Should(HaveHTML(ContainSubstring(`<a href="https://www.sedenverultimate.net/lunchtime/%s" target="_blank">Here are the options for this week</a>`, s.GUID)))
 
@@ -679,7 +683,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("No Lunchtime Bible Park Frisbee This Week"))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
-			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 			Ω(le()).Should(HaveHTML(ContainSubstring(`No lunchtime game this week.`)))
 
 			Ω(s).Should(HaveState(StateNoInviteSent))
@@ -693,7 +698,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("No Lunchtime Bible Park Frisbee This Week"))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
-			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 			Ω(le()).Should(HaveHTML(ContainSubstring(`Merry <strong>Christmas</strong>!`)))
 			Ω(le()).Should(HaveHTML(ContainSubstring(`No lunchtime game this week.`)))
 
@@ -723,7 +729,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("Need more players for Lunchtime game - week of " + weekOf))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
-			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 			Ω(le()).Should(HaveHTML(ContainSubstring(`still looking for players</strong>.  Can anyone else join?`)))
 
 			Ω(s).Should(HaveState(StateInviteSent))
@@ -737,7 +744,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("Need more players for Lunchtime game - week of " + weekOf))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
-			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 			Ω(le()).Should(HaveHTML(ContainSubstring(`Need <strong>3</strong> more.`)))
 			Ω(le()).ShouldNot(HaveHTML(ContainSubstring(`still looking for players`)))
 
@@ -797,7 +805,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			It("sends the game on email and updates the homepage", func() {
 				Eventually(le).Should(HaveSubject("GAME ON! Tuesday 9/26 at 11:00am"))
 				Ω(le()).Should(BeFrom(conf.BossEmail))
-				Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+				Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 				Ω(le()).Should(HaveHTML(ContainSubstring(`Yum <strong>YUM</strong>`)))
 				Ω(le()).Should(HaveHTML(ContainSubstring(`<strong>GAME ON</strong> for <strong>Tuesday 9/26 at 11:00am</strong>`)))
 				Ω(le()).Should(HaveHTML(ContainSubstring(`<strong>Who</strong>: John, Bob and Sally`)))
@@ -808,7 +817,8 @@ var _ = Describe("LunchtimeDisco", func() {
 				Ω(clock.Time()).Should(BeOn(time.Tuesday, 6))
 				Eventually(le).Should(HaveSubject("Reminder: GAME ON TODAY! Tuesday 9/26 at 11:00am"))
 				Ω(le()).Should(BeFrom(conf.BossEmail))
-				Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+				Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 				Ω(le()).Should(HaveHTML(ContainSubstring(`Quick reminder: we`)))
 			})
 
@@ -834,7 +844,7 @@ var _ = Describe("LunchtimeDisco", func() {
 			It("sends the game on email and updates the homepage", func() {
 				Eventually(le).Should(HaveSubject("GAME ON! Tuesday 9/26 at 11:15AM"))
 				Ω(le()).Should(BeFrom(conf.BossEmail))
-				Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+				Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
 				Ω(le()).Should(HaveHTML(ContainSubstring(`<strong>GAME ON</strong> for <strong>Tuesday 9/26 at 11:15AM</strong>`)))
 				Ω(le()).Should(HaveHTML(ContainSubstring(`<strong>Who</strong>: John, Bob and Sally`)))
 			})
@@ -844,7 +854,8 @@ var _ = Describe("LunchtimeDisco", func() {
 				Ω(clock.Time()).Should(BeOn(time.Tuesday, 6))
 				Eventually(le).Should(HaveSubject("Reminder: GAME ON TODAY! Tuesday 9/26 at 11:15AM"))
 				Ω(le()).Should(BeFrom(conf.BossEmail))
-				Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+				Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 				Ω(le()).Should(HaveHTML(ContainSubstring(`Quick reminder: we`)))
 			})
 
@@ -871,7 +882,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("No Lunchtime Game This Week"))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
-			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 			Ω(le()).Should(HaveHTML(ContainSubstring(`<strong>No lunchtime game this week</strong>.`)))
 
 			Ω(s).Should(HaveState(StateNoGameSent))
@@ -885,7 +897,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("No Lunchtime Game This Week"))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
-			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList))
+			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
+
 			Ω(le()).Should(HaveHTML(ContainSubstring(`<strong>No lunchtime game this week</strong>.`)))
 			Ω(le()).Should(HaveHTML(ContainSubstring(`Calling <em>it</em>.`)))
 

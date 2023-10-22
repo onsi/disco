@@ -414,12 +414,14 @@ func (s *LunchtimeDisco) emailForList(name string, data TemplateData) mail.Email
 		return mail.E().
 			WithFrom(s.config.BossEmail).
 			WithTo(s.config.LunchtimeDiscoList).
+			AndCC(s.config.BossEmail).
 			WithSubject(s.emailSubject(name, data)).
 			WithBody(mail.Markdown(s.emailBody(name, data)))
 	} else {
 		email := mail.E().
 			WithFrom(s.config.BossEmail).
 			WithTo(s.config.LunchtimeDiscoList).
+			AndCC(s.config.BossEmail).
 			WithBody(mail.Markdown(s.emailBody(name, data)))
 		if strings.HasPrefix(s.ThreadEmail.Subject, "Re: ") {
 			email.Subject = s.ThreadEmail.Subject
