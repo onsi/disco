@@ -49,6 +49,11 @@ func (s *Server) Subscribe(c echo.Context) error {
 	request.Email = truncate(strings.TrimSpace(request.Email), 100)
 	request.Message = truncate(strings.TrimSpace(request.Message), 1000)
 
+	if request.Email == "" {
+		say.Fplni(s.e.Logger.Output(), 1, "{{red}}Email is required but missing{{/}}")
+		return c.String(http.StatusBadRequest, "Email is required")
+	}
+
 	body := &strings.Builder{}
 	err := subscribeTemplate.Execute(body, request)
 	if err != nil {
