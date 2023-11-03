@@ -30,6 +30,43 @@ var _ = Describe("Clock", func() {
 		),
 	)
 
+	DescribeTable("NextSaturdayAt10Or1030", func(input, output time.Time) {
+		Expect(clock.NextSaturdayAt10Or1030(input)).To(Equal(output))
+	},
+		Entry("when it's before Saturday at 10 (during DST)",
+			time.Date(2023, time.October, 30, 13, 07, 35, 0, clock.Timezone),
+			time.Date(2023, time.November, 4, 10, 0, 0, 0, clock.Timezone),
+		),
+		Entry("when it's just before Saturday at 10 (during DST)",
+			time.Date(2023, time.November, 4, 9, 59, 59, 0, clock.Timezone),
+			time.Date(2023, time.November, 4, 10, 0, 0, 0, clock.Timezone),
+		),
+		Entry("when it's just after Saturday at 10 (during DST)",
+			time.Date(2023, time.October, 28, 10, 0, 01, 0, clock.Timezone),
+			time.Date(2023, time.November, 4, 10, 0, 0, 0, clock.Timezone),
+		),
+		Entry("when it's before Saturday at 10:30 (if not DST)",
+			time.Date(2023, time.November, 6, 7, 07, 35, 0, clock.Timezone),
+			time.Date(2023, time.November, 11, 10, 30, 0, 0, clock.Timezone),
+		),
+		Entry("when it's just before Saturday at 10:30 (druing DST)",
+			time.Date(2023, time.November, 11, 10, 29, 29, 0, clock.Timezone),
+			time.Date(2023, time.November, 11, 10, 30, 0, 0, clock.Timezone),
+		),
+		Entry("when it's just after Saturday at 10:30 (during DST)",
+			time.Date(2023, time.November, 11, 10, 30, 01, 0, clock.Timezone),
+			time.Date(2023, time.November, 18, 10, 30, 0, 0, clock.Timezone),
+		),
+		Entry("no problem at leap years",
+			time.Date(2024, time.February, 28, 12, 0, 0, 0, clock.Timezone),
+			time.Date(2024, time.March, 2, 10, 30, 0, 0, clock.Timezone),
+		),
+		Entry("when we're starting DST",
+			time.Date(2024, time.March, 9, 10, 30, 0, 0, clock.Timezone),
+			time.Date(2024, time.March, 16, 10, 0, 0, 0, clock.Timezone),
+		),
+	)
+
 	Describe("AlarmClock", func() {
 		var c *clock.AlarmClock
 

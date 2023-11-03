@@ -24,6 +24,25 @@ func NextSaturdayAt10(now time.Time) time.Time {
 	return time.Date(now.Year(), now.Month(), now.Day()+deltaDay, 10, 0, 0, 0, Timezone)
 }
 
+func NextSaturdayAt10Or1030(now time.Time) time.Time {
+	now = now.In(Timezone)
+	deltaDay := int(time.Saturday - now.Weekday())
+	if now.Weekday() == time.Saturday {
+		if now.IsDST() && now.Hour() < 10 {
+			return time.Date(now.Year(), now.Month(), now.Day(), 10, 0, 0, 0, Timezone)
+		} else if !now.IsDST() && (now.Hour() < 10 || (now.Hour() == 10 && now.Minute() < 30)) {
+			return time.Date(now.Year(), now.Month(), now.Day(), 10, 30, 0, 0, Timezone)
+		} else {
+			deltaDay = 7
+		}
+	}
+	target := time.Date(now.Year(), now.Month(), now.Day()+deltaDay, 10, 0, 0, 0, Timezone)
+	if target.IsDST() {
+		return target
+	}
+	return target.Add(time.Minute * 30)
+}
+
 func DayOfAt6am(t time.Time) time.Time {
 	t = t.In(Timezone)
 	return time.Date(t.Year(), t.Month(), t.Day(), 6, 0, 0, 0, Timezone)

@@ -233,7 +233,7 @@ func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock clock.AlarmC
 			startupMessage = fmt.Sprintf("FAILED TO UNMARSHAL BACKUP: %s", err.Error())
 			saturdayDisco.logi(0, "{{red}}%s{{/}}", startupMessage)
 		} else {
-			nextSaturday := clock.NextSaturdayAt10(alarmClock.Time())
+			nextSaturday := clock.NextSaturdayAt10Or1030(alarmClock.Time())
 			if nextSaturday.After(snapshot.T) {
 				startupMessage = "Backup is from a previous week.  Resetting."
 				saturdayDisco.logi(0, "{{red}}%s{{/}}", startupMessage)
@@ -839,7 +839,7 @@ func (s *SaturdayDisco) reset() {
 	s.alarmClock.Stop()
 	s.State = StateInvalid
 	s.Participants = Participants{}
-	s.T = clock.NextSaturdayAt10(s.alarmClock.Time())
+	s.T = clock.NextSaturdayAt10Or1030(s.alarmClock.Time())
 	s.NextEvent = time.Time{}
 	s.ProcessedEmailIDs = ProcessedEmailIDs{}
 	s.transitionTo(StatePending)

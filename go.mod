@@ -9,7 +9,7 @@ require (
 	github.com/icodealot/noaa v0.0.1
 	github.com/labstack/echo/v4 v4.11.1
 	github.com/labstack/gommon v0.4.0
-	github.com/onsi/ginkgo/v2 v2.12.1
+	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.27.10
 	github.com/onsi/say v1.1.0
 	github.com/sashabaranov/go-openai v1.15.3
