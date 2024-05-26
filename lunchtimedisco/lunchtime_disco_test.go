@@ -137,7 +137,7 @@ var _ = Describe("LunchtimeDisco", func() {
 			clock.Fire()
 			Ω(clock.Time()).Should(BeOn(time.Monday, 6))
 			Eventually(le).Should(HaveSubject("Lunchtime Monitor: " + weekOf))
-			Ω(le()).Should(HaveText(ContainSubstring("+ A - 1 - Tuesday 9/26 at 10:00am - %s\n  - John Player <player@example.com>\n+ B - 0 - Tuesday 9/26 at 11:00am - %s\n+ C", forecast, forecast)))
+			Ω(le()).Should(HaveText(ContainSubstring("+ A - 1 - Tuesday 9/26 at 10:00am - %s\n  - John Player \n+ B - 0 - Tuesday 9/26 at 11:00am - %s\n+ C", forecast, forecast)))
 			outbox.Clear()
 
 			signUpPlayer("Bob Player", "bob@example.com", "", []string{"A", "B"})
@@ -146,7 +146,7 @@ var _ = Describe("LunchtimeDisco", func() {
 			clock.Fire()
 			Ω(clock.Time()).Should(BeOn(time.Tuesday, 6))
 			Eventually(le).Should(HaveSubject("Lunchtime Monitor: " + weekOf))
-			Ω(le()).Should(HaveText(ContainSubstring("+ A - 2 - Tuesday 9/26 at 10:00am - %s\n  - John Player <player@example.com>\n  - Bob Player <bob@example.com>\n+ B - 1 - Tuesday 9/26 at 11:00am - %s\n  - Bob Player <bob@example.com>\n+ C", forecast, forecast)))
+			Ω(le()).Should(HaveText(ContainSubstring("+ A - 2 - Tuesday 9/26 at 10:00am - %s\n  - John Player \n  - Bob Player \n+ B - 1 - Tuesday 9/26 at 11:00am - %s\n  - Bob Player \n+ C", forecast, forecast)))
 		})
 
 		Context("when the invite is sent", func() {
@@ -482,18 +482,17 @@ var _ = Describe("LunchtimeDisco", func() {
 
 		It("includes the set of players in the monitor email", func() {
 			Ω(le()).Should(HaveText(ContainSubstring(`+ A - 2 - Tuesday 9/26 at 10:00am - %s
-  - John Player <player@example.com>
-  - Bob Player <bob@example.com>
+  - John Player 
+  - Bob Player 
 + B - 2 - Tuesday 9/26 at 11:00am - %s
-  - John Player <player@example.com>
-  - Sally Player <sally@example.com>
+  - John Player 
+  - Sally Player 
 + C - 1 - Tuesday 9/26 at 12:00pm - %s
-  - John Player <player@example.com>
+  - John Player 
 + D - 0 - Tuesday 9/26 at 1:00pm - %s
 + E - 2 - Wednesday 9/27 at 10:00am - %s
-  - Bob Player <bob@example.com>
-  - Sally Player <sally@example.com>`,
-				forecast, forecast, forecast, forecast, forecast)))
+  - Bob Player 
+  - Sally Player `, forecast, forecast, forecast, forecast, forecast)))
 		})
 	})
 
