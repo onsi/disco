@@ -349,28 +349,18 @@ var _ = Describe("SaturdayDisco", func() {
 				Describe("when a player sends an e-mail that includes the list or boss", func() {
 					Context("and disco is unsure if its a command", func() {
 						It("does nothing", func() {
-							interpreter.SetCommand(Command{CommandType: CommandPlayerUnsure})
+							interpreter.SetCommand(Command{CommandType: CommandPlayerIgnore})
 							handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoList).WithSubject("hey").WithBody("I'm in!"))
-							Consistently(le).Should(BeZero())
-						})
-					})
-
-					Context("and disco is unsure if its a command", func() {
-						It("does nothing", func() {
-							interpreter.SetCommand(Command{CommandType: CommandPlayerUnsure})
-							handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.BossEmail).WithSubject("hey").WithBody("I'm in!"))
 							Consistently(le).Should(BeZero())
 						})
 					})
 				})
 
 				Describe("when a player sends an e-mail that doesn't include the boss and disco is unsure", func() {
-					It("replies and CCs the boss", func() {
-						interpreter.SetCommand(Command{CommandType: CommandPlayerUnsure})
+					It("does nothing (the boss will actually get the e-mail and can deal with it because forward e-mail is ocnfigured to forward things to the boss anyway)", func() {
+						interpreter.SetCommand(Command{CommandType: CommandPlayerIgnore})
 						handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, "someone-else@example.com").WithSubject("hey").WithBody("Make me a bagel."))
-						Eventually(le).Should(HaveSubject("Re: hey"))
-						Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail))
-						Ω(le()).Should(HaveText(ContainSubstring("I'm not sure what you're asking me to do.  I'm CCing the boss to help.")))
+						Consistently(le).Should(BeZero())
 					})
 				})
 
@@ -388,7 +378,7 @@ var _ = Describe("SaturdayDisco", func() {
 
 				Describe("when an e-mail comes from disco itself", func() {
 					It("completely ignores the e-mail", func() {
-						interpreter.SetCommand(Command{CommandType: CommandPlayerStatus})
+						interpreter.SetCommand(Command{CommandType: CommandPlayerSetCount, Count: 2})
 						handleIncomingEmail(mail.E().WithFrom(conf.SaturdayDiscoEmail).WithTo(conf.SaturdayDiscoList).WithSubject("hey").WithBody("Is the game on?"))
 						Consistently(le).Should(BeZero())
 					})
@@ -525,7 +515,8 @@ var _ = Describe("SaturdayDisco", func() {
 							Ω(le()).Should(BeSentTo(conf.BossEmail))
 							Ω(le()).Should(HaveText(ContainSubstring("I've set the player's count to 2.")))
 							Ω(le()).Should(HaveText(ContainSubstring("Send me a:\n\n/set player@example.com N")))
-							Ω(le()).Should(HaveHTML(BeEmpty()))
+
+							Ω(le()).Should(HaveHTML(ContainSubstring(`<a href="mailto:Disco &lt;saturday-disco@sedenverultimate.net&gt;?subject=Set Player&amp;body=/set player@example.com N" target="_blank">/set player@example.com N</a>`)))
 						})
 					})
 				})
@@ -562,64 +553,6 @@ var _ = Describe("SaturdayDisco", func() {
 
 							Ω(le()).Should(HaveHTML(""))
 						})
-					})
-
-					Describe("the player's interface", func() {
-						sendPlayerRequest := func() {
-							interpreter.SetCommand(Command{CommandType: CommandPlayerStatus})
-
-							handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")).WithSubject("hey").WithBody("Is the game on?"))
-							Eventually(le).Should(HaveSubject("Re: hey"))
-						}
-
-						Context("when the game hasn't been called yet", func() {
-							BeforeEach(func() {
-								sendPlayerRequest()
-							})
-
-							It("allows players to get a status update, replying to all", func() {
-								Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")))
-								Ω(le()).Should(HaveText(ContainSubstring("The game on " + gameDate + " hasn't been called yet.")))
-								Ω(le()).Should(HaveText(ContainSubstring("Weather Forecast: 🌤️ Partly Cloud: 😎 72ºF | 💧 10% | 💨 8 mph")))
-								Ω(le()).Should(HaveText(ContainSubstring("Players: player and onsijoe (2)")))
-								Ω(le()).Should(HaveText(ContainSubstring("Total: 3")))
-								Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Players</strong>: player and onsijoe <strong>(2)</strong>")))
-								Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Total</strong>: 3")))
-							})
-						})
-
-						Context("when the game is on", func() {
-							BeforeEach(func() {
-								bossToDisco("/game-on")
-								Eventually(disco.GetSnapshot).Should(HaveState(StateGameOnSent))
-								sendPlayerRequest()
-							})
-
-							It("allows players to get a status update, replying to all", func() {
-								Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")))
-								Ω(le()).Should(HaveHTML(ContainSubstring("<strong>GAME ON!</strong>")))
-								Ω(le()).Should(HaveHTML(ContainSubstring("<strong>Weather Forecast</strong>: 🌤️ Partly Cloud: 😎 72ºF | 💧 10% | 💨 8 mph")))
-								Ω(le()).Should(HaveText(ContainSubstring("Players: player and onsijoe (2)")))
-								Ω(le()).Should(HaveText(ContainSubstring("Total: 3")))
-							})
-						})
-
-						Context("when the game is off", func() {
-							BeforeEach(func() {
-								bossToDisco("/no-game")
-								Eventually(disco.GetSnapshot).Should(HaveState(StateNoGameSent))
-								sendPlayerRequest()
-							})
-
-							It("allows players to get a status update, replying to all", func() {
-								Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")))
-								Ω(le()).Should(HaveHTML(ContainSubstring("<strong>NO GAME</strong>")))
-								Ω(le()).Should(HaveText(ContainSubstring("Weather Forecast: 🌤️ Partly Cloud: 😎 72ºF | 💧 10% | 💨 8 mph")))
-								Ω(le()).Should(HaveText(ContainSubstring("Players: player and onsijoe (2)")))
-								Ω(le()).Should(HaveText(ContainSubstring("Total: 3")))
-							})
-						})
-
 					})
 				})
 
@@ -658,19 +591,6 @@ var _ = Describe("SaturdayDisco", func() {
 						Ω(le()).Should(HaveSubject("Re: hey"))
 						Ω(le()).Should(BeSentTo(conf.BossEmail))
 						Ω(le()).Should(HaveText(ContainSubstring("Alright.  I'm resetting.  You'd better know what you're doing!")))
-					})
-				})
-
-				Describe("if a player wants to unsubscribe", func() {
-					BeforeEach(func() {
-						interpreter.SetCommand(Command{CommandType: CommandPlayerUnsubscribe})
-						handleIncomingEmail(mail.E().WithFrom(playerEmail).WithTo(conf.SaturdayDiscoEmail, conf.SaturdayDiscoList, mail.EmailAddress("random@example.com")).WithSubject("hey").WithBody("Please unsubscibe me."))
-					})
-
-					It("replies and includes boss", func() {
-						Eventually(le).Should(HaveSubject("Re: hey"))
-						Ω(le()).Should(BeSentTo(playerEmail, conf.BossEmail))
-						Ω(le()).Should(HaveText(ContainSubstring("I got your unsubscribe request.  I'm notifying the boss to remove you from the list.")))
 					})
 				})
 

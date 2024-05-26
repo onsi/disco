@@ -12,7 +12,7 @@
 
 I just got the email below.  I've set the player's count to {{.Message}}.  Send me a:
 
-/set {{.Attachment}} N
+[/set {{.Attachment}} N](mailto:{{.DiscoEmailAddress}}?subject=Set Player&body=/set {{.Attachment}} N)
 
 command if I got it wrong.  Email debug key: {{.EmailDebugKey}}.
 

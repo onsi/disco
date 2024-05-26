@@ -31,16 +31,6 @@ Participants:{{range $idx, $participant := .Participants}}
 {{- end}}{{end}}
 
 
-
-/* public_status_body */
-{{define "public_status_body"}}Hey there,
-
-{{if .GameOn}}**GAME ON!** {{.GameDate}}{{ else if .GameOff}}**NO GAME** {{.GameDate}}{{ else }}The game on {{.GameDate}} hasn't been called yet.{{end}}
-
-{{template "public_status" .}}
-
-{{template "signature" .}}{{end}}
-
 /* public_status */
 
 {{define "public_status"}}**Weather Forecast**: {{.Forecast}}

@@ -21,9 +21,16 @@ func init() {
 	client = openai.NewClient(apiKey)
 }
 
-func askGPT(ctx context.Context, model string, prompt string, userMessage string) (string, error) {
+func askGPT(ctx context.Context, model string, prompt string, userMessage string, wantsJSON bool) (string, error) {
 	if len(userMessage) > USER_MESSAGE_CUTOFF {
 		userMessage = userMessage[:USER_MESSAGE_CUTOFF] + "..."
+	}
+
+	responseFormat := &openai.ChatCompletionResponseFormat{
+		Type: openai.ChatCompletionResponseFormatTypeJSONObject,
+	}
+	if !wantsJSON {
+		responseFormat = nil
 	}
 
 	for {
@@ -44,6 +51,7 @@ func askGPT(ctx context.Context, model string, prompt string, userMessage string
 					Content: userMessage,
 				},
 			},
+			ResponseFormat: responseFormat,
 		})
 
 		if attemptCtx.Err() != nil && ctx.Err() == nil && err != nil {
@@ -65,9 +73,9 @@ func askGPT(ctx context.Context, model string, prompt string, userMessage string
 }
 
 func AskGPT3(ctx context.Context, prompt string, userMessage string) (string, error) {
-	return askGPT(ctx, openai.GPT3Dot5Turbo, prompt, userMessage)
+	return askGPT(ctx, openai.GPT3Dot5Turbo, prompt, userMessage, false)
 }
 
-func AskGPT4(ctx context.Context, prompt string, userMessage string) (string, error) {
-	return askGPT(ctx, openai.GPT4, prompt, userMessage)
+func AskGPT4ForJSON(ctx context.Context, prompt string, userMessage string) (string, error) {
+	return askGPT(ctx, openai.GPT4o, prompt, userMessage, true)
 }

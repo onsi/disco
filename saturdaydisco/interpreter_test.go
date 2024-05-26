@@ -32,11 +32,6 @@ var _ = Describe("Interpreter", func() {
 		Ω(actualCommand.Email).Should(Equal(email))
 		Ω(actualCommand.EmailAddress).Should(Equal(email.From))
 	},
-		//status
-		Entry(nil, "Status", 0, CommandPlayerStatus),
-		Entry(nil, "Is the game happening?", 0, CommandPlayerStatus),
-		Entry(nil, "Yo - are we playing this week or not?", 0, CommandPlayerStatus),
-
 		//new players
 		Entry(nil, "In!", 0, CommandPlayerSetCount, 1),
 		Entry(nil, "Joseph and I can join", 0, CommandPlayerSetCount, 2),
@@ -57,13 +52,8 @@ var _ = Describe("Interpreter", func() {
 		Entry(nil, "Sorry, something's come up and none of us can make it any more", 3, CommandPlayerSetCount, 0),
 		Entry(nil, "My cousin's in town and can join me too!", 1, CommandPlayerSetCount, 2),
 
-		//unsubscribe
-		Entry(nil, "unsubscribe", 0, CommandPlayerUnsubscribe),
-		Entry(nil, "Hey - I just can't play very much these days.  Can someone take me off the list?", 0, CommandPlayerUnsubscribe),
-		Entry(nil, "I'm moving back east.  It's been fun y'all, but I think it's time to stop receiving these e-mails.", 0, CommandPlayerUnsubscribe),
-
 		//banter
-		Entry(nil, "Last week was amazing.\n\nI've planning to hand out on Thursday anybody want to join?", 0, CommandPlayerUnsure),
-		Entry(nil, "By the way, there's an ultimate game showing on ESPN 7.  Anybody interested?", 0, CommandPlayerUnsure),
+		Entry(nil, "Last week was amazing.\n\nI've planning to hand out on Thursday anybody want to join?", 0, CommandPlayerIgnore),
+		Entry(nil, "By the way, there's an ultimate game showing on ESPN 7.  Anybody interested?", 0, CommandPlayerIgnore),
 	)
 })
