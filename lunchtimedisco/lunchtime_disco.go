@@ -310,11 +310,11 @@ func NewLunchtimeDisco(config config.Config, w io.Writer, alarmClock clock.Alarm
 	if err != nil {
 		outbox.SendEmail(lunchtimeDisco.emailForBoss("startup_error", TemplateData{
 			Error: fmt.Errorf(startupMessage + "\n" + participantsMessage),
-		}, false))
+		}))
 		return nil, err
 	}
 
-	outbox.SendEmail(lunchtimeDisco.emailForBoss("startup", lunchtimeDisco.emailData().WithMessage(startupMessage), false))
+	outbox.SendEmail(lunchtimeDisco.emailForBoss("startup", lunchtimeDisco.emailData().WithMessage(startupMessage)))
 
 	go lunchtimeDisco.dance()
 	return lunchtimeDisco, nil
@@ -401,16 +401,12 @@ func (s *LunchtimeDisco) emailBody(name string, data TemplateData) string {
 	return b.String()
 }
 
-func (s *LunchtimeDisco) emailForBoss(name string, data TemplateData, asMarkdown bool) mail.Email {
+func (s *LunchtimeDisco) emailForBoss(name string, data TemplateData) mail.Email {
 	e := mail.E().
 		WithFrom(s.config.LunchtimeDiscoEmail).
 		WithTo(s.config.BossEmail).
-		WithSubject(s.emailSubject(name, data))
-	if asMarkdown {
-		e = e.WithBody(mail.Markdown(s.emailBody(name, data)))
-	} else {
-		e = e.WithBody(s.emailBody(name, data))
-	}
+		WithSubject(s.emailSubject(name, data)).
+		WithBody(mail.Markdown(s.emailBody(name, data)))
 	return e
 }
 
@@ -531,7 +527,7 @@ func (s *LunchtimeDisco) performNextEvent() {
 	switch s.State {
 	case StatePending, StateInviteSent:
 		s.logi(1, "{{coral}}sending boss the morning ping{{/}}")
-		s.sendEmail(s.emailForBoss("monitor", data, true), s.State, s.retryNextEventErrorHandler)
+		s.sendEmail(s.emailForBoss("monitor", data), s.State, s.retryNextEventErrorHandler)
 	case StateGameOnSent:
 		s.sendEmail(s.emailForList("reminder", data), StateReminderSent, s.retryNextEventErrorHandler)
 	case StateNoInviteSent, StateNoGameSent, StateReminderSent:
@@ -580,7 +576,7 @@ func (s *LunchtimeDisco) handleCommand(command Command) {
 		s.HistoricalParticipants = s.HistoricalParticipants.AddOrUpdate(command.Participant.Address)
 		s.sendEmailWithNoTransition(s.emailForBoss("acknowledge_set_games", s.emailData().
 			WithMessage(command.Participant.GamesAckMessage()).
-			WithComment(command.Participant.Comments), false))
+			WithComment(command.Participant.Comments)))
 	}
 }
 

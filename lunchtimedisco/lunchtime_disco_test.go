@@ -339,7 +339,7 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("Set Games - John Player <john@example.com>: A,E,M"))
 			Ω(le()).Should(BeFrom(conf.LunchtimeDiscoEmail))
 			Ω(le()).Should(BeSentTo(conf.BossEmail))
-			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player <john@example.com>: A,E,M")))
+			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player : A,E,M")))
 			Ω(le()).Should(HaveText(ContainSubstring("Comment: Might be late on Tuesday")))
 			Ω(le()).Should(HaveText(ContainSubstring("+ A - 1")))
 			Ω(le()).Should(HaveText(ContainSubstring("+ B - 0")))
@@ -375,7 +375,7 @@ var _ = Describe("LunchtimeDisco", func() {
 
 			By("the boss gets an acknowledgement email")
 			Eventually(le).Should(HaveSubject("Set Games - John Player Jr. <john@example.com>: E,M,B"))
-			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player Jr. <john@example.com>: E,M,B")))
+			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player Jr. : E,M,B")))
 			Ω(le()).Should(HaveText(ContainSubstring("Comment: I'm not late anymore")))
 			Ω(le()).Should(HaveText(ContainSubstring("+ A - 0")))
 			Ω(le()).Should(HaveText(ContainSubstring("+ B - 1")))
@@ -401,7 +401,7 @@ var _ = Describe("LunchtimeDisco", func() {
 
 			By("the boss gets an acknowledgement email")
 			Eventually(le).Should(HaveSubject("Set Games - John Player Jr. <john@example.com>: No Games"))
-			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player Jr. <john@example.com>: No Games")))
+			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player Jr. : No Games")))
 			Ω(le()).Should(HaveText(ContainSubstring("Comment: I'm out, sorry")))
 			Ω(le()).Should(HaveText(ContainSubstring("+ A - 0")))
 			Ω(le()).Should(HaveText(ContainSubstring("+ B - 0")))
@@ -422,7 +422,7 @@ var _ = Describe("LunchtimeDisco", func() {
 
 			By("the boss gets an acknowledgement email")
 			Eventually(le).Should(HaveSubject("Set Games - John Player Jr. <john@example.com>: No Games"))
-			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player Jr. <john@example.com>: No Games")))
+			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player Jr. : No Games")))
 			Ω(le()).ShouldNot(HaveText(ContainSubstring("Comment")))
 			Ω(le()).Should(HaveText(ContainSubstring("+ A - 0")))
 			Ω(le()).Should(HaveText(ContainSubstring("+ B - 0")))
