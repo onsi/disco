@@ -1,0 +1,162 @@
+{
+    "attachments": [],
+    "headerLines": [
+        {
+            "key": "arc-seal",
+            "line": "ARC-Seal: i=1; a=rsa-sha256; t=1744145918; cv=none; d=forwardemail.net;\r\n s=default;\r\n b=acGAlqx/3MPCTolRm+KEcBNB09VrfeQ+6TqsZPcEoV01FOOvT2oOMWezSFpOSRoykfRdQuzZu\r\n iJQ18wrnyw6LcFxuOseTVHPOZMW3tFQsmkYqsItdOYXJ+1WNRJB/cAmxSqgbNHbK/vlT5FkEv8o\r\n 9eK4Y/dzkLR7rr13qP+ao/Q="
+        },
+        {
+            "key": "arc-message-signature",
+            "line": "ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;\r\n d=forwardemail.net; h=To: In-Reply-To: References: Message-Id: Date:\r\n Subject: Mime-Version: From: Content-Transfer-Encoding: Content-Type;\r\n q=dns/txt; s=default; t=1744145918;\r\n bh=Uflo2njgIkGilOWBFwtU79cOg0KdVNdntJcUW4+LKpg=;\r\n b=mzVXAnsgD8DsBXUYsMnHJLywKiYkUe6IZpwVbc5Hx0Xc09IiTJrDI02n9HxedIpIpP6E+hBp7\r\n iK1PF4bIxbFYIAVTZxNxe2hr9ZsGQ4/q1rVboe3uKk8QmKEL4f6nu8lP2uT3tnBuQVZgpBtSaX8\r\n uFRfYMlKpH8XD9WoIvu1XMM="
+        },
+        {
+            "key": "arc-authentication-results",
+            "line": "ARC-Authentication-Results: i=1; mx2.forwardemail.net;\r\n dkim=pass header.i=@gmail.com header.s=20230601 header.a=rsa-sha256 header.b=k1CrphjQ;\r\n spf=pass (mx2.forwardemail.net: domain of example-user@gmail.com designates 2607:f8b0:4864:20::32c as permitted sender)\r\n smtp.mailfrom=example-user@gmail.com smtp.helo=mail-ot1-x32c.google.com;\r\n dmarc=pass (p=NONE sp=QUARANTINE arc=none) header.from=gmail.com header.d=gmail.com;\r\n bimi=skipped (too lax DMARC policy)"
+        },
+        {
+            "key": "dkim-signature",
+            "line": "DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=forwardemail.net;\r\n h=To: In-Reply-To: References: Message-Id: Date: Subject: Mime-Version:\r\n From: Content-Transfer-Encoding: Content-Type; q=dns/txt; s=default;\r\n t=1744145917; bh=Uflo2njgIkGilOWBFwtU79cOg0KdVNdntJcUW4+LKpg=;\r\n b=MIs9TJOZOIJqbYWNvxLoxWkkVoHmEmuxfilGxGRRwySMHwxkyBy+INeEVD4ujK+HGLodIpWVa\r\n 13Z779eoHNr0whpcxHMKUWY6cBkfv8GJTMjPf3AtCLwBFBKvLBaKcAuB9rP6lyvTj+B3dXQ6nMN\r\n 4E1j5ZTGwLhtGEvC501sEuY="
+        },
+        {
+            "key": "received",
+            "line": "Received: from mail-ot1-x32c.google.com ([2607:f8b0:4864:20::32c]\r\n mail-ot1-x32c.google.com) by mx2.forwardemail.net (Forward Email) with\r\n ESMTPS for <saturday-disco@sedenverultimate.net> (version=TLSv1.3\r\n cipher=TLS_AES_256_GCM_SHA384); Tue, 08 Apr 2025 20:58:34 +0000"
+        },
+        {
+            "key": "x-original-to",
+            "line": "X-Original-To: saturday-disco@sedenverultimate.net"
+        },
+        {
+            "key": "x-forward-email-sender",
+            "line": "X-Forward-Email-Sender: rfc822; example-user@gmail.com,\r\n mail-ot1-x32c.google.com, 2607:f8b0:4864:20::32c"
+        },
+        {
+            "key": "x-forward-email-version",
+            "line": "X-Forward-Email-Version: 1.0.1"
+        },
+        {
+            "key": "x-forward-email-website",
+            "line": "X-Forward-Email-Website: https://forwardemail.net"
+        },
+        {
+            "key": "x-complaints-to",
+            "line": "X-Complaints-To: abuse@forwardemail.net"
+        },
+        {
+            "key": "x-report-abuse",
+            "line": "X-Report-Abuse: abuse@forwardemail.net"
+        },
+        {
+            "key": "x-report-abuse-to",
+            "line": "X-Report-Abuse-To: abuse@forwardemail.net"
+        },
+        {
+            "key": "received",
+            "line": "Received: by mail-ot1-x32c.google.com with SMTP id 46e09a7af769-72bd5f25ea6so1464138a34.1\r\n        for <saturday-disco@sedenverultimate.net>; Tue, 08 Apr 2025 13:58:35 -0700 (PDT)"
+        },
+        {
+            "key": "dkim-signature",
+            "line": "DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=gmail.com; s=20230601; t=1744145914; x=1744750714; darn=sedenverultimate.net;\r\n        h=to:in-reply-to:references:message-id:date:subject:mime-version:from\r\n         :content-transfer-encoding:from:to:cc:subject:date:message-id\r\n         :reply-to;\r\n        bh=Uflo2njgIkGilOWBFwtU79cOg0KdVNdntJcUW4+LKpg=;\r\n        b=k1CrphjQ408USiVOWV3q6QZRaj7fiU9UAkjXRSzfj9ciMxvGOT3680dXjXITJLHeZX\r\n         0EZymX1VIozUZZ9bW3HPCuqqgkirPiUudIKuPSgeAo2GTrIWpd4p6i0d3RVHioCqgJKI\r\n         YMqEry5ItXSLPzqIbkt4oafrhoNEJ5L539HKmFrALc73K5ZcIweIn2cv0qie1NIEN6nR\r\n         IHfXJXUuwxVVHMnmT4optF6XnaMbw2llk2lCuOTZ80PAnyNPpfV7DlDzeaVS2IX/VkrW\r\n         XM5YBMCwObDZB3j/kdzbamEevWF3+GTKBzszrtdPvpLCWW1dY2WEddQmtmIVhtanDwJv\r\n         MU7w=="
+        },
+        {
+            "key": "x-google-dkim-signature",
+            "line": "X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;\r\n        d=1e100.net; s=20230601; t=1744145914; x=1744750714;\r\n        h=to:in-reply-to:references:message-id:date:subject:mime-version:from\r\n         :content-transfer-encoding:x-gm-message-state:from:to:cc:subject\r\n         :date:message-id:reply-to;\r\n        bh=Uflo2njgIkGilOWBFwtU79cOg0KdVNdntJcUW4+LKpg=;\r\n        b=GdQ1gSxy+qGVzvA49FMnMiGCfwyNBF9xTXiqhVYr1KfsqOn+6ZIvo9O0Of9yKX2IKs\r\n         Dz+luuY04pQUDyeDmi0uNqHOJnh/5YKKOM2mcn8i2XOkOo2cm9ByRUFd+B+vJfhP2Tjo\r\n         VgofB4YHxOicCjqXXBpebjZFjImTEAzrLl1BGYFO3XTSU04muH1VIRipPpl1PcDe0Kka\r\n         JeljC5xcnK8FCKt1ZNdEVgMI7888UrzYOX2v4XsyOccnESRZP2LzMJxP6p8I2N3cNTCd\r\n         itVC9ii20meIyUeZFY/IHLmH19HpEDpXJzQ8jWbSNtnNylsZ24+Le30ms1+tpsufFBQj\r\n         DGIg=="
+        },
+        {
+            "key": "x-gm-message-state",
+            "line": "X-Gm-Message-State: AOJu0YxJyZtWcEknzSgSiOc8sx9pvgQ9/IrKahhTNi+p2DY1j2jl4RQO\r\n\tonEBUq1n9LfSdaPoQN0BrwjtkSj0Yd9UIriUzNeKKvHkJBPCgrYEqyAV"
+        },
+        {
+            "key": "x-gm-gg",
+            "line": "X-Gm-Gg: ASbGncvQjktIoqobktcwlXW5UvLwIo72kFPXYT/2CCMbEaiXqZ1oYF0UQSaQkjS9soy\r\n\ttAIMZC41OtayAcYJy3RXOOgpmDY556xSbeFMI1FSecN5H4J+SbEwj2SurBBOAdInS6t7TBpJTI1\r\n\tPED2eOn2lh8zqTXUpi2vePM3ePwjCIhOzWnkLpfSYFps1O9NF88PSvIoa8kYmlExHJTs+3hywpC\r\n\tL1UYztcXCsvhaiK62vkB8kmS8MXkHqc4BCpKghlKxp8zF+0ehE8vxt7FohPAy1a1KSmI88bMaPg\r\n\tj9/ZfphyGax3N+RKinglmarAmsQMmp/8pH1NH7fn7R9vP1MYfxdbMNo+AvDqiM6e3bCknqF+PTC\r\n\ttVVlAtXcNI/WMrA=="
+        },
+        {
+            "key": "x-google-smtp-source",
+            "line": "X-Google-Smtp-Source: AGHT+IF1hDWjDAiIFyOy4dVjtSEBt+D9OCzWH+i7e3NfdyUbL3Ntg5sRx1ZgCttQScSR7vBhz2Uh8Q=="
+        },
+        {
+            "key": "x-received",
+            "line": "X-Received: by 2002:a05:6830:6011:b0:72b:f8bd:48c4 with SMTP id 46e09a7af769-72e71a8e2a0mr74246a34.3.1744145913730;\r\n        Tue, 08 Apr 2025 13:58:33 -0700 (PDT)"
+        },
+        {
+            "key": "return-path",
+            "line": "Return-Path: <example-user@gmail.com>"
+        },
+        {
+            "key": "received",
+            "line": "Received: from smtpclient.apple ([2600:381:4d0b:ac60:31c3:5bee:6007:1390])\r\n        by smtp.gmail.com with ESMTPSA id 46e09a7af769-72e6515d0c2sm590594a34.2.2025.04.08.13.58.32\r\n        for <saturday-disco@sedenverultimate.net>\r\n        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);\r\n        Tue, 08 Apr 2025 13:58:32 -0700 (PDT)"
+        },
+        {
+            "key": "content-type",
+            "line": "Content-Type: multipart/alternative; boundary=Apple-Mail-5A279F0A-5C64-47B9-BD21-7CEE4ADA04A2"
+        },
+        {
+            "key": "content-transfer-encoding",
+            "line": "Content-Transfer-Encoding: 7bit"
+        },
+        {
+            "key": "from",
+            "line": "From: Example User <example-user@gmail.com>"
+        },
+        {
+            "key": "mime-version",
+            "line": "Mime-Version: 1.0 (1.0)"
+        },
+        {
+            "key": "subject",
+            "line": "Subject: Re: Saturday Bible Park Frisbee 4/12"
+        },
+        {
+            "key": "date",
+            "line": "Date: Tue, 8 Apr 2025 14:58:21 -0600"
+        },
+        {
+            "key": "message-id",
+            "line": "Message-Id: <4CDDA56C-717F-4D56-BEC2-7A3EDF1BE409@gmail.com>"
+        },
+        {
+            "key": "references",
+            "line": "References: <5b9d1992-e010-3bbf-50b2-bb58387d51f3@sedenverultimate.net>"
+        },
+        {
+            "key": "in-reply-to",
+            "line": "In-Reply-To: <5b9d1992-e010-3bbf-50b2-bb58387d51f3@sedenverultimate.net>"
+        },
+        {
+            "key": "to",
+            "line": "To: Disco Saturday <saturday-disco@sedenverultimate.net>"
+        },
+        {
+            "key": "x-mailer",
+            "line": "X-Mailer: iPhone Mail (22D82)"
+        }
+    ],
+    "html": "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"></head><body dir=\"auto\">I’m in<div><br id=\"lineBreakAtBeginningOfSignature\"><div dir=\"ltr\">Sent from my iPhone</div><div dir=\"ltr\"><br><blockquote type=\"cite\">On Apr 8, 2025, at 10:00\u202fAM, Saturday Disco &lt;saturday-disco@sedenverultimate.net&gt; wrote:<br><br></blockquote></div><blockquote type=\"cite\"><div dir=\"ltr\">\ufeff<p>Please let me know if you’ll be joining us this Saturday <strong>4/12</strong>.</p>\n\n<p><strong>Where</strong>: <a href=\"https://maps.app.goo.gl/P1vm2nkZdYLGZbxb9\" target=\"_blank\">James Bible Park</a><br>\n<strong>When</strong>: Saturday, 10:00am<br>\n<strong>What</strong>: Bring a red and a blue shirt if you have them<br>\n<strong>Weather Forecast</strong>: ☀️ Mostly Sunny: 😎 67ºF | 💧 0% | 💨 8 mph</p>\n\n<p>Reminder that we also play at lunch during the week. Visit <a href=\"https://www.sedenverultimate.net\" target=\"_blank\">sedenverultimate.net</a> to sign up for the lunchtime mailing list.</p>\n\n<p>Disco 🪩<br><a href=\"https://www.sedenverultimate.net\" target=\"_blank\">sedenverultimate.net</a></p>\n\n<p></p>\n\n-- <br>\nYou received this message because you are subscribed to the Google Groups \"Saturday Southeast Denver Ultimate\" group.<br>\nTo unsubscribe from this group and stop receiving emails from it, send an email to <a href=\"mailto:saturday-sedenverultimate+unsubscribe@googlegroups.com\">saturday-sedenverultimate+unsubscribe@googlegroups.com</a>.<br>\nTo view this discussion visit <a href=\"https://groups.google.com/d/msgid/saturday-sedenverultimate/5b9d1992-e010-3bbf-50b2-bb58387d51f3%40sedenverultimate.net?utm_medium=email&amp;utm_source=footer\">https://groups.google.com/d/msgid/saturday-sedenverultimate/5b9d1992-e010-3bbf-50b2-bb58387d51f3%40sedenverultimate.net</a>.<br>\nFor more options, visit <a href=\"https://groups.google.com/d/optout\">https://groups.google.com/d/optout</a>.<br>\n</div></blockquote></div></body></html>",
+    "subject": "Re: Saturday Bible Park Frisbee 4/12",
+    "references": "<5b9d1992-e010-3bbf-50b2-bb58387d51f3@sedenverultimate.net>",
+    "date": "2025-04-08T20:58:21.000Z",
+    "to": {
+        "value": [
+            {
+                "address": "saturday-disco@sedenverultimate.net",
+                "name": "Disco Saturday"
+            }
+        ],
+        "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">Disco Saturday</span> &lt;<a href=\"mailto:saturday-disco@sedenverultimate.net\" class=\"mp_address_email\">saturday-disco@sedenverultimate.net</a>&gt;</span>",
+        "text": "\"Disco Saturday\" <saturday-disco@sedenverultimate.net>"
+    },
+    "from": {
+        "value": [
+            {
+                "address": "example-user@gmail.com",
+                "name": "Example User"
+            }
+        ],
+        "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">Example User</span> &lt;<a href=\"mailto:example-user@gmail.com\" class=\"mp_address_email\">example-user@gmail.com</a>&gt;</span>",
+        "text": "\"Example User\" <example-user@gmail.com>"
+    },
+    "messageId": "<4CDDA56C-717F-4D56-BEC2-7A3EDF1BE409@gmail.com>",
+    "inReplyTo": "<5b9d1992-e010-3bbf-50b2-bb58387d51f3@sedenverultimate.net>",
+    "recipients": [
+        "saturday-disco@sedenverultimate.net"
+    ]
+}

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	strip "github.com/grokify/html-strip-tags-go"
 	"github.com/onsi/say"
 )
 
@@ -49,6 +50,7 @@ type forwardEmailModel struct {
 	Subject   string                   `json:"subject"`
 	MessageID string                   `json:"messageId"`
 	Text      string                   `json:"text"`
+	HTML      string                   `json:"html"`
 	Headers   []forwardEmailHeader     `json:"headerLines"`
 }
 
@@ -60,6 +62,17 @@ var replyRegexes = []*regexp.Regexp{
 	regexp.MustCompile(`(?im)-+\s*(original|forwarded)\s+message\s*-+\s*$`),
 	regexp.MustCompile(`(?im)From:\s*` + emailRegex),
 	regexp.MustCompile(`(?im)` + emailRegex + `\s+wrote:`),
+}
+
+func ExtractTopMostPortionFromHTML(htmlBody string) string {
+	i := strings.Index(htmlBody, "<blockquote")
+	if i >= 0 {
+		htmlBody = htmlBody[:i]
+	}
+	htmlBody = strings.ReplaceAll(htmlBody, "<br", "\n<br")
+	txtBody := strip.StripTags(htmlBody)
+	return ExtractTopMostPortion(txtBody)
+
 }
 
 func ExtractTopMostPortion(fullBody string) string {
@@ -123,6 +136,11 @@ func ParseIncomingEmail(db S3DBInt, data []byte, debug io.Writer) (Email, error)
 		}
 	}
 
-	out.Text = ExtractTopMostPortion(model.Text)
+	if model.Text != "" {
+		out.Text = ExtractTopMostPortion(model.Text)
+	} else {
+
+		out.Text = ExtractTopMostPortionFromHTML(model.HTML)
+	}
 	return out, nil
 }

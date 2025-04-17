@@ -107,5 +107,14 @@ var _ = Describe("ParseIncomingEmail", func() {
 				Ω(mail.ExtractTopMostPortion(string(fullBody))).Should(Equal(" I'm in - bringing REDACTED as well.\n"))
 			})
 		})
+
+		Context("when the e-mail has no text and is just HTML", func() {
+			It("grabs the html and strips out all the tags", func() {
+				email, err := mail.ParseIncomingEmail(db, loadEmailFixture("html_only_ios_email.json"), GinkgoWriter)
+				Ω(err).ShouldNot(HaveOccurred())
+				Ω(email.Text).Should(Equal("I’m in\nSent from my iPhone\n"))
+				Ω(email.HTML).Should(BeZero())
+			})
+		})
 	})
 })
