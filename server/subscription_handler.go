@@ -46,6 +46,11 @@ func (s *Server) Subscribe(c echo.Context) error {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
+	if !request.WantsSaturday && !request.WantsLunchtime {
+		say.Fplni(s.e.Logger.Output(), 1, "{{red}}No subscription type selected - ignoring{{/}}")
+		return c.String(http.StatusBadRequest, "No subscription type selected")
+	}
+
 	request.Email = truncate(strings.TrimSpace(request.Email), 100)
 	request.Message = truncate(strings.TrimSpace(request.Message), 1000)
 

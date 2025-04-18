@@ -3,12 +3,14 @@ package saturdaydisco
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"strings"
 	"text/template"
 	"time"
 
 	"github.com/onsi/disco/askgpt"
 	"github.com/onsi/disco/mail"
+	"github.com/onsi/say"
 )
 
 type promptData struct {
@@ -44,10 +46,11 @@ type InterpreterInt interface {
 }
 
 type Interpreter struct {
+	w io.Writer
 }
 
-func NewInterpreter() *Interpreter {
-	return &Interpreter{}
+func NewInterpreter(w io.Writer) *Interpreter {
+	return &Interpreter{w: w}
 }
 
 func (interpreter *Interpreter) InterpretEmail(email mail.Email, count int) (Command, error) {
@@ -63,15 +66,18 @@ func (interpreter *Interpreter) InterpretEmail(email mail.Email, count int) (Com
 	promptTemplate.Execute(prompt, promptData{Count: count})
 
 	userMessage := email.Text
-
+	say.Fplni(interpreter.w, 0, "Asking GPT to interpret email: %s", userMessage)
 	resp, err := askgpt.AskGPT4ForJSON(ctx, prompt.String(), userMessage)
 
 	if err == askgpt.ErrNoChoices {
+		say.Fplni(interpreter.w, 1, "{{red}}GPT came back with ErrNoChoices{{/}}")
 		return cmd, nil
 	} else if err != nil {
+		say.Fplni(interpreter.w, 1, "{{red}}GPT came back with Error: %s{{/}}", err)
 		return Command{}, err
 	}
 
+	say.Fplni(interpreter.w, 1, "GPT response: %s", resp)
 	var response responseJSON
 	err = json.Unmarshal([]byte(resp), &response)
 	if err != nil {

@@ -50,7 +50,7 @@ type forwardEmailModel struct {
 	Subject   string                   `json:"subject"`
 	MessageID string                   `json:"messageId"`
 	Text      string                   `json:"text"`
-	HTML      string                   `json:"html"`
+	HTML      any                      `json:"html"`
 	Headers   []forwardEmailHeader     `json:"headerLines"`
 }
 
@@ -139,8 +139,14 @@ func ParseIncomingEmail(db S3DBInt, data []byte, debug io.Writer) (Email, error)
 	if model.Text != "" {
 		out.Text = ExtractTopMostPortion(model.Text)
 	} else {
-
-		out.Text = ExtractTopMostPortionFromHTML(model.HTML)
+		switch v := model.HTML.(type) {
+		case string:
+			if v != "" {
+				out.Text = ExtractTopMostPortionFromHTML(v)
+			}
+		default:
+			return Email{}, fmt.Errorf("no content found in email")
+		}
 	}
 	return out, nil
 }

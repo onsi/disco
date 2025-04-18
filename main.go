@@ -94,7 +94,7 @@ func main() {
 		e.Logger.Output(),
 		clock.NewAlarmClock(),
 		outbox,
-		saturdaydisco.NewInterpreter(),
+		saturdaydisco.NewInterpreter(e.Logger.Output()),
 		forecaster,
 		db,
 	)

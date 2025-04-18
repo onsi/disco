@@ -77,5 +77,5 @@ func AskGPT3(ctx context.Context, prompt string, userMessage string) (string, er
 }
 
 func AskGPT4ForJSON(ctx context.Context, prompt string, userMessage string) (string, error) {
-	return askGPT(ctx, openai.GPT4o, prompt, userMessage, true)
+	return askGPT(ctx, "gpt-4.1", prompt, userMessage, true)
 }
