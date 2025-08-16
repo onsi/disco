@@ -128,7 +128,6 @@ var _ = Describe("LunchtimeDisco", func() {
 			Ω(le()).Should(BeSentTo(conf.BossEmail))
 			Ω(le()).Should(HaveText(ContainSubstring("Here's the latest on the lunchtime game.")))
 			Ω(le()).Should(HaveText(ContainSubstring("Dashboard: https://www.sedenverultimate.net/lunchtime/" + disco.GetSnapshot().BossGUID)))
-			Ω(le()).Should(HaveText(ContainSubstring("+ A - 0 - Tuesday 9/26 at 10:00am - %s\n+ B - 0 - Tuesday 9/26 at 11:00am - %s", forecast, forecast)))
 			outbox.Clear()
 
 			signUpPlayer(playerName, playerEmail.Address(), "", []string{"A"})
@@ -137,7 +136,6 @@ var _ = Describe("LunchtimeDisco", func() {
 			clock.Fire()
 			Ω(clock.Time()).Should(BeOn(time.Monday, 6))
 			Eventually(le).Should(HaveSubject("Lunchtime Monitor: " + weekOf))
-			Ω(le()).Should(HaveText(ContainSubstring("+ A - 1 - Tuesday 9/26 at 10:00am - %s\n  - John Player \n+ B - 0 - Tuesday 9/26 at 11:00am - %s\n+ C", forecast, forecast)))
 			outbox.Clear()
 
 			signUpPlayer("Bob Player", "bob@example.com", "", []string{"A", "B"})
@@ -146,7 +144,6 @@ var _ = Describe("LunchtimeDisco", func() {
 			clock.Fire()
 			Ω(clock.Time()).Should(BeOn(time.Tuesday, 6))
 			Eventually(le).Should(HaveSubject("Lunchtime Monitor: " + weekOf))
-			Ω(le()).Should(HaveText(ContainSubstring("+ A - 2 - Tuesday 9/26 at 10:00am - %s\n  - John Player \n  - Bob Player \n+ B - 1 - Tuesday 9/26 at 11:00am - %s\n  - Bob Player \n+ C", forecast, forecast)))
 		})
 
 		Context("when the invite is sent", func() {
@@ -341,10 +338,6 @@ var _ = Describe("LunchtimeDisco", func() {
 			Ω(le()).Should(BeSentTo(conf.BossEmail))
 			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player : A,E,M")))
 			Ω(le()).Should(HaveText(ContainSubstring("Comment: Might be late on Tuesday")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ A - 1")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ B - 0")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ E - 1")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ M - 1")))
 
 			By("...and we do see the player's games stored off")
 			Eventually(disco.GetSnapshot).Should(HaveGameCount("A", 1))
@@ -377,10 +370,6 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("Set Games - John Player Jr. <john@example.com>: E,M,B"))
 			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player Jr. : E,M,B")))
 			Ω(le()).Should(HaveText(ContainSubstring("Comment: I'm not late anymore")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ A - 0")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ B - 1")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ E - 1")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ M - 1")))
 
 			By("...and we do see the player's updates stored off")
 			Eventually(disco.GetSnapshot).Should(HaveGameCount("B", 1))
@@ -403,10 +392,6 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("Set Games - John Player Jr. <john@example.com>: No Games"))
 			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player Jr. : No Games")))
 			Ω(le()).Should(HaveText(ContainSubstring("Comment: I'm out, sorry")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ A - 0")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ B - 0")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ E - 0")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ M - 0")))
 			Eventually(disco.GetSnapshot).Should(HaveGameCount("B", 0))
 			Ω(disco.GetSnapshot().Participants[0]).Should(Equal(lunchtimedisco.LunchtimeParticipant{
 				Address:  "John Player Jr. <john@example.com>",
@@ -424,11 +409,6 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually(le).Should(HaveSubject("Set Games - John Player Jr. <john@example.com>: No Games"))
 			Ω(le()).Should(HaveText(ContainSubstring("I've set games for John Player Jr. : No Games")))
 			Ω(le()).ShouldNot(HaveText(ContainSubstring("Comment")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ A - 0")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ B - 0")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ E - 0")))
-			Ω(le()).Should(HaveText(ContainSubstring("+ M - 0")))
-
 			By("and the user is no longer in the set of participants")
 			Ω(disco.GetSnapshot().Participants).Should(BeEmpty())
 
@@ -465,34 +445,6 @@ var _ = Describe("LunchtimeDisco", func() {
 			var backupHistoricalParticipants []mail.EmailAddress
 			Ω(json.Unmarshal(rawHistoricalParticipants, &backupHistoricalParticipants)).Should(Succeed())
 			Ω(backupHistoricalParticipants).Should(ConsistOf(mail.EmailAddress("John Player Jr. <john@example.com>")))
-		})
-	})
-
-	Describe("allowing the boss to see who has signed up (via email)", func() {
-		BeforeEach(func() {
-			sendInvite()
-			signUpPlayer(playerName, playerEmail.Address(), "I'm in", []string{"A", "B", "C"})
-			signUpPlayer("Bob Player", "bob@example.com", "", []string{"A", "E"})
-			signUpPlayer("Sally Player", "sally@example.com", "Let's play!", []string{"B", "E"})
-			Eventually(le).Should(HaveSubject("Set Games - Sally Player <sally@example.com>: B,E"))
-			outbox.Clear()
-			clock.Fire()
-			Eventually(le).Should(HaveSubject("Lunchtime Monitor: " + weekOf))
-		})
-
-		It("includes the set of players in the monitor email", func() {
-			Ω(le()).Should(HaveText(ContainSubstring(`+ A - 2 - Tuesday 9/26 at 10:00am - %s
-  - John Player 
-  - Bob Player 
-+ B - 2 - Tuesday 9/26 at 11:00am - %s
-  - John Player 
-  - Sally Player 
-+ C - 1 - Tuesday 9/26 at 12:00pm - %s
-  - John Player 
-+ D - 0 - Tuesday 9/26 at 1:00pm - %s
-+ E - 2 - Wednesday 9/27 at 10:00am - %s
-  - Bob Player 
-  - Sally Player `, forecast, forecast, forecast, forecast, forecast)))
 		})
 	})
 

@@ -9,17 +9,14 @@ Here's the latest on the lunchtime game.
 
 {{define "boss_status"}}Dashboard: {{.BossURL}}
 
+Signup URL: {{.PickerURL}}
+
 Current State: {{.State}}
 Next Event on: {{.NextEvent}}
 Game On sent: {{if not .GameOnGame.IsZero}}For {{.GameOnGameFullStartTime}}{{else}}No{{end}}
 Game Off sent: {{.GameOff}}
-Signup URL: {{.PickerURL}}
 
 {{template "public_status" .}}
-
-Games:{{range $idx, $game := .Games}}
-+ {{$game.String}}{{- range $idx, $player := $game.Players}}
-  - {{$player.String}}{{- end}}{{- end}}
 {{end}}
 
 {{define "public_status"}}{{if .GameOnGame.IsZero}}<table border="0" cellpadding="0" cellspacing="5px" width="100%" style="max-width:600px;cursor:pointer;">
