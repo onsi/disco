@@ -41,7 +41,7 @@ Participants:{{range $idx, $participant := .Participants}}
 /* game_details */
 {{define "game_details"}}**Where**: [James Bible Park](https://maps.app.goo.gl/P1vm2nkZdYLGZbxb9)<br>
 **When**: Saturday, {{.GameTime}}<br>
-**What**: Bring a red and a blue shirt if you have them<br>{{end}}
+**What**: Bring a red shirt, a blue shirt, and a white shirt if you have them<br>{{end}}
 
 {{define "boss_debug_body"}}Hey boss,
 

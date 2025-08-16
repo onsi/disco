@@ -8,10 +8,8 @@ primary_region = "den"
 kill_timeout = 120
 
 [build]
-  builder = "paketobuildpacks/builder:tiny"
-  buildpacks = ["gcr.io/paketo-buildpacks/go"]
   [build.args]
-    BP_KEEP_FILES = "css/*:js/*:html/*:node_modules/*:img/*:templates/*"
+    GO_VERSION = '1.23.0'
 
 [env]
   ENV = "PROD"
