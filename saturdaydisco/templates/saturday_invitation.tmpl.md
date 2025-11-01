@@ -6,6 +6,10 @@
 
 {{end}}Please let me know if you'll be joining us this Saturday **{{.GameDate}}**.
 
+**How do I sign up?**
+
+Just [reply to this e-mail and say "in" if you're coming](mailto:{{.DiscoEmailAddress}}?subject=Re:Saturday Bible Park Frisbee {{.GameDate}}&body=in) .  If you're bringing players with you say something like "[In and bringing 2 others.](mailto:{{.DiscoEmailAddress}}?subject=Re:Saturday Bible Park Frisbee {{.GameDate}}&body=In and bringing 2 others)"
+
 {{template "game_details" .}}
 **Weather Forecast**: {{.Forecast}}
 

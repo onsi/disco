@@ -19,7 +19,9 @@ Game Off sent: {{.GameOff}}
 {{template "public_status" .}}
 {{end}}
 
-{{define "public_status"}}{{if .GameOnGame.IsZero}}<table border="0" cellpadding="0" cellspacing="5px" width="100%" style="max-width:600px;cursor:pointer;">
+{{define "public_status"}}{{if .GameOnGame.IsZero}}**[Click here to sign up]({{.PickerURL}})**
+
+<table border="0" cellpadding="0" cellspacing="5px" width="100%" style="max-width:600px;cursor:pointer;">
 <tr>
     <th colspan="4" style="font-size:1.3em;">{{.Games.A.GameDate}}</th>
 </tr>
@@ -56,7 +58,7 @@ Game Off sent: {{.GameOff}}
 </tr>
 </table></a>
 
-**[Click here to sign up]({{.PickerURL}})** or reply with the options you can make.
+**[Click here to sign up]({{.PickerURL}})**
 
 {{- else}}**Where**: [James Bible Park](https://maps.app.goo.gl/P1vm2nkZdYLGZbxb9)<br>
 **When**: {{.GameOnGameFullStartTime}}<br>
