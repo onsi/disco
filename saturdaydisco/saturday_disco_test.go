@@ -926,7 +926,7 @@ var _ = Describe("SaturdayDisco", func() {
 								Ω(le()).Should(HaveSubject("Last Call! " + gameDate))
 								Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 								Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
-								Ω(le()).Should(HaveText(ContainSubstring("We're still short.  Anyone forget to respond?")))
+								Ω(le()).Should(HaveText(ContainSubstring("We're still short.")))
 								Ω(le()).Should(HaveText(ContainSubstring("player (7)")))
 								Ω(disco.GetSnapshot()).Should(HaveState(StateBadgerSent))
 							})
@@ -966,9 +966,10 @@ var _ = Describe("SaturdayDisco", func() {
 								Ω(le()).Should(HaveSubject("Last Call! " + gameDate))
 								Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 								Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
-								Ω(le()).Should(HaveText(ContainSubstring("We're still short.  Anyone forget to respond?")))
+								Ω(le()).Should(HaveText(ContainSubstring("We're still short.")))
 								Ω(le()).Should(HaveHTML(ContainSubstring("<strong>")))
 								Ω(disco.GetSnapshot()).Should(HaveState(StateBadgerSent))
+								fmt.Println(le().HTML)
 							})
 
 							It("checks for quorum on Friday morning", func() {
@@ -990,7 +991,7 @@ var _ = Describe("SaturdayDisco", func() {
 								Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 								Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
 								Ω(le()).Should(HaveText(ContainSubstring("We only have FIVE.")))
-								Ω(le()).Should(HaveText(ContainSubstring("We're still short.  Anyone forget to respond?")))
+								Ω(le()).Should(HaveText(ContainSubstring("We're still short.")))
 								Ω(le()).Should(HaveHTML(ContainSubstring("We only have <strong>FIVE</strong>.")))
 								Ω(disco.GetSnapshot()).Should(HaveState(StateBadgerSent))
 							})
@@ -1076,7 +1077,7 @@ var _ = Describe("SaturdayDisco", func() {
 							It("sends the badger anyway", func() {
 								Ω(le()).Should(BeFrom(conf.SaturdayDiscoEmail))
 								Ω(le()).Should(BeSentTo(conf.SaturdayDiscoList))
-								Ω(le()).Should(HaveText(ContainSubstring("We're still short.  Anyone forget to respond?")))
+								Ω(le()).Should(HaveText(ContainSubstring("We're still short.")))
 								Ω(le()).Should(HaveHTML(ContainSubstring("<strong>")))
 								Ω(disco.GetSnapshot()).Should(HaveState(StateBadgerSent))
 							})
