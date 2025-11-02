@@ -4,9 +4,11 @@
 
 {{define "badger_body"}}{{- if .Message}}{{.Message}}
 
-{{end}}**We're still short**.  Anyone forget to respond?
+{{end}}**We're still short**.  Here are the folks who've signed up so far: {{.Participants.Public}}
 
-Here are the folks who've signed up so far: {{.Participants.Public}}
+**How do I sign up?**
+
+Just [reply to this e-mail and say "in" if you're coming](mailto:{{.DiscoEmailAddress}}?subject=Re:Saturday Bible Park Frisbee {{.GameDate}}&body=in) .  If you're bringing players with you say something like "[In and bringing 2 others.](mailto:{{.DiscoEmailAddress}}?subject=Re:Saturday Bible Park Frisbee {{.GameDate}}&body=In and bringing 2 others)"
 
 If we missed your reply, please let us know ASAP!
 
