@@ -5,6 +5,7 @@ document.addEventListener('submit', (e) => {
         wantsSaturday: document.querySelector("#saturday").checked,
         wantsLunchtime: document.querySelector("#lunchtime").checked,
         message: document.querySelector("#message").value,
+        turnstileToken: document.querySelector("[name=cf-turnstile-response]").value
     }
     fetch(form.action, {
         method: form.method,
