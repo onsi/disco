@@ -1,8 +1,10 @@
 package server
 
 import (
+	"encoding/json"
 	"html/template"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -38,8 +40,27 @@ func truncate(input string, maxLength int) string {
 	return input
 }
 
+func verifyTurnstile(secret, token string) bool {
+	resp, err := http.PostForm("https://challenges.cloudflare.com/turnstile/v0/siteverify",
+		url.Values{"secret": {secret}, "response": {token}})
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	var result struct {
+		Success bool `json:"success"`
+	}
+	json.NewDecoder(resp.Body).Decode(&result)
+	return result.Success
+}
+
 func (s *Server) Subscribe(c echo.Context) error {
 	say.Fplni(s.e.Logger.Output(), 0, "{{green}}Got a subscription request{{/}}")
+	token := c.FormValue("cf-turnstile-response")
+	if !verifyTurnstile(s.config.TurnstileSecretKey, token) {
+		say.Fplni(s.e.Logger.Output(), 1, "{{red}}Turnstile verification failed{{/}}")
+		return c.String(http.StatusForbidden, "Human verification failed")
+	}
 	var request SubscriptionRequest
 	if err := c.Bind(&request); err != nil {
 		say.Fplni(s.e.Logger.Output(), 1, "{{red}}Failed to bind request %s{{/}}", err.Error())

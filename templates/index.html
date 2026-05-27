@@ -8,6 +8,7 @@
     <title>Southeast Denver Ultimate Frisbee</title>
 
     {{ build "css/index.css" "style" }}
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
 <body>
@@ -166,6 +167,7 @@
                 </div>
                 <textarea name="message" id="message" placeholder="Message (optional)" rows="3"
                     maxlength="1000"></textarea>
+                <div class="cf-turnstile" data-sitekey="{{ .TurnstileSiteKey }}"></div>
                 <input type="submit" value="Subscribe" />
             </form>
         </div>

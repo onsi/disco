@@ -19,6 +19,7 @@ kill_timeout = 120
   SATURDAY_DISCO_LIST = "saturday-sedenverultimate@googlegroups.com"
   LUNCHTIME_DISCO_EMAIL = "Lunchtime Disco <lunchtime-disco@sedenverultimate.net>"
   LUNCHTIME_DISCO_LIST = "southeast-denver-lunchtime-ultimate@googlegroups.com"
+  TURNSTILE_SITE_KEY = "0x4AAAAAADXQD8pxvtzBWwoH"
 
 [http_service]
   internal_port = 8080

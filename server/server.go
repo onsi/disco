@@ -15,8 +15,9 @@ import (
 )
 
 type TemplateData struct {
-	Saturday  saturdaydisco.TemplateData
-	Lunchtime lunchtimedisco.TemplateData
+	Saturday         saturdaydisco.TemplateData
+	Lunchtime        lunchtimedisco.TemplateData
+	TurnstileSiteKey string
 }
 
 type Server struct {
@@ -64,7 +65,7 @@ func (s *Server) RegisterRoutes() {
 }
 
 func (s *Server) Index(c echo.Context) error {
-	t := TemplateData{}
+	t := TemplateData{TurnstileSiteKey: s.config.TurnstileSiteKey}
 	if s.saturdayDisco != nil {
 		t.Saturday = s.saturdayDisco.TemplateData()
 	}
