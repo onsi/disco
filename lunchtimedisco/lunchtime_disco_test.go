@@ -38,22 +38,32 @@ var _ = Describe("LunchtimeDisco", func() {
 	var indexURL, playerURL, persistentPlayerURL, bossURL string
 	var forecast weather.Forecast
 
+	confirmSend := func(label string) {
+		GinkgoHelper()
+		b.Click(b.XPath("button").WithClass("confirm-message").WithText("Send " + label))
+	}
+
+	clickParticipant := func(name string) {
+		GinkgoHelper()
+		b.Click(b.ByCSS(".pc-name").ContainingText(name))
+	}
+
 	signUpPlayer := func(name string, email string, comments string, gameKeys []string) {
 		GinkgoHelper()
 		b.Navigate(playerURL)
-		Eventually("#name").Should(b.SetValue(name))
-		Ω("#email").Should(b.SetValue(email))
+		b.SetValue("#name", name)
+		b.SetValue("#email", email)
 		Eventually(".validation-error").ShouldNot(b.Exist())
-		Ω("#comments").Should(b.SetValue(comments))
-		selected := b.GetPropertyForEach(".selected", "id")
-		for _, key := range selected {
-			Ω("#" + key.(string)).Should(b.Click())
+		b.SetValue("#comments", comments)
+		for _, key := range b.CurrentPropertyForEach(".selected", "id") {
+			b.Click("#" + key.(string))
 		}
 		for _, key := range gameKeys {
-			Ω("#" + key).Should(b.Click())
+			b.Click("#" + key)
 			Eventually("#" + key).Should(b.HaveClass("selected"))
 		}
-		Ω(".submit").Should(b.Click())
+		b.Click(".submit")
+		Eventually(".message.set-games.success").Should(b.Exist())
 	}
 
 	sendInvite := func() {
@@ -65,8 +75,8 @@ var _ = Describe("LunchtimeDisco", func() {
 
 		//then we send the invite
 		b.Navigate(bossURL)
-		Eventually("#invite").Should(b.Click())
-		Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send Invite")).Should(b.Click())
+		b.Click("#invite")
+		confirmSend("Invite")
 		Eventually(le).Should(HaveSubject("Lunchtime Bible Park Frisbee - Week of " + weekOf))
 		outbox.Clear()
 		Ω(disco.GetSnapshot()).Should(HaveState(StateInviteSent))
@@ -174,8 +184,8 @@ var _ = Describe("LunchtimeDisco", func() {
 
 				//then we send the invite
 				b.Navigate(bossURL)
-				Eventually("#no-invite").Should(b.Click())
-				Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send No Invite")).Should(b.Click())
+				b.Click("#no-invite")
+				confirmSend("No Invite")
 				Eventually(le).Should(HaveSubject("No Lunchtime Bible Park Frisbee This Week"))
 				outbox.Clear()
 				Ω(disco.GetSnapshot()).Should(HaveState(StateNoInviteSent))
@@ -193,8 +203,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			BeforeEach(func() {
 				sendInvite()
 				b.Navigate(bossURL)
-				Eventually("#no-game").Should(b.Click())
-				Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send No Game")).Should(b.Click())
+				b.Click("#no-game")
+				confirmSend("No Game")
 				Eventually(le).Should(HaveSubject("No Lunchtime Game This Week"))
 				outbox.Clear()
 
@@ -213,9 +223,9 @@ var _ = Describe("LunchtimeDisco", func() {
 			BeforeEach(func() {
 				sendInvite()
 				b.Navigate(bossURL)
-				Eventually("#game-on").Should(b.Click())
-				Eventually("#game-option-E").Should(b.Click())
-				Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send Game On")).Should(b.Click())
+				b.Click("#game-on")
+				b.Click("#game-option-E")
+				confirmSend("Game On")
 				Eventually(le).Should(HaveSubject("GAME ON! Wednesday 9/27 at 10:00am"))
 				outbox.Clear()
 
@@ -246,8 +256,8 @@ var _ = Describe("LunchtimeDisco", func() {
 
 			//then we send the invite
 			b.Navigate(bossURL)
-			Eventually("#invite").Should(b.Click())
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send Invite")).Should(b.Click())
+			b.Click("#invite")
+			confirmSend("Invite")
 			Eventually(le).Should(HaveSubject("Lunchtime Bible Park Frisbee - Week of " + weekOf))
 			Ω(le()).Should(BeFrom(conf.BossEmail))
 			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
@@ -274,9 +284,9 @@ var _ = Describe("LunchtimeDisco", func() {
 
 			//now subsequent e-mails should be sent to the same thread (and not a decoy/other thread!)
 			b.Navigate(bossURL)
-			Eventually("#game-on").Should(b.Click())
-			Eventually("#game-option-E").Should(b.Click())
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send Game On")).Should(b.Click())
+			b.Click("#game-on")
+			b.Click("#game-option-E")
+			confirmSend("Game On")
 			Eventually(le).Should(HaveSubject("Re: Lunchtime Bible Park Frisbee - Week of " + weekOf))
 			Ω(le()).Should(BeFrom(conf.BossEmail))
 			Ω(le()).Should(BeSentTo(conf.LunchtimeDiscoList, conf.BossEmail))
@@ -306,17 +316,17 @@ var _ = Describe("LunchtimeDisco", func() {
 			By("validating the presence of name...")
 			b.Navigate(persistentPlayerURL)
 			Eventually("#invalid-name").Should(b.Exist())
-			Ω("#invalid-email").Should(b.Exist())
-			Ω("button.submit").ShouldNot(b.BeEnabled())
+			Eventually("#invalid-email").Should(b.Exist())
+			Eventually("button.submit").ShouldNot(b.BeEnabled())
 
-			Ω("#name").Should(b.SetValue("John Player"))
+			b.SetValue("#name", "John Player")
 			Eventually("#invalid-name").ShouldNot(b.Exist())
 
 			By("validating a valid e-mail is present...")
-			Ω("#email").Should(b.SetValue("john"))
+			b.SetValue("#email", "john")
 			Consistently("#invalid-email").Should(b.Exist())
 
-			Ω("#email").Should(b.SetValue("john@example.com"))
+			b.SetValue("#email", "john@example.com")
 			Eventually("#invalid-email").ShouldNot(b.Exist())
 			Eventually("button.submit").Should(b.BeEnabled())
 
@@ -327,9 +337,9 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually("#A.selected").Should(b.Exist())
 			Eventually("#E.selected").Should(b.Exist())
 			Eventually("#M.selected").Should(b.Exist())
-			Ω(".selected").Should(b.HaveCount(3))
+			Eventually(".selected").Should(b.HaveCount(3))
 
-			Ω("#comments").Should(b.SetValue("Might be late on Tuesday"))
+			b.SetValue("#comments", "Might be late on Tuesday")
 			b.Click("button.submit")
 
 			By("the boss gets an acknowledgement email")
@@ -352,18 +362,18 @@ var _ = Describe("LunchtimeDisco", func() {
 			Eventually("#content.index").Should(b.Exist())
 			b.Navigate(persistentPlayerURL)
 			Eventually("#name").Should(b.HaveValue("John Player"))
-			Ω("#email").Should(b.HaveValue("john@example.com"))
+			Eventually("#email").Should(b.HaveValue("john@example.com"))
 			Eventually("#A.selected").Should(b.Exist())
 			Eventually("#E.selected").Should(b.Exist())
 			Eventually("#M.selected").Should(b.Exist())
-			Ω(".selected").Should(b.HaveCount(3))
-			Ω("#comments").Should(b.HaveValue("Might be late on Tuesday"))
+			Eventually(".selected").Should(b.HaveCount(3))
+			Eventually("#comments").Should(b.HaveValue("Might be late on Tuesday"))
 
 			By("the user can adjust their selection (and even change their name)")
-			Ω("#name").Should(b.SetValue("John Player Jr."))
-			Ω("#A").Should(b.Click())
-			Ω("#B").Should(b.Click())
-			Ω("#comments").Should(b.SetValue("I'm not late anymore"))
+			b.SetValue("#name", "John Player Jr.")
+			b.Click("#A")
+			b.Click("#B")
+			b.SetValue("#comments", "I'm not late anymore")
 			b.Click("button.submit")
 
 			By("the boss gets an acknowledgement email")
@@ -381,11 +391,11 @@ var _ = Describe("LunchtimeDisco", func() {
 
 			By("when the user clears out their games (but there is a comment) - we keep them around")
 			b.Navigate(persistentPlayerURL)
-			Eventually("#B").Should(b.Click())
-			Ω("#E").Should(b.Click())
-			Ω("#M").Should(b.Click())
+			b.Click("#B")
+			b.Click("#E")
+			b.Click("#M")
 			Eventually(".selected").Should(b.HaveCount(0))
-			Ω("#comments").Should(b.SetValue("I'm out, sorry"))
+			b.SetValue("#comments", "I'm out, sorry")
 			b.Click("button.submit")
 
 			By("the boss gets an acknowledgement email")
@@ -402,7 +412,7 @@ var _ = Describe("LunchtimeDisco", func() {
 			outbox.Clear()
 			By("when the user clears out their comment too")
 			b.Navigate(persistentPlayerURL)
-			Eventually("#comments").Should(b.SetValue(""))
+			b.SetValue("#comments", "")
 			b.Click("button.submit")
 
 			By("the boss gets an acknowledgement email")
@@ -418,7 +428,7 @@ var _ = Describe("LunchtimeDisco", func() {
 			By("and when the user comes back they see that they are empty but can sign up again")
 			b.Navigate(persistentPlayerURL)
 			Eventually("#name").Should(b.HaveValue("John Player Jr."))
-			Ω("#email").Should(b.HaveValue("john@example.com"))
+			Eventually("#email").Should(b.HaveValue("john@example.com"))
 			b.Click("#A")
 			Eventually(".selected").Should(b.HaveCount(1))
 			b.Click("button.submit")
@@ -464,49 +474,49 @@ var _ = Describe("LunchtimeDisco", func() {
 		It("shows the boss the set of players", func() {
 			b.Navigate(bossURL)
 			Eventually(".pc").Should(b.HaveCount(3))
-			Ω(b.InnerTextForEach(".pc-name")).Should(HaveExactElements("John Player", "Bob Player", "Sally Player"))
-			Ω(b.InnerTextForEach(".pc-email")).Should(HaveExactElements("player@example.com", "bob@example.com", "sally@example.com"))
-			Ω(b.InnerTextForEach(".pc-comment")).Should(HaveExactElements("I'm in", "Let's play!"))
+			Eventually(".pc-name").Should(b.EachHaveInnerText(HaveExactElements("John Player", "Bob Player", "Sally Player")))
+			Eventually(".pc-email").Should(b.EachHaveInnerText(HaveExactElements("player@example.com", "bob@example.com", "sally@example.com")))
+			Eventually(".pc-comment").Should(b.EachHaveInnerText(HaveExactElements("I'm in", "Let's play!")))
 
-			Ω("#A").Should(b.HaveInnerText(HavePrefix("10AM\n2\nJohn Player\nBob Player\n🌤️")))
-			Ω("#B").Should(b.HaveInnerText(HavePrefix("11AM\n2\nJohn Player\nSally Player\n🌤️")))
-			Ω("#C").Should(b.HaveInnerText(HavePrefix("12PM\n1\nJohn Player\n🌤️")))
-			Ω("#D").Should(b.HaveInnerText(HavePrefix("1PM\n0\n🌤️")))
-			Ω("#E").Should(b.HaveInnerText(HavePrefix("10AM\n2\nBob Player\nSally Player\n🌤️")))
+			Eventually("#A").Should(b.HaveInnerText(HavePrefix("10AM\n2\nJohn Player\nBob Player\n🌤️")))
+			Eventually("#B").Should(b.HaveInnerText(HavePrefix("11AM\n2\nJohn Player\nSally Player\n🌤️")))
+			Eventually("#C").Should(b.HaveInnerText(HavePrefix("12PM\n1\nJohn Player\n🌤️")))
+			Eventually("#D").Should(b.HaveInnerText(HavePrefix("1PM\n0\n🌤️")))
+			Eventually("#E").Should(b.HaveInnerText(HavePrefix("10AM\n2\nBob Player\nSally Player\n🌤️")))
 
-			Ω("#participant-address").Should(b.HaveValue(""))
-			Ω(b.GetPropertyForEach("#historical-participants option", "value")).Should(HaveExactElements(
+			Eventually("#participant-address").Should(b.HaveValue(""))
+			Eventually("#historical-participants option").Should(b.EachHaveProperty("value", HaveExactElements(
 				"John Player <player@example.com>",
 				"Bob Player <bob@example.com>",
 				"Sally Player <sally@example.com>",
 				"Flakey McFlake <flakey@example.com>",
-			))
+			)))
 
-			Ω("td.game.selected").Should(b.HaveCount(0))
-			b.Click(b.XPath("div").WithClass("pc-name").WithTextContains("John Player"))
+			Eventually("td.game.selected").Should(b.HaveCount(0))
+			clickParticipant("John Player")
 			Eventually("#participant-address").Should(b.HaveValue("John Player <player@example.com>"))
 			Eventually("td.game.selected").Should(b.HaveCount(3))
-			Ω("#A").Should(b.HaveClass("selected"))
-			Ω("#B").Should(b.HaveClass("selected"))
-			Ω("#C").Should(b.HaveClass("selected"))
-			Ω("#comments").Should(b.HaveValue("I'm in"))
+			Eventually("#A").Should(b.HaveClass("selected"))
+			Eventually("#B").Should(b.HaveClass("selected"))
+			Eventually("#C").Should(b.HaveClass("selected"))
+			Eventually("#comments").Should(b.HaveValue("I'm in"))
 
-			b.Click(b.XPath("div").WithClass("pc-name").WithTextContains("Bob Player"))
+			clickParticipant("Bob Player")
 			Eventually("#participant-address").Should(b.HaveValue("Bob Player <bob@example.com>"))
 			Eventually("td.game.selected").Should(b.HaveCount(2))
-			Ω("#A").Should(b.HaveClass("selected"))
-			Ω("#B").ShouldNot(b.HaveClass("selected"))
-			Ω("#E").Should(b.HaveClass("selected"))
-			Ω("#comments").Should(b.HaveValue(""))
+			Eventually("#A").Should(b.HaveClass("selected"))
+			Eventually("#B").ShouldNot(b.HaveClass("selected"))
+			Eventually("#E").Should(b.HaveClass("selected"))
+			Eventually("#comments").Should(b.HaveValue(""))
 		})
 
 		It("allows the boss to modify sign ups", func() {
 			b.Navigate(bossURL)
-			Eventually(b.XPath("div").WithClass("pc-name").WithTextContains("John Player")).Should(b.Click())
+			clickParticipant("John Player")
 			Eventually("#participant-address").Should(b.HaveValue("John Player <player@example.com>"))
 			b.Click("#A")
 			b.Click("#E")
-			Ω("#comments").Should(b.SetValue("I'm more in"))
+			b.SetValue("#comments", "I'm more in")
 			b.Click("button.submit")
 
 			Eventually(le).Should(HaveSubject("Set Games - John Player <player@example.com>: B,C,E"))
@@ -514,18 +524,18 @@ var _ = Describe("LunchtimeDisco", func() {
 
 			By("John will see the changes when they next log in!")
 			b.Navigate(playerURL)
-			Eventually("#name").Should(b.SetValue("John Player"))
-			Ω("#email").Should(b.SetValue("player@example.com"))
+			b.SetValue("#name", "John Player")
+			b.SetValue("#email", "player@example.com")
 			Eventually("#comments").Should(b.HaveValue("I'm more in"))
-			Ω("#A").ShouldNot(b.HaveClass("selected"))
-			Ω("#B").Should(b.HaveClass("selected"))
-			Ω("#C").Should(b.HaveClass("selected"))
-			Ω("#E").Should(b.HaveClass("selected"))
+			Eventually("#A").ShouldNot(b.HaveClass("selected"))
+			Eventually("#B").Should(b.HaveClass("selected"))
+			Eventually("#C").Should(b.HaveClass("selected"))
+			Eventually("#E").Should(b.HaveClass("selected"))
 		})
 
 		It("allows the boss to sign up a historical participant", func() {
 			b.Navigate(bossURL)
-			Eventually("#participant-address").Should(b.SetValue("Flaker <flakey@example.com>")) //note that we are testing the name updates too
+			b.SetValue("#participant-address", "Flaker <flakey@example.com>") //note that we are testing the name updates too
 			Eventually("button.submit").Should(b.BeEnabled())
 			b.Click("#A")
 			b.Click("button.submit")
@@ -534,28 +544,28 @@ var _ = Describe("LunchtimeDisco", func() {
 
 			b.Navigate(bossURL)
 			Eventually(".pc").Should(b.HaveCount(4))
-			Ω(b.InnerTextForEach(".pc-name")).Should(HaveExactElements("John Player", "Bob Player", "Sally Player", "Flaker"))
-			Ω(b.InnerTextForEach(".pc-email")).Should(HaveExactElements("player@example.com", "bob@example.com", "sally@example.com", "flakey@example.com"))
-			Ω(b.InnerTextForEach(".pc-comment")).Should(HaveExactElements("I'm in", "Let's play!"))
+			Eventually(".pc-name").Should(b.EachHaveInnerText(HaveExactElements("John Player", "Bob Player", "Sally Player", "Flaker")))
+			Eventually(".pc-email").Should(b.EachHaveInnerText(HaveExactElements("player@example.com", "bob@example.com", "sally@example.com", "flakey@example.com")))
+			Eventually(".pc-comment").Should(b.EachHaveInnerText(HaveExactElements("I'm in", "Let's play!")))
 
-			Ω("#A").Should(b.HaveInnerText(HavePrefix("10AM\n3\nJohn Player\nBob Player\nFlaker\n🌤️")))
+			Eventually("#A").Should(b.HaveInnerText(HavePrefix("10AM\n3\nJohn Player\nBob Player\nFlaker\n🌤️")))
 
-			b.Click(b.XPath("div").WithClass("pc-name").WithTextContains("Flaker"))
+			clickParticipant("Flaker")
 			Eventually("#participant-address").Should(b.HaveValue("Flaker <flakey@example.com>"))
 			Eventually("td.game.selected").Should(b.HaveCount(1))
-			Ω("#A").Should(b.HaveClass("selected"))
+			Eventually("#A").Should(b.HaveClass("selected"))
 
-			Ω(b.GetPropertyForEach("#historical-participants option", "value")).Should(HaveExactElements(
+			Eventually("#historical-participants option").Should(b.EachHaveProperty("value", HaveExactElements(
 				"John Player <player@example.com>",
 				"Bob Player <bob@example.com>",
 				"Sally Player <sally@example.com>",
 				"Flaker <flakey@example.com>",
-			))
+			)))
 		})
 
 		It("allows the boss to create a new participant", func() {
 			b.Navigate(bossURL)
-			Eventually("#participant-address").Should(b.SetValue("Onsi Fakhouri <onsijoe@gmail.com>")) //note that we are testing the name updates too
+			b.SetValue("#participant-address", "Onsi Fakhouri <onsijoe@gmail.com>") //note that we are testing the name updates too
 			Eventually("button.submit").Should(b.BeEnabled())
 			b.Click("#A")
 			b.Click("#G")
@@ -566,33 +576,33 @@ var _ = Describe("LunchtimeDisco", func() {
 
 			b.Navigate(bossURL)
 			Eventually(".pc").Should(b.HaveCount(4))
-			Ω(b.InnerTextForEach(".pc-name")).Should(HaveExactElements("John Player", "Bob Player", "Sally Player", "Onsi Fakhouri"))
-			Ω(b.InnerTextForEach(".pc-email")).Should(HaveExactElements("player@example.com", "bob@example.com", "sally@example.com", "onsijoe@gmail.com"))
-			Ω(b.InnerTextForEach(".pc-comment")).Should(HaveExactElements("I'm in", "Let's play!", "Yay!"))
+			Eventually(".pc-name").Should(b.EachHaveInnerText(HaveExactElements("John Player", "Bob Player", "Sally Player", "Onsi Fakhouri")))
+			Eventually(".pc-email").Should(b.EachHaveInnerText(HaveExactElements("player@example.com", "bob@example.com", "sally@example.com", "onsijoe@gmail.com")))
+			Eventually(".pc-comment").Should(b.EachHaveInnerText(HaveExactElements("I'm in", "Let's play!", "Yay!")))
 
-			Ω("#A").Should(b.HaveInnerText(HavePrefix("10AM\n3\nJohn Player\nBob Player\nOnsi Fakhouri\n🌤️")))
+			Eventually("#A").Should(b.HaveInnerText(HavePrefix("10AM\n3\nJohn Player\nBob Player\nOnsi Fakhouri\n🌤️")))
 
-			b.Click(b.XPath("div").WithClass("pc-name").WithTextContains("Onsi Fakhouri"))
+			clickParticipant("Onsi Fakhouri")
 			Eventually("#participant-address").Should(b.HaveValue("Onsi Fakhouri <onsijoe@gmail.com>"))
 			Eventually("td.game.selected").Should(b.HaveCount(2))
-			Ω("#A").Should(b.HaveClass("selected"))
-			Ω("#G").Should(b.HaveClass("selected"))
+			Eventually("#A").Should(b.HaveClass("selected"))
+			Eventually("#G").Should(b.HaveClass("selected"))
 
-			Ω(b.GetPropertyForEach("#historical-participants option", "value")).Should(HaveExactElements(
+			Eventually("#historical-participants option").Should(b.EachHaveProperty("value", HaveExactElements(
 				"John Player <player@example.com>",
 				"Bob Player <bob@example.com>",
 				"Sally Player <sally@example.com>",
 				"Flakey McFlake <flakey@example.com>",
 				"Onsi Fakhouri <onsijoe@gmail.com>",
-			))
+			)))
 		})
 	})
 
 	Describe("boss sending invite", func() {
 		It("sends an invite to the mailing list on behalf of the boss", func() {
 			b.Navigate(bossURL)
-			Eventually("#invite").Should(b.Click())
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send Invite")).Should(b.Click())
+			b.Click("#invite")
+			confirmSend("Invite")
 			Eventually(le).Should(HaveSubject("Lunchtime Bible Park Frisbee - Week of " + weekOf))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
@@ -605,9 +615,9 @@ var _ = Describe("LunchtimeDisco", func() {
 
 		It("can include an optional message", func() {
 			b.Navigate(bossURL)
-			Eventually("#invite").Should(b.Click())
-			Eventually("#additional-content").Should(b.SetValue("Lets do it **again**."))
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send Invite")).Should(b.Click())
+			b.Click("#invite")
+			b.SetValue("#additional-content", "Lets do it **again**.")
+			confirmSend("Invite")
 			Eventually(le).Should(HaveSubject("Lunchtime Bible Park Frisbee - Week of " + weekOf))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
@@ -629,8 +639,8 @@ var _ = Describe("LunchtimeDisco", func() {
 	Describe("boss sending no-invite", func() {
 		It("sends a no-invite to the mailing list on behalf of the boss", func() {
 			b.Navigate(bossURL)
-			Eventually("#no-invite").Should(b.Click())
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send No Invite")).Should(b.Click())
+			b.Click("#no-invite")
+			confirmSend("No Invite")
 			Eventually(le).Should(HaveSubject("No Lunchtime Bible Park Frisbee This Week"))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
@@ -643,9 +653,9 @@ var _ = Describe("LunchtimeDisco", func() {
 
 		It("can include an optional message", func() {
 			b.Navigate(bossURL)
-			Eventually("#no-invite").Should(b.Click())
-			Eventually("#additional-content").Should(b.SetValue("Merry **Christmas**!"))
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send No Invite")).Should(b.Click())
+			b.Click("#no-invite")
+			b.SetValue("#additional-content", "Merry **Christmas**!")
+			confirmSend("No Invite")
 			Eventually(le).Should(HaveSubject("No Lunchtime Bible Park Frisbee This Week"))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
@@ -659,8 +669,8 @@ var _ = Describe("LunchtimeDisco", func() {
 
 		It("sets the home-page to no-game", func() {
 			b.Navigate(bossURL)
-			Eventually("#no-invite").Should(b.Click())
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send No Invite")).Should(b.Click())
+			b.Click("#no-invite")
+			confirmSend("No Invite")
 			Eventually(le).Should(HaveSubject("No Lunchtime Bible Park Frisbee This Week"))
 
 			b.Navigate(indexURL)
@@ -675,8 +685,8 @@ var _ = Describe("LunchtimeDisco", func() {
 
 		It("sends a badger to the mailing list on behalf of the boss", func() {
 			b.Navigate(bossURL)
-			Eventually("#badger").Should(b.Click())
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send Badger")).Should(b.Click())
+			b.Click("#badger")
+			confirmSend("Badger")
 			Eventually(le).Should(HaveSubject("Need more players for Lunchtime game - week of " + weekOf))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
@@ -689,9 +699,9 @@ var _ = Describe("LunchtimeDisco", func() {
 
 		It("can include an optional message", func() {
 			b.Navigate(bossURL)
-			Eventually("#badger").Should(b.Click())
-			Eventually("#additional-content").Should(b.SetValue("Need **3** more."))
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send Badger")).Should(b.Click())
+			b.Click("#badger")
+			b.SetValue("#additional-content", "Need **3** more.")
+			confirmSend("Badger")
 			Eventually(le).Should(HaveSubject("Need more players for Lunchtime game - week of " + weekOf))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
@@ -705,8 +715,8 @@ var _ = Describe("LunchtimeDisco", func() {
 
 		It("keeps the home-page as-is", func() {
 			b.Navigate(bossURL)
-			Eventually("#badger").Should(b.Click())
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send Badger")).Should(b.Click())
+			b.Click("#badger")
+			confirmSend("Badger")
 			Eventually(le).Should(HaveSubject("Need more players for Lunchtime game - week of " + weekOf))
 
 			b.Navigate(indexURL)
@@ -722,7 +732,7 @@ var _ = Describe("LunchtimeDisco", func() {
 			signUpPlayer("Sally Player", "sally@example.com", "", []string{"B", "C"})
 
 			b.Navigate(bossURL)
-			Eventually("#game-on").Should(b.Click())
+			b.Click("#game-on")
 			Eventually(".game-option").Should(b.HaveCount(4 * 4))
 		})
 
@@ -731,25 +741,25 @@ var _ = Describe("LunchtimeDisco", func() {
 		})
 
 		It("shows the boss options", func() {
-			Ω("#game-option-A .day").Should(b.HaveInnerText("Tue"))
-			Ω("#game-option-A .time").Should(b.HaveInnerText("10AM"))
-			Ω("#game-option-A .count").Should(b.HaveInnerText("2"))
+			Eventually("#game-option-A .day").Should(b.HaveInnerText("Tue"))
+			Eventually("#game-option-A .time").Should(b.HaveInnerText("10AM"))
+			Eventually("#game-option-A .count").Should(b.HaveInnerText("2"))
 
-			Ω("#game-option-B .day").Should(b.HaveInnerText("Tue"))
-			Ω("#game-option-B .time").Should(b.HaveInnerText("11AM"))
-			Ω("#game-option-B .count").Should(b.HaveInnerText("3"))
+			Eventually("#game-option-B .day").Should(b.HaveInnerText("Tue"))
+			Eventually("#game-option-B .time").Should(b.HaveInnerText("11AM"))
+			Eventually("#game-option-B .count").Should(b.HaveInnerText("3"))
 
-			Ω("#game-option-C .day").Should(b.HaveInnerText("Tue"))
-			Ω("#game-option-C .time").Should(b.HaveInnerText("12PM"))
-			Ω("#game-option-C .count").Should(b.HaveInnerText("2"))
+			Eventually("#game-option-C .day").Should(b.HaveInnerText("Tue"))
+			Eventually("#game-option-C .time").Should(b.HaveInnerText("12PM"))
+			Eventually("#game-option-C .count").Should(b.HaveInnerText("2"))
 		})
 
 		Context("with the standard time", func() {
 			BeforeEach(func() {
 				b.Click("#game-option-B")
 				Eventually("#game-option-B").Should(b.HaveClass("selected"))
-				Ω("#additional-content").Should(b.SetValue("Yum **YUM**"))
-				b.Click(b.XPath("button").WithClass("confirm-message").WithText("Send Game On"))
+				b.SetValue("#additional-content", "Yum **YUM**")
+				confirmSend("Game On")
 				Eventually(disco.GetSnapshot).Should(HaveState(StateGameOnSent))
 			})
 
@@ -776,10 +786,10 @@ var _ = Describe("LunchtimeDisco", func() {
 			It("updates the homepage", func() {
 				b.Navigate(indexURL)
 				Eventually(".status.lunchtime").Should(b.HaveClass("game-on"))
-				Ω(".status.lunchtime .call .game-day").Should(b.HaveInnerText("Tuesday 9/26"))
-				Ω(".status.lunchtime .call .game-time").Should(b.HaveInnerText("11AM"))
-				Ω(".status.lunchtime .count .number").Should(b.HaveInnerText("3"))
-				Ω(".status.lunchtime .count .text").Should(b.HaveInnerText("Players"))
+				Eventually(".status.lunchtime .call .game-day").Should(b.HaveInnerText("Tuesday 9/26"))
+				Eventually(".status.lunchtime .call .game-time").Should(b.HaveInnerText("11AM"))
+				Eventually(".status.lunchtime .count .number").Should(b.HaveInnerText("3"))
+				Eventually(".status.lunchtime .count .text").Should(b.HaveInnerText("Players"))
 			})
 		})
 
@@ -787,8 +797,8 @@ var _ = Describe("LunchtimeDisco", func() {
 			BeforeEach(func() {
 				b.Click("#game-option-B")
 				Eventually("#game-option-B").Should(b.HaveClass("selected"))
-				Ω("#override-start-time").Should(b.SetValue("11:15AM"))
-				b.Click(b.XPath("button").WithClass("confirm-message").WithText("Send Game On"))
+				b.SetValue("#override-start-time", "11:15AM")
+				confirmSend("Game On")
 				Eventually(disco.GetSnapshot).Should(HaveState(StateGameOnSent))
 			})
 
@@ -813,10 +823,10 @@ var _ = Describe("LunchtimeDisco", func() {
 			It("updates the homepage", func() {
 				b.Navigate(indexURL)
 				Eventually(".status.lunchtime").Should(b.HaveClass("game-on"))
-				Ω(".status.lunchtime .call .game-day").Should(b.HaveInnerText("Tuesday 9/26"))
-				Ω(".status.lunchtime .call .game-time").Should(b.HaveInnerText("11:15AM"))
-				Ω(".status.lunchtime .count .number").Should(b.HaveInnerText("3"))
-				Ω(".status.lunchtime .count .text").Should(b.HaveInnerText("Players"))
+				Eventually(".status.lunchtime .call .game-day").Should(b.HaveInnerText("Tuesday 9/26"))
+				Eventually(".status.lunchtime .call .game-time").Should(b.HaveInnerText("11:15AM"))
+				Eventually(".status.lunchtime .count .number").Should(b.HaveInnerText("3"))
+				Eventually(".status.lunchtime .count .text").Should(b.HaveInnerText("Players"))
 			})
 		})
 	})
@@ -828,8 +838,8 @@ var _ = Describe("LunchtimeDisco", func() {
 
 		It("sends a no-game email to the mailing list on behalf of the boss", func() {
 			b.Navigate(bossURL)
-			Eventually("#no-game").Should(b.Click())
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send No Game")).Should(b.Click())
+			b.Click("#no-game")
+			confirmSend("No Game")
 			Eventually(le).Should(HaveSubject("No Lunchtime Game This Week"))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
@@ -842,9 +852,9 @@ var _ = Describe("LunchtimeDisco", func() {
 
 		It("can include an optional message", func() {
 			b.Navigate(bossURL)
-			Eventually("#no-game").Should(b.Click())
-			Eventually("#additional-content").Should(b.SetValue("Calling _it_."))
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send No Game")).Should(b.Click())
+			b.Click("#no-game")
+			b.SetValue("#additional-content", "Calling _it_.")
+			confirmSend("No Game")
 			Eventually(le).Should(HaveSubject("No Lunchtime Game This Week"))
 			s := disco.GetSnapshot()
 			Ω(le()).Should(BeFrom(conf.BossEmail))
@@ -858,8 +868,8 @@ var _ = Describe("LunchtimeDisco", func() {
 
 		It("sets the home-page to no-game", func() {
 			b.Navigate(bossURL)
-			Eventually("#no-game").Should(b.Click())
-			Eventually(b.XPath("button").WithClass("confirm-message").WithText("Send No Game")).Should(b.Click())
+			b.Click("#no-game")
+			confirmSend("No Game")
 			Eventually(disco.GetSnapshot).Should(HaveState(StateNoGameSent))
 
 			b.Navigate(indexURL)

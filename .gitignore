@@ -6,3 +6,4 @@ node_modules
 biloba-screenshots/
 .ginkgo-report/
 .claude/settings.local.json
+.claude/worktrees/
