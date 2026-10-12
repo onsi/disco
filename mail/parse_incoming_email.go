@@ -60,7 +60,8 @@ var replyRegexes = []*regexp.Regexp{
 	regexp.MustCompile(`(?m)^\s*On.*(\s?).*@.*wrote:`),
 	regexp.MustCompile(`(?m)^\s*On.*@.*(\s?).*wrote:`),
 	regexp.MustCompile(`(?im)-+\s*(original|forwarded)\s+message\s*-+\s*$`),
-	regexp.MustCompile(`(?im)From:\s*` + emailRegex),
+	regexp.MustCompile(`(?m)^_{10,}\s*$`),
+	regexp.MustCompile(`(?i)From:[^\n]{0,100}?` + emailRegex),
 	regexp.MustCompile(`(?im)` + emailRegex + `\s+wrote:`),
 }
 

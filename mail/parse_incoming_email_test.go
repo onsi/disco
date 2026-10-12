@@ -108,6 +108,21 @@ var _ = Describe("ParseIncomingEmail", func() {
 			})
 		})
 
+		Context("when the e-mail is an Outlook reply", func() {
+			It("cuts at the separator and the From: header, even when the header carries a display name", func() {
+				fullBody := "In!\n\n________________________________\nFrom: Saturday Disco <saturday@sedenverultimate.net>\nSent: Thursday, September 18, 2025 2:00 PM\nSubject: Saturday Bible Park Frisbee 9/20\n\nJust reply to this e-mail and say \"in\" if you're coming"
+				Ω(mail.ExtractTopMostPortion(fullBody)).Should(Equal("In!\n\n"))
+
+				fullBody = "In!\n\nFrom: Saturday Disco <saturday@sedenverultimate.net>\nSent: Thursday, September 18, 2025 2:00 PM\n\nJust reply to this e-mail"
+				Ω(mail.ExtractTopMostPortion(fullBody)).Should(Equal("In!\n\n"))
+			})
+
+			It("cuts the HTML version too", func() {
+				htmlBody := `<div>In!</div><hr style="display:inline-block;width:98%"><div id="divRplyFwdMsg"><b>From:</b> Saturday Disco &lt;saturday@sedenverultimate.net&gt;<br><b>Sent:</b> Thursday, September 18, 2025 2:00 PM</div><div>Just reply to this e-mail</div>`
+				Ω(mail.ExtractTopMostPortionFromHTML(htmlBody)).Should(Equal("In!"))
+			})
+		})
+
 		Context("when the e-mail has no text and is just HTML", func() {
 			It("grabs the html and strips out all the tags", func() {
 				email, err := mail.ParseIncomingEmail(db, loadEmailFixture("html_only_ios_email.json"), GinkgoWriter)
