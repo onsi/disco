@@ -2,6 +2,7 @@ package clock
 
 import (
 	"context"
+	"sync"
 	"time"
 	_ "time/tzdata"
 )
@@ -59,6 +60,7 @@ type AlarmClockInt interface {
 type AlarmClock struct {
 	c      chan time.Time
 	cancel func()
+	lock   sync.Mutex
 }
 
 func NewAlarmClock() *AlarmClock {
@@ -77,7 +79,9 @@ func (a *AlarmClock) C() <-chan time.Time {
 }
 
 func (a *AlarmClock) SetAlarm(t time.Time) {
-	a.Stop()
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	a.stop()
 	ctx, cancel := context.WithCancel(context.Background())
 	a.cancel = cancel
 	go func() {
@@ -98,6 +102,12 @@ func (a *AlarmClock) SetAlarm(t time.Time) {
 }
 
 func (a *AlarmClock) Stop() {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	a.stop()
+}
+
+func (a *AlarmClock) stop() {
 	if a.cancel != nil {
 		a.cancel()
 	}

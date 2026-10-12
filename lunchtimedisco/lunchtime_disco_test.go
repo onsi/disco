@@ -115,18 +115,16 @@ var _ = Describe("LunchtimeDisco", func() {
 		Ω(disco.GetSnapshot()).Should(HaveState(StatePending))
 		outbox.Clear() //clear out the welcome email
 
-		conf.Port = fmt.Sprintf("99%02d", GinkgoParallelProcess())
 		e := echo.New()
 		e.Logger.SetOutput(GinkgoWriter)
-		s := server.NewServer(e, "../", conf, outbox, db, nil, disco)
-		go s.Start()
-		DeferCleanup(e.Shutdown, NodeTimeout(10*time.Second))
+		server.NewServer(e, "../", conf, outbox, db, nil, disco).Configure()
+		app.Store(e)
+		DeferCleanup(func() { app.Store(nil) })
 
-		indexURL = fmt.Sprintf("http://localhost:%s", conf.Port)
+		indexURL = appURL
 		persistentPlayerURL = fmt.Sprintf("%s/lunchtime/%s", indexURL, disco.GUID)
 		playerURL = fmt.Sprintf("%s/lunchtime/%s?reset", indexURL, disco.GUID)
 		bossURL = fmt.Sprintf("%s/lunchtime/%s", indexURL, disco.BossGUID)
-		Eventually(http.Get).WithArguments(indexURL).Should(HaveField("StatusCode", http.StatusOK))
 	})
 
 	Describe("the scheduler", func() {

@@ -43,14 +43,17 @@ func NewServer(e *echo.Echo, rootPath string, conf config.Config, outbox mail.Ou
 }
 
 func (s *Server) Start() error {
-	t := NewTemplateRenderer(s.rootPath, s.config.IsDev())
-	s.e.Renderer = t
+	s.Configure()
+	return s.e.Start(":" + s.config.Port)
+}
+
+func (s *Server) Configure() {
+	s.e.Renderer = NewTemplateRenderer(s.rootPath, s.config.IsDev())
 	s.e.Logger.SetLevel(log.INFO)
 	if s.config.IsDev() {
 		s.e.Debug = true
 	}
 	s.RegisterRoutes()
-	return s.e.Start(":" + s.config.Port)
 }
 
 func (s *Server) RegisterRoutes() {

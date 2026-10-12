@@ -1,9 +1,13 @@
 package lunchtimedisco_test
 
 import (
+	"net"
+	"net/http"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	"github.com/onsi/biloba"
 	"github.com/onsi/disco/lunchtimedisco"
 	"github.com/onsi/disco/mail"
@@ -18,10 +22,27 @@ func TestLunchtimedisco(t *testing.T) {
 
 var b *biloba.Biloba
 
+var app atomic.Pointer[echo.Echo]
+var appURL string
+
 var _ = SynchronizedBeforeSuite(func() {
 	biloba.SpinUpChrome(GinkgoT())
 }, func() {
 	b = biloba.ConnectToChrome(GinkgoT())
+
+	// Held for the whole run so the origin stays stable and its OS-assigned port can't be taken by a concurrent run; each spec swaps in its own app.
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	Ω(err).ShouldNot(HaveOccurred())
+	srv := &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if e := app.Load(); e != nil {
+			e.ServeHTTP(w, r)
+			return
+		}
+		http.Error(w, "no spec is running", http.StatusServiceUnavailable)
+	})}
+	go srv.Serve(l)
+	DeferCleanup(srv.Close)
+	appURL = "http://" + l.Addr().String()
 })
 
 var _ = BeforeEach(func() {

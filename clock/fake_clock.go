@@ -29,8 +29,8 @@ func (a *FakeAlarmClock) SetTime(t time.Time) {
 func (a *FakeAlarmClock) Fire() {
 	a.lock.Lock()
 	t := a.alarmTime
-	a.lock.Unlock()
 	a.now = t
+	a.lock.Unlock()
 	a.c <- t
 }
 

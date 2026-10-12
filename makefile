@@ -6,6 +6,10 @@ test:
 	@echo "Running tests"
 	go run github.com/onsi/ginkgo/v2/ginkgo -r -p --keep-going --randomize-all
 
+race:
+	@echo "Running tests with the race detector"
+	go run github.com/onsi/ginkgo/v2/ginkgo -r -p --keep-going --randomize-all --race
+
 expensive:
 	@echo "Running Expensive tests"
 	INCLUDE_OPENAI_SPECS=true go run github.com/onsi/ginkgo/v2/ginkgo -r -p --keep-going --randomize-all

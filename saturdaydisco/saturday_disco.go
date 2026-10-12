@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -249,7 +250,7 @@ func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock clock.AlarmC
 
 	if err != nil {
 		outbox.SendEmail(saturdayDisco.emailForBoss("startup_error", TemplateData{
-			Error: fmt.Errorf(startupMessage),
+			Error: errors.New(startupMessage),
 		}))
 		return nil, err
 	}
@@ -264,7 +265,7 @@ func NewSaturdayDisco(config config.Config, w io.Writer, alarmClock clock.AlarmC
 		}
 	}
 
-	outbox.SendEmail(saturdayDisco.emailForBoss("startup", saturdayDisco.emailData().WithMessage(startupMessage)))
+	outbox.SendEmail(saturdayDisco.emailForBoss("startup", saturdayDisco.emailData().WithMessage("%s", startupMessage)))
 
 	go saturdayDisco.dance()
 	return saturdayDisco, nil
@@ -643,12 +644,12 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 	case CommandAdminGameOn:
 		s.logi(1, "{{green}}boss has asked me to send game-on{{/}}")
 		s.sendEmail(s.emailForList("game_on",
-			s.emailData().WithMessage(command.AdditionalContent)),
+			s.emailData().WithMessage("%s", command.AdditionalContent)),
 			StateGameOnSent, s.replyWithFailureErrorHandler)
 	case CommandAdminNoGame:
 		s.logi(1, "{{red}}boss has asked me to send no-game{{/}}")
 		s.sendEmail(s.emailForList("no_game",
-			s.emailData().WithMessage(command.AdditionalContent)),
+			s.emailData().WithMessage("%s", command.AdditionalContent)),
 			StateNoGameSent, s.replyWithFailureErrorHandler)
 	case CommandAdminSetCount:
 		s.logi(1, "{{green}}boss has asked me to adjust a participant count{{/}}")
@@ -678,7 +679,7 @@ func (s *SaturdayDisco) handleCommand(command Command) {
 }
 
 func (s *SaturdayDisco) handleReplyCommand(command Command) {
-	data := s.emailData().WithMessage(command.AdditionalContent).WithError(command.Error)
+	data := s.emailData().WithMessage("%s", command.AdditionalContent).WithError(command.Error)
 	var expectedState SaturdayDiscoState
 	var requestedApproval string
 	switch command.CommandType {
