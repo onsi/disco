@@ -5,3 +5,5 @@ fly.toml
 TODO.md
 TODO
 .git
+.claude
+node_modules

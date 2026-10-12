@@ -385,6 +385,11 @@ var _ = Describe("SaturdayDisco", func() {
 				})
 
 				Describe("when an e-mail is received twice (a can happen when disco gets an e-mail directly *and* via the mailing list)", func() {
+					It("reports the processed message IDs in the snapshot", func() {
+						message := bossToDisco("/set onsijoe@gmail.com 2")
+						Eventually(disco.GetSnapshot).Should(HaveField("ProcessedEmailIDs", ConsistOf(message.MessageID)))
+					})
+
 					It("only runs once", func() {
 						outbox.Clear()
 						message := bossToDisco("/set onsijoe@gmail.com 2")

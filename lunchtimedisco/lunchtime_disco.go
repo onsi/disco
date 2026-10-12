@@ -294,13 +294,13 @@ func NewLunchtimeDisco(config config.Config, w io.Writer, alarmClock clock.Alarm
 		lunchtimeDisco.logi(0, "{{yellow}}%s{{/}}", participantsMessage)
 		pErr = nil
 	} else if pErr != nil {
-		participantsMessage = fmt.Sprintf("FAILED TO LOAD HISTORICAL PARTICIPANTS: %s", err.Error())
+		participantsMessage = fmt.Sprintf("FAILED TO LOAD HISTORICAL PARTICIPANTS: %s", pErr.Error())
 		lunchtimeDisco.logi(0, "{{red}}%s{{/}}", participantsMessage)
 	} else {
 		lunchtimeDisco.logi(0, "{{green}}Loading historical participants...{{/}}")
 		pErr = json.Unmarshal(historicalParticipants, &(lunchtimeDisco.HistoricalParticipants))
 		if pErr != nil {
-			participantsMessage = fmt.Sprintf("FAILED TO UNMARSHAL HISTORICAL PARTICIPANTS: %s", err.Error())
+			participantsMessage = fmt.Sprintf("FAILED TO UNMARSHAL HISTORICAL PARTICIPANTS: %s", pErr.Error())
 			lunchtimeDisco.logi(0, "{{red}}%s{{/}}", participantsMessage)
 		} else {
 			participantsMessage = "Historical participants loaded."

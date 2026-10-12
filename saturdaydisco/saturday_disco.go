@@ -131,6 +131,8 @@ func (s SaturdayDiscoSnapshot) dup() SaturdayDiscoSnapshot {
 		Participants: s.Participants.dup(),
 		NextEvent:    s.NextEvent,
 		T:            s.T,
+
+		ProcessedEmailIDs: append(ProcessedEmailIDs{}, s.ProcessedEmailIDs...),
 	}
 }
 

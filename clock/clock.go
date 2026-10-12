@@ -3,6 +3,7 @@ package clock
 import (
 	"context"
 	"time"
+	_ "time/tzdata"
 )
 
 var Timezone *time.Location

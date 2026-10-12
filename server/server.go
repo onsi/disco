@@ -56,12 +56,17 @@ func (s *Server) Start() error {
 func (s *Server) RegisterRoutes() {
 	s.e.Use(middleware.Logger())
 	s.e.Static("/img", "img")
+	s.e.GET("/healthz", s.Healthz)
 	s.e.GET("/", s.Index)
 	s.e.POST("/incoming/"+s.config.IncomingSaturdayEmailGUID, s.IncomingSaturdayEmail)
 	s.e.POST("/incoming/"+s.config.IncomingLunchtimeEmailGUID, s.IncomingLunchtimeEmail)
 	s.e.POST("/subscribe", s.Subscribe)
 	s.e.GET("/lunchtime/:guid", s.Lunchtime)
 	s.e.POST("/lunchtime/:guid", s.LunchtimeSubmit)
+}
+
+func (s *Server) Healthz(c echo.Context) error {
+	return c.NoContent(http.StatusOK)
 }
 
 func (s *Server) Index(c echo.Context) error {

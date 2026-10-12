@@ -296,6 +296,29 @@ var _ = Describe("LunchtimeDisco", func() {
 		})
 	})
 
+	Describe("booting with a valid backup but unusable historical participants", func() {
+		bootWithParticipants := func(participants []byte) *mail.FakeOutbox {
+			GinkgoHelper()
+			snapshot, err := json.Marshal(disco.GetSnapshot())
+			Ω(err).ShouldNot(HaveOccurred())
+			seeded := s3db.NewFakeS3DB()
+			Ω(seeded.PutObject(KEY, snapshot)).Should(Succeed())
+			if participants != nil {
+				Ω(seeded.PutObject(PARTICIPANTS_KEY, participants)).Should(Succeed())
+			}
+			bootOutbox := mail.NewFakeOutbox()
+			booted, err := NewLunchtimeDisco(conf, GinkgoWriter, clockpkg.NewFakeAlarmClock(), bootOutbox, forecaster, seeded)
+			Ω(err).ShouldNot(HaveOccurred())
+			DeferCleanup(booted.Stop)
+			return bootOutbox
+		}
+
+		It("boots and sends the startup email when the participants blob is corrupt", func() {
+			bootOutbox := bootWithParticipants([]byte("{not json"))
+			Ω(bootOutbox.LastEmail()).Should(BeSentTo(conf.BossEmail))
+		})
+	})
+
 	Describe("preventing access", func() {
 		It("returns 404 if someone without the magic guid tries to access", func() {
 			Ω(http.Get(indexURL + "/lunchtime")).Should(HaveHTTPStatus(http.StatusNotFound))

@@ -4,12 +4,16 @@
 #
 
 app = "ultimate-disco"
-primary_region = "den"
+primary_region = "dfw"
 kill_timeout = 120
 
 [build]
   [build.args]
-    GO_VERSION = '1.23.0'
+    GO_VERSION = '1.26.9'
+
+[deploy]
+  # Never two machines at once: S3 has no locking, so bluegreen/canary would give two writers.
+  strategy = "rolling"
 
 [env]
   ENV = "PROD"
@@ -28,3 +32,10 @@ kill_timeout = 120
   auto_start_machines = false
   min_machines_running = 1
   processes = ["app"]
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/healthz"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "60s"

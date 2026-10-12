@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -17,6 +18,7 @@ type Template struct {
 	rootPath   string
 	templates  *template.Template
 	lock       *sync.Mutex
+	cacheLock  sync.Mutex
 	buildCache map[string]string
 }
 
@@ -31,23 +33,40 @@ func NewTemplateRenderer(rootPath string, reload bool) *Template {
 }
 
 func (t *Template) Render(w io.Writer, name string, data any, c echo.Context) error {
+	templates, err := t.loadTemplates()
+	if err != nil {
+		return err
+	}
+	return templates.ExecuteTemplate(w, name, data)
+}
+
+func (t *Template) loadTemplates() (*template.Template, error) {
 	t.lock.Lock()
+	defer t.lock.Unlock()
 	if t.reload || t.templates == nil {
-		var err error
-		t.templates, err = template.New("templates").Funcs(template.FuncMap{
+		templates, err := template.New("templates").Funcs(template.FuncMap{
 			"build": t.ESBuild,
 		}).ParseGlob(t.rootPath + "templates/*")
 		if err != nil {
-			return err
+			return nil, err
 		}
+		t.templates = templates
 	}
-	t.lock.Unlock()
-	return t.templates.ExecuteTemplate(w, name, data)
+	return t.templates, nil
+}
+
+func (t *Template) cached(asset string) (string, bool) {
+	t.cacheLock.Lock()
+	defer t.cacheLock.Unlock()
+	output, ok := t.buildCache[asset]
+	return output, ok && output != ""
 }
 
 func (t *Template) ESBuild(asset string, tag string) (any, error) {
-	if !t.reload && t.buildCache[asset] != "" {
-		return template.HTML(t.buildCache[asset]), nil
+	if !t.reload {
+		if output, ok := t.cached(asset); ok {
+			return template.HTML(output), nil
+		}
 	}
 	result := esbuild.Build(esbuild.BuildOptions{
 		EntryPoints: []string{t.rootPath + asset},
@@ -69,7 +88,7 @@ func (t *Template) ESBuild(asset string, tag string) (any, error) {
 		Kind:          esbuild.ErrorMessage,
 		Color:         true,
 	}) {
-		fmt.Fprintf(os.Stderr, msg+"\n")
+		fmt.Fprintln(os.Stderr, msg)
 	}
 
 	for _, msg := range esbuild.FormatMessages(result.Warnings, esbuild.FormatMessagesOptions{
@@ -77,7 +96,7 @@ func (t *Template) ESBuild(asset string, tag string) (any, error) {
 		Kind:          esbuild.WarningMessage,
 		Color:         true,
 	}) {
-		fmt.Fprintf(os.Stderr, msg+"\n")
+		fmt.Fprintln(os.Stderr, msg)
 	}
 
 	output := ""
@@ -87,11 +106,13 @@ func (t *Template) ESBuild(asset string, tag string) (any, error) {
 		issues = append(issues, "failed to compile: got empty output")
 	}
 	if len(issues) > 0 {
-		return "", fmt.Errorf(strings.Join(issues, "\n"))
+		return "", errors.New(strings.Join(issues, "\n"))
 	}
 	if tag != "" {
 		output = "<" + tag + ">\n" + output + "\n</" + tag + ">"
 	}
+	t.cacheLock.Lock()
 	t.buildCache[asset] = output
+	t.cacheLock.Unlock()
 	return template.HTML(output), nil
 }
