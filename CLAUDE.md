@@ -22,7 +22,9 @@ machines that invite players, count replies, and call game / no-game with the bo
 - `mail/` — `Email`/`EmailAddress` types, inbound parsing of forwardemail.net's JSON, `Outbox` (real
   SMTP) and `FakeOutbox`.
 - `weather/` — api.weather.gov forecasts plus an LLM-picked emoji per short forecast, cached in S3.
-- `askclaude/` — the LLM client: Claude Haiku (`claude-haiku-5-5`) via the Anthropic Go SDK, with structured outputs so callers always get schema-valid JSON. Haiku 5.5 rejects `temperature`; the schema is what pins the output shape.
+- `askclaude/` — the LLM client: Claude Haiku (`claude-haiku-5-5`) via the Anthropic Go SDK, with
+  structured outputs so callers always get schema-valid JSON. Haiku 5.5 rejects `temperature`; the
+  schema is what pins the output shape.
 - `clock/` — `AlarmClock` (one pending alarm, the state machines' only timer) and `FakeAlarmClock`;
   all scheduling is in `America/Denver`.
 - `s3db/` — the persistence layer. Read the next section before touching any state.
@@ -38,8 +40,8 @@ everywhere. The invariants:
 - **One Fly machine, always.** `fly.toml` pins `min_machines_running = 1` with auto start/stop off.
   Never `fly scale count` above 1, never add a region, never switch the deploy strategy to
   `bluegreen`/`canary` (both boot the new machine while the old one still runs, giving two writers
-  and two alarm clocks sending duplicate emails). The default rolling deploy replaces the single
-  machine in place, so the old process stops before the new one loads state.
+  and two alarm clocks sending duplicate emails). `fly.toml` pins `strategy = "rolling"`, which
+  replaces the single machine in place, so the old process stops before the new one loads state.
 - **Each disco is an actor.** `SaturdayDisco`/`LunchtimeDisco` embed their snapshot and own it from a
   single goroutine (`dance()`); everything else talks to it through channels (`commandC`,
   `snapshotC`, `templateC`). After every alarm and every command the loop marshals the *entire*
@@ -61,15 +63,15 @@ everywhere. The invariants:
   read-modify-write under the provider's mutex), and `email/<uuid>` (every raw inbound email, written
   fire-and-forget for debugging, never read by the code).
 - **Tests use `s3db.FakeS3DB`** (in-memory, with `SetFetchError` to simulate S3 failures),
-  except the `s3db` suite itself, which round-trips against the real bucket under `TEST/` — so
-  `make test` needs `.secrets`.
+  except the `s3db` suite itself, which round-trips against the real bucket under `TEST/`.
 
 ## Config and secrets
 
 `config.LoadConfig()` reads env vars. Locally the `makefile` `include`s `local.env` and `.secrets`
 (gitignored, owner's laptop only) and exports them; on Fly the non-secret values are `[env]` in
 `fly.toml` and the rest are `fly secrets`. A new secret has to be added in three places: `.secrets`,
-`config.go`, and `fly secrets set` before the deploy that needs it.
+`config.go`, and Fly. Use `fly secrets set --stage …` so it lands with the next deploy instead of
+restarting the machine (and emailing the boss) on its own.
 
 ## House rules
 
@@ -85,7 +87,7 @@ everywhere. The invariants:
   - **Tell a fact once per file**, at the place it bites.
   - Nothing lints this here — review comments by eye on every diff.
 - **Ginkgo for all Go tests — never `go test`.** Use the `make` targets, which load `local.env` and
-  `.secrets` and run `go run github.com/onsi/ginkgo/v2/ginkgo -r -p --keep-going --randomize-all`:
+  `.secrets` (the `s3db` suite needs the AWS credentials) and run `go run github.com/onsi/ginkgo/v2/ginkgo -r -p --keep-going --randomize-all`:
   `make test` (the whole suite), `make race` (the same under `--race`), and `make expensive` (adds
   the real-Haiku specs, gated on `INCLUDE_LLM_SPECS=true`; they spend tokens and are
   nondeterministic, so a prompt change needs several clean runs, not one).
@@ -116,6 +118,7 @@ everywhere. The invariants:
 
 `make deploy` runs the suite, checks it compiles, then `flyctl deploy` (remote builder, `Dockerfile`).
 The deploy restarts the one machine: the discos reload from S3 and the boss gets startup emails.
-Avoid deploying in the windows where an alarm is about to fire for a list email (Tuesday 6am,
+Fly health-checks `GET /healthz`, which deliberately touches nothing; never point a check at `/`, which
+renders through both discos and calls the weather API. Avoid deploying in the windows where an alarm is about to fire for a list email (Tuesday 6am,
 Thursday 2pm, Saturday morning for Saturday Disco); a boot after Thursday 2pm with the invite not yet
 sent aborts the week and hands it to the boss.

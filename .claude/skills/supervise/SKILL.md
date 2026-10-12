@@ -16,6 +16,9 @@ send a subagent to refactor when you see it.
 Dispatch developer work through one of the four profiles in `.claude/agents/`, which pin both
 model and effort: `opus-dev-high`, `opus-dev-medium`, `sonnet-dev-high`, `sonnet-dev-medium`.
 Prefer these to a bare `general-purpose` agent with a `model` override, which cannot set effort.
+Agent profiles load when a session starts, so a profile added or edited mid-session isn't
+dispatchable until the next one; until then fall back to `general-purpose` with a `model` override
+and say so to the user.
 
 **Prefer the cheapest viable profile.** The test is not task size — it is whether the answer is
 already specified, and how much load-bearing thinking remains on top of it.
@@ -56,11 +59,11 @@ wrote it, before the commit — it still holds the context.
 
 Put the gate list in the brief, sized to the change:
 
-- **Go** — `make test` (the whole suite, ~20s; it needs `.secrets` for the `s3db` suite).
+- **Go** — `make test` (the whole suite).
 - **Prompt or LLM client** — also `make expensive`, which runs the real-model specs. They spend real
   tokens and are nondeterministic, so a prompt change needs several clean runs, not one.
-- **Docker / Fly** — `docker build` locally if Docker is available, and `fly deploy --build-only`
-  to exercise the remote builder without releasing.
+- **Docker / Fly** — `fly config validate` and `fly deploy --build-only --remote-only`, which
+  exercises the real builder without releasing.
 - **Biloba (`lunchtimedisco/`)** — `make test` covers it; for tight iteration
   `go run github.com/onsi/ginkgo/v2/ginkgo -p --randomize-all ./lunchtimedisco`.
 
@@ -77,6 +80,15 @@ editing `go.mod`. Serialize work in the main tree, or give a parallel workstream
 (`isolation: "worktree"`) and merge it afterwards. If a scope change lands mid-flight, send it to
 the agent that already owns those files rather than starting a second writer.
 
+Two facts about worktrees:
+
+- **A worktree branches from `origin/master`, not your local HEAD.** Unpushed commits are absent
+  from it, so its agent re-does or conflicts with work you've already landed. Push first when the
+  user is happy to, or brief the agent on what master already has and plan the merge.
+- **Worktrees isolate files, not the machine.** Suites in two trees still share ports, browsers,
+  and the `TEST/` S3 prefix. A failure that appears only while another agent is running a suite is
+  contamination until proven otherwise — check what else was running before diagnosing a flake.
+
 ## A green suite is not coverage
 
 The closing pass on any change is: per behavioural change, what spec now proves it? **A regression
@@ -88,11 +100,14 @@ justifies it.
 **Re-run the suites yourself** rather than trusting "tests pass", and check the claim covers the
 current tree.
 
-**You own flake hunts; subagents never run them.** After the Biloba suite changes, hunt it:
-`go run github.com/onsi/ginkgo/v2/ginkgo -p --randomize-all --repeat=20 ./lunchtimedisco`. When a hunt
-turns up a flake, reason from the failure output — don't try to reproduce it — and send it back to
-the agent whose work introduced it, with your mechanism guess and explicit permission to disagree
-with evidence. A pre-existing or cross-cutting flake goes to a *different* agent.
+**You own flake hunts and the closing race lane; subagents never run hunts.** After the Biloba
+suite changes, hunt it: `go run github.com/onsi/ginkgo/v2/ginkgo -p --randomize-all --repeat=20
+./lunchtimedisco`. Run `make race` once before the session's last commit. When a hunt turns up a
+flake, reason from the failure output first. Never re-run hoping to see it again — a green rerun
+proves nothing — but a *deliberate* reproduction that forces the suspected mechanism (e.g. two
+concurrent runs, a held response) is strong evidence and worth its cost. Send the flake back to the
+agent whose work introduced it, with your mechanism guess and explicit permission to disagree with
+evidence. A pre-existing or cross-cutting flake goes to a *different* agent.
 
 Smells found during a session are in scope for that session: record them in `TODO.md`, then
 dispatch a subagent at them or consciously defer them with the user.
