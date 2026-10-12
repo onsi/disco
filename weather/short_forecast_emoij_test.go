@@ -14,8 +14,8 @@ import (
 
 var _ = Describe("ShortForecastEmoij", func() {
 	It("returns appropriate emoji", SpecTimeout(time.Second*20), func(ctx SpecContext) {
-		if os.Getenv("INCLUDE_OPENAI_SPECS") != "true" {
-			Skip("Skipping OpenAI specs - use INCLUDE_OPENAI_SPECS=true to run them")
+		if os.Getenv("INCLUDE_LLM_SPECS") != "true" {
+			Skip("Skipping LLM specs - use INCLUDE_LLM_SPECS=true to run them")
 		}
 
 		db := s3db.NewFakeS3DB()

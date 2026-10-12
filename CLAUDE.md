@@ -22,7 +22,7 @@ machines that invite players, count replies, and call game / no-game with the bo
 - `mail/` — `Email`/`EmailAddress` types, inbound parsing of forwardemail.net's JSON, `Outbox` (real
   SMTP) and `FakeOutbox`.
 - `weather/` — api.weather.gov forecasts plus an LLM-picked emoji per short forecast, cached in S3.
-- `askgpt/` — the LLM client (being replaced by `askclaude`, Claude Haiku).
+- `askclaude/` — the LLM client: Claude Haiku (`claude-haiku-5-5`) via the Anthropic Go SDK, with structured outputs so callers always get schema-valid JSON. Haiku 5.5 rejects `temperature`; the schema is what pins the output shape.
 - `clock/` — `AlarmClock` (one pending alarm, the state machines' only timer) and `FakeAlarmClock`;
   all scheduling is in `America/Denver`.
 - `s3db/` — the persistence layer. Read the next section before touching any state.
@@ -84,9 +84,14 @@ everywhere. The invariants:
     silently when that thing is renamed.
   - **Tell a fact once per file**, at the place it bites.
   - Nothing lints this here — review comments by eye on every diff.
-- **Ginkgo for all Go tests — never `go test`.** `make test` runs the whole suite
-  (`-r -p --keep-going --randomize-all`). Real-LLM specs are skipped unless opted in; `make expensive`
-  runs them too.
+- **Ginkgo for all Go tests — never `go test`.** Use the `make` targets, which load `local.env` and
+  `.secrets` and run `go run github.com/onsi/ginkgo/v2/ginkgo -r -p --keep-going --randomize-all`:
+  `make test` (the whole suite), `make race` (the same under `--race`), and `make expensive` (adds
+  the real-Haiku specs, gated on `INCLUDE_LLM_SPECS=true`; they spend tokens and are
+  nondeterministic, so a prompt change needs several clean runs, not one).
+- **Never pin a test server to a fixed port.** The lunchtime suite serves each process from an
+  OS-assigned port it holds for the whole run, so concurrent runs (another worktree, an agent) can't
+  steal each other's ports.
 - **Keep the LLM out of the loop in ordinary specs.** The state machines take an `InterpreterInt`;
   their specs use `FakeInterpreter`. Only the interpreter's own spec and the emoji spec call the real
   model, behind the opt-in env var — those are the integration tests proving the prompt works.

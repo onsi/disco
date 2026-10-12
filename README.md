@@ -16,6 +16,6 @@ All credentials are in a `.secrets` file on Onsi's laptop or stored securely in 
 - amazon Route 53 is the DNS registrar
 - "database" is backed up on Amazon S3
 - e-mail sneding and forwarding for the disco bot is handled by forwardemail.net
-- language parsing is handled by openai.com
+- language parsing (reply interpretation and forecast emoji) is handled by Claude Haiku via api.anthropic.com
 - weather is provided by api.weather.gov
 - the mailing lists are hosted on googlegroups.com

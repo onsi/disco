@@ -21,7 +21,7 @@ type Config struct {
 
 	IncomingSaturdayEmailGUID  string
 	IncomingLunchtimeEmailGUID string
-	OpenAIKey                  string
+	AnthropicKey               string
 
 	AWSAccessKey string
 	AWSSecretKey string
@@ -49,7 +49,7 @@ func LoadConfig() Config {
 		GmailPassword:              os.Getenv("GMAIL_PASSWORD"),
 		IncomingSaturdayEmailGUID:  os.Getenv("INCOMING_SATURDAY_EMAIL_GUID"),
 		IncomingLunchtimeEmailGUID: os.Getenv("INCOMING_LUNCHTIME_EMAIL_GUID"),
-		OpenAIKey:                  os.Getenv("OPEN_AI_KEY"),
+		AnthropicKey:               os.Getenv("ANTHROPIC_KEY"),
 		AWSAccessKey:               os.Getenv("AWS_ACCESS_KEY"),
 		AWSSecretKey:               os.Getenv("AWS_SECRET_KEY"),
 		AWSRegion:                  os.Getenv("AWS_REGION"),
