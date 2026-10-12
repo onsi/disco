@@ -1,4 +1,8 @@
 .DS_Store
 .secrets
 TODO
+TODO.md
 node_modules
+biloba-screenshots/
+.ginkgo-report/
+.claude/settings.local.json

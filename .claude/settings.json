@@ -1,0 +1,7 @@
+{
+  "enabledPlugins": {
+    "ginkgo@ginkgo": true,
+    "gomega@gomega": true,
+    "biloba-go@biloba": true
+  }
+}
