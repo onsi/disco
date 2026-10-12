@@ -7,11 +7,11 @@ require (
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/evanw/esbuild v0.25.2
-	github.com/gomarkdown/markdown v0.0.0-20250311123330-531bef5e742b
+	github.com/gomarkdown/markdown v0.0.0-20261011113952-f83953680332
 	github.com/google/uuid v1.6.0
 	github.com/grokify/html-strip-tags-go v0.1.0
-	github.com/labstack/echo/v4 v4.13.3
-	github.com/labstack/gommon v0.4.2
+	github.com/labstack/echo/v4 v4.16.0
+	github.com/labstack/gommon v0.5.0
 	github.com/onsi/biloba v0.17.0
 	github.com/onsi/ginkgo/v2 v2.33.1
 	github.com/onsi/gomega v1.44.0
@@ -38,8 +38,8 @@ require (
 	github.com/invopop/jsonschema v0.14.0 // indirect
 	github.com/jehiah/agentdetection v0.0.0-20260504180809-d55902bec14c // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-colorable v0.1.15 // indirect
+	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/pb33f/ordered-map/v2 v2.3.1 // indirect
 	github.com/standard-webhooks/standard-webhooks/libraries v0.0.1 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
@@ -57,7 +57,7 @@ require (
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
-	golang.org/x/time v0.11.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )
