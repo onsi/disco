@@ -366,7 +366,7 @@ func (s *LunchtimeDisco) log(format string, args ...any) {
 }
 
 func (s *LunchtimeDisco) logi(i uint, format string, args ...any) {
-	out := say.F("{{gray}}[%s]{{/}} LunchtimeDisco: ", s.alarmClock.Time().Format("1/2 3:04:05am"))
+	out := say.F("{{gray}}[%s]{{/}} LunchtimeDisco: ", s.alarmClock.Time().Format("1/2 3:04:05pm"))
 	out += say.Fi(i, format, args...) + "\n"
 	s.w.Write([]byte(out))
 }
