@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/onsi/disco/askgpt"
+	"github.com/onsi/disco/askclaude"
 	"github.com/onsi/disco/s3db"
 )
 
@@ -72,17 +72,70 @@ func (p *ShortForecastEmojiProvider) GetShortForecastEmoji(ctx context.Context, 
 		return emoji
 	}
 
-	emoji, err := askgpt.AskGPT3(ctx, "Give me a single emoji from this set: ☀️🌤️⛅️🌥️☁️🌦️🌧️⛈️🌩️🌨️❄️💨 that best characterizes this short weather forecast", forecast)
+	emoji, err := askForEmoji(ctx, forecast)
 	if err != nil {
 		fmt.Printf("Forecast %s returned error while getting emoji: %s\n", forecast, err.Error())
-		return ""
-	}
-	if emoji == "" {
-		fmt.Printf("Forecast %s returned empty emoji\n", forecast)
 		return ""
 	}
 
 	p.cache[forecast] = emoji
 	p.saveCache()
 	return emoji
+}
+
+var forecastEmoji = []string{"☀️", "🌤️", "⛅️", "🌥️", "☁️", "🌦️", "🌧️", "⛈️", "🌩️", "🌨️", "❄️", "💨"}
+
+const emojiPrompt = `You pick the emoji that summarizes a short weather forecast from api.weather.gov in the email for an outdoor pickup ultimate frisbee game. The forecast is inside <forecast> tags.
+
+Choose exactly one emoji from this set:
+- ☀️ sunny or clear
+- 🌤️ mostly sunny or mostly clear
+- ⛅️ partly sunny or partly cloudy
+- 🌥️ mostly cloudy
+- ☁️ cloudy, overcast, or fog
+- 🌦️ a chance of showers, or showers with some sun
+- 🌧️ rain, drizzle, or showers likely
+- ⛈️ thunderstorms
+- 🌩️ lightning, or a slight chance of thunderstorms
+- 🌨️ snow showers, flurries, sleet, or a wintry mix
+- ❄️ snow
+- 💨 windy, breezy, or blowing dust
+
+When the forecast changes during the day ("Sunny then Chance Showers"), pick the condition that matters most for playing outside.`
+
+var emojiSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"emoji": map[string]any{
+			"type": "string",
+			"enum": forecastEmoji,
+		},
+	},
+	"required":             []string{"emoji"},
+	"additionalProperties": false,
+}
+
+func askForEmoji(ctx context.Context, forecast string) (string, error) {
+	var response struct {
+		Emoji string `json:"emoji"`
+	}
+	err := askclaude.AskForJSON(ctx, emojiPrompt, "<forecast>"+forecast+"</forecast>", emojiSchema, &response)
+	if err != nil {
+		return "", err
+	}
+	return canonicalForecastEmoji(response.Emoji)
+}
+
+func canonicalForecastEmoji(emoji string) (string, error) {
+	bare := withoutVariationSelector(strings.TrimSpace(emoji))
+	for _, candidate := range forecastEmoji {
+		if withoutVariationSelector(candidate) == bare {
+			return candidate, nil
+		}
+	}
+	return "", fmt.Errorf("%q is not a forecast emoji", emoji)
+}
+
+func withoutVariationSelector(s string) string {
+	return strings.ReplaceAll(s, "\uFE0F", "")
 }

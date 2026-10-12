@@ -8,7 +8,7 @@ test:
 
 expensive:
 	@echo "Running Expensive tests"
-	INCLUDE_OPENAI_SPECS=true ginkgo -r -p --keep-going --randomize-all
+	INCLUDE_LLM_SPECS=true ginkgo -r -p --keep-going --randomize-all
 
 local:
 	@echo "Running disco"

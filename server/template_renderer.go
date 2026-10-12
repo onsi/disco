@@ -69,7 +69,7 @@ func (t *Template) ESBuild(asset string, tag string) (any, error) {
 		Kind:          esbuild.ErrorMessage,
 		Color:         true,
 	}) {
-		fmt.Fprintf(os.Stderr, msg+"\n")
+		fmt.Fprintln(os.Stderr, msg)
 	}
 
 	for _, msg := range esbuild.FormatMessages(result.Warnings, esbuild.FormatMessagesOptions{
@@ -77,7 +77,7 @@ func (t *Template) ESBuild(asset string, tag string) (any, error) {
 		Kind:          esbuild.WarningMessage,
 		Color:         true,
 	}) {
-		fmt.Fprintf(os.Stderr, msg+"\n")
+		fmt.Fprintln(os.Stderr, msg)
 	}
 
 	output := ""
@@ -87,7 +87,7 @@ func (t *Template) ESBuild(asset string, tag string) (any, error) {
 		issues = append(issues, "failed to compile: got empty output")
 	}
 	if len(issues) > 0 {
-		return "", fmt.Errorf(strings.Join(issues, "\n"))
+		return "", fmt.Errorf("%s", strings.Join(issues, "\n"))
 	}
 	if tag != "" {
 		output = "<" + tag + ">\n" + output + "\n</" + tag + ">"

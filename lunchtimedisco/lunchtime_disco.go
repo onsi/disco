@@ -309,12 +309,12 @@ func NewLunchtimeDisco(config config.Config, w io.Writer, alarmClock clock.Alarm
 
 	if err != nil {
 		outbox.SendEmail(lunchtimeDisco.emailForBoss("startup_error", TemplateData{
-			Error: fmt.Errorf(startupMessage + "\n" + participantsMessage),
+			Error: fmt.Errorf("%s\n%s", startupMessage, participantsMessage),
 		}))
 		return nil, err
 	}
 
-	outbox.SendEmail(lunchtimeDisco.emailForBoss("startup", lunchtimeDisco.emailData().WithMessage(startupMessage)))
+	outbox.SendEmail(lunchtimeDisco.emailForBoss("startup", lunchtimeDisco.emailData().WithMessage("%s", startupMessage)))
 
 	go lunchtimeDisco.dance()
 	return lunchtimeDisco, nil
@@ -545,37 +545,37 @@ func (s *LunchtimeDisco) handleCommand(command Command) {
 	case CommandAdminBadger:
 		s.logi(1, "{{red}}boss has asked me to badger{{/}}")
 		s.sendEmailWithNoTransition((s.emailForList("badger",
-			s.emailData().WithMessage(command.AdditionalContent))))
+			s.emailData().WithMessage("%s", command.AdditionalContent))))
 	case CommandAdminGameOn:
 		s.logi(1, "{{green}}boss has asked me to send game-on{{/}}")
 		s.GameOnGameKey = command.GameOnGameKey
 		s.GameOnAdjustedTime = command.GameOnAdjustedTime
 		s.sendEmail(s.emailForList("game_on",
-			s.emailData().WithMessage(command.AdditionalContent)),
+			s.emailData().WithMessage("%s", command.AdditionalContent)),
 			StateGameOnSent, s.replyWithFailureErrorHandler)
 	case CommandAdminNoGame:
 		s.logi(1, "{{red}}boss has asked me to send no-game{{/}}")
 		s.GameOnGameKey = ""
 		s.GameOnAdjustedTime = ""
 		s.sendEmail(s.emailForList("no_game",
-			s.emailData().WithMessage(command.AdditionalContent)),
+			s.emailData().WithMessage("%s", command.AdditionalContent)),
 			StateNoGameSent, s.replyWithFailureErrorHandler)
 	case CommandAdminInvite:
 		s.logi(1, "{{green}}boss has asked me to send the invite out{{/}}")
 		s.sendEmail(s.emailForList("invitation",
-			s.emailData().WithMessage(command.AdditionalContent)),
+			s.emailData().WithMessage("%s", command.AdditionalContent)),
 			StateInviteSent, s.replyWithFailureErrorHandler)
 	case CommandAdminNoInvite:
 		s.logi(1, "{{red}}boss has asked me to send the no-invite email{{/}}")
 		s.sendEmail(s.emailForList("no_invitation",
-			s.emailData().WithMessage(command.AdditionalContent)),
+			s.emailData().WithMessage("%s", command.AdditionalContent)),
 			StateNoInviteSent, s.replyWithFailureErrorHandler)
 	case CommandSetGames:
 		s.logi(1, "{{green}}I've been asked to set games{{/}}")
 		s.Participants = s.Participants.AddOrUpdate(command.Participant)
 		s.HistoricalParticipants = s.HistoricalParticipants.AddOrUpdate(command.Participant.Address)
 		s.sendEmailWithNoTransition(s.emailForBoss("acknowledge_set_games", s.emailData().
-			WithMessage(command.Participant.GamesAckMessage()).
+			WithMessage("%s", command.Participant.GamesAckMessage()).
 			WithComment(command.Participant.Comments)))
 	}
 }
